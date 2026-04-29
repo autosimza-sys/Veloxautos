@@ -29,6 +29,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
 
   const [loginForm, setLoginForm] = useState({ phone: "", pass: "" });
+
   const [registerForm, setRegisterForm] = useState({
     name: "",
     phone: "",
@@ -67,11 +68,23 @@ export default function App() {
     setDb(next);
   }
 
-  function addActivity(text) {
-    setDb(prev => ({
-      ...prev,
-      activity: [{ id: uid(), text, date: new Date().toLocaleString() }, ...prev.activity]
-    }));
+  function resetVehicleForm() {
+    setVehicleForm({
+      type: "auto",
+      saleType: "propio",
+      title: "",
+      brand: "",
+      model: "",
+      year: "",
+      km: "",
+      price: "",
+      domain: "",
+      location: "",
+      phone: "",
+      fuel: "nafta",
+      desc: "",
+      images: []
+    });
   }
 
   function register() {
@@ -92,10 +105,18 @@ export default function App() {
       realCredits: 0
     };
 
-    saveDB({ ...db, users: [...db.users, newUser] });
+    const next = {
+      ...db,
+      users: [...db.users, newUser],
+      activity: [
+        { id: uid(), text: `Nuevo registro: ${newUser.name}`, date: new Date().toLocaleString() },
+        ...db.activity
+      ]
+    };
+
+    saveDB(next);
     setUser(newUser);
     setView("home");
-    addActivity(`Nuevo registro: ${newUser.name}`);
   }
 
   function login() {
@@ -130,9 +151,40 @@ export default function App() {
       return;
     }
 
+    if (currentUser.role === "admin") {
+      alert("El admin no publica vehículos");
+      return;
+    }
+
     if (!vehicleForm.title || !vehicleForm.price || !vehicleForm.phone) {
       alert("Completá título, precio y teléfono");
       return;
+    }
+
+    const userPublications = db.vehicles.filter(
+      v => v.ownerId === currentUser.id
+    ).length;
+
+    let publicationCost = 0;
+
+    if (currentUser.role === "user" && userPublications >= 1) {
+      alert("El usuario particular solo puede publicar 1 vehículo gratis.");
+      return;
+    }
+
+    if (currentUser.role === "seller" && userPublications >= 3) {
+      publicationCost = 10;
+    }
+
+    const next = structuredClone(db);
+    const owner = next.users.find(u => u.id === currentUser.id);
+
+    if (publicationCost > 0) {
+      if (!owner || owner.promoCredits < publicationCost) {
+        alert("No tenés créditos promocionales suficientes para publicar.");
+        return;
+      }
+      owner.promoCredits -= publicationCost;
     }
 
     const vehicle = {
@@ -145,31 +197,34 @@ export default function App() {
         photoClicks: 0,
         priceUnlocks: 0,
         contactUnlocks: 0,
-        creditsConsumed: 0
+        creditsConsumed: publicationCost
       },
       unlockedPriceBy: [],
       unlockedContactBy: []
     };
 
-    saveDB({ ...db, vehicles: [vehicle, ...db.vehicles] });
-    setVehicleForm({
-      type: "auto",
-      saleType: "propio",
-      title: "",
-      brand: "",
-      model: "",
-      year: "",
-      km: "",
-      price: "",
-      domain: "",
-      location: "",
-      phone: "",
-      fuel: "nafta",
-      desc: "",
-      images: []
-    });
+    next.vehicles = [vehicle, ...next.vehicles];
+    next.activity = [
+      {
+        id: uid(),
+        text:
+          publicationCost > 0
+            ? `Vehículo publicado con costo de 10 créditos: ${vehicle.title}`
+            : `Vehículo publicado gratis: ${vehicle.title}`,
+        date: new Date().toLocaleString()
+      },
+      ...next.activity
+    ];
+
+    saveDB(next);
+    resetVehicleForm();
     setView("home");
-    addActivity(`Vehículo publicado: ${vehicle.title}`);
+
+    alert(
+      publicationCost > 0
+        ? "Vehículo publicado. Se descontaron 10 créditos promocionales."
+        : "Vehículo publicado gratis."
+    );
   }
 
   function chargeSeller(vehicle, action) {
@@ -195,29 +250,63 @@ export default function App() {
       return;
     }
 
-    if (action === "price" && !v.unlockedPriceBy.includes(currentUser.id)) {
+    if (action === "price") {
+      if (v.unlockedPriceBy.includes(currentUser.id)) return;
+
       owner.promoCredits -= cost;
       v.unlockedPriceBy.push(currentUser.id);
       v.stats.priceUnlocks += 1;
       v.stats.creditsConsumed += cost;
-      addActivity(`Precio desbloqueado: ${v.title}`);
+
+      next.activity = [
+        {
+          id: uid(),
+          text: `Precio desbloqueado: ${v.title}`,
+          date: new Date().toLocaleString()
+        },
+        ...next.activity
+      ];
     }
 
-    if (action === "contact" && !v.unlockedContactBy.includes(currentUser.id)) {
+    if (action === "contact") {
+      if (v.unlockedContactBy.includes(currentUser.id)) return;
+
       owner.promoCredits -= cost;
       v.unlockedContactBy.push(currentUser.id);
       v.stats.contactUnlocks += 1;
       v.stats.creditsConsumed += cost;
-      addActivity(`Contacto solicitado: ${v.title}`);
+
+      next.activity = [
+        {
+          id: uid(),
+          text: `Contacto solicitado: ${v.title}`,
+          date: new Date().toLocaleString()
+        },
+        ...next.activity
+      ];
     }
 
     saveDB(next);
-    setSelected(v);
+
+    const updatedSelected = next.vehicles.find(x => x.id === vehicle.id);
+    setSelected(updatedSelected);
   }
 
   function deleteVehicle(id) {
-    saveDB({ ...db, vehicles: db.vehicles.filter(v => v.id !== id) });
-    addActivity("Admin eliminó una publicación");
+    const next = {
+      ...db,
+      vehicles: db.vehicles.filter(v => v.id !== id),
+      activity: [
+        {
+          id: uid(),
+          text: "Admin eliminó una publicación",
+          date: new Date().toLocaleString()
+        },
+        ...db.activity
+      ]
+    };
+
+    saveDB(next);
   }
 
   function handleImages(files) {
@@ -309,6 +398,7 @@ export default function App() {
 
             {db.vehicles.map(v => {
               const priceUnlocked = currentUser && v.unlockedPriceBy.includes(currentUser.id);
+
               return (
                 <article key={v.id} style={styles.card}>
                   <div style={styles.photoBox}>
@@ -334,7 +424,7 @@ export default function App() {
                       const vehicle = next.vehicles.find(x => x.id === v.id);
                       vehicle.stats.views += 1;
                       saveDB(next);
-                      setSelected(v);
+                      setSelected(vehicle);
                       setView("detail");
                     }}
                   >
@@ -503,6 +593,13 @@ export default function App() {
             <div>Publicaciones activas: {db.vehicles.length}</div>
             <div>Actividad: {db.activity.length}</div>
           </div>
+
+          <h3>Usuarios</h3>
+          {db.users.map(u => (
+            <div key={u.id} style={styles.adminRow}>
+              <span>{u.name} — {u.role} — Créditos: {u.promoCredits}</span>
+            </div>
+          ))}
 
           <h3>Vehículos</h3>
           {db.vehicles.map(v => (
@@ -758,7 +855,8 @@ const styles = {
     borderRadius: 12,
     marginBottom: 8,
     display: "flex",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    gap: 10
   },
   activity: {
     padding: 10,
