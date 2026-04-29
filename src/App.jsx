@@ -145,88 +145,75 @@ export default function App() {
     setSelected(null);
   }
 
-  function publish() {
-    if (!currentUser) {
-      alert("Primero tenés que iniciar sesión");
-      return;
-    }
-
-    if (currentUser.role === "admin") {
-      alert("El admin no publica vehículos");
-      return;
-    }
-
-    if (!vehicleForm.title || !vehicleForm.price || !vehicleForm.phone) {
-      alert("Completá título, precio y teléfono");
-      return;
-    }
-
-    const userPublications = db.vehicles.filter(
-      v => v.ownerId === currentUser.id
-    ).length;
-
-    let publicationCost = 0;
-
-    if (currentUser.role === "user" && userPublications >= 1) {
-      alert("El usuario particular solo puede publicar 1 vehículo gratis.");
-      return;
-    }
-
-    if (currentUser.role === "seller" && userPublications >= 3) {
-      publicationCost = 10;
-    }
-
-    const next = structuredClone(db);
-    const owner = next.users.find(u => u.id === currentUser.id);
-
-    if (publicationCost > 0) {
-      if (!owner || owner.promoCredits < publicationCost) {
-        alert("No tenés créditos promocionales suficientes para publicar.");
-        return;
-      }
-      owner.promoCredits -= publicationCost;
-    }
-
-    const vehicle = {
-      id: uid(),
-      ownerId: currentUser.id,
-      createdAt: new Date().toLocaleString(),
-      ...vehicleForm,
-      stats: {
-        views: 0,
-        photoClicks: 0,
-        priceUnlocks: 0,
-        contactUnlocks: 0,
-        creditsConsumed: publicationCost
-      },
-      unlockedPriceBy: [],
-      unlockedContactBy: []
-    };
-
-    next.vehicles = [vehicle, ...next.vehicles];
-    next.activity = [
-      {
-        id: uid(),
-        text:
-          publicationCost > 0
-            ? `Vehículo publicado con costo de 10 créditos: ${vehicle.title}`
-            : `Vehículo publicado gratis: ${vehicle.title}`,
-        date: new Date().toLocaleString()
-      },
-      ...next.activity
-    ];
-
-    saveDB(next);
-    resetVehicleForm();
-    setView("home");
-
-    alert(
-      publicationCost > 0
-        ? "Vehículo publicado. Se descontaron 10 créditos promocionales."
-        : "Vehículo publicado gratis."
-    );
+ function publish() {
+  if (!currentUser) {
+    alert("Tenés que iniciar sesión");
+    return;
   }
 
+  if (!vehicleForm.title || !vehicleForm.price || !vehicleForm.phone) {
+    alert("Completá título, precio y teléfono");
+    return;
+  }
+
+  const userPublications = db.vehicles.filter(
+    v => v.ownerId === currentUser.id
+  ).length;
+
+  let publicationCost = 0;
+
+  // REGLAS
+  if (currentUser.role === "user" && userPublications >= 1) {
+    alert("Solo podés publicar 1 vehículo");
+    return;
+  }
+
+  if (currentUser.role === "seller" && userPublications >= 3) {
+    publicationCost = 10;
+  }
+
+  // COPIA SIMPLE (NO structuredClone)
+  const nextUsers = db.users.map(u => ({ ...u }));
+  const nextVehicles = [...db.vehicles];
+
+  const owner = nextUsers.find(u => u.id === currentUser.id);
+
+  if (publicationCost > 0) {
+    if (owner.promoCredits < publicationCost) {
+      alert("No tenés créditos suficientes");
+      return;
+    }
+    owner.promoCredits -= publicationCost;
+  }
+
+  const vehicle = {
+    id: Date.now(),
+    ownerId: currentUser.id,
+    ...vehicleForm,
+    stats: {
+      views: 0,
+      priceUnlocks: 0,
+      contactUnlocks: 0,
+      creditsConsumed: publicationCost
+    },
+    unlockedPriceBy: [],
+    unlockedContactBy: []
+  };
+
+  nextVehicles.unshift(vehicle);
+
+  // GUARDAR BIEN
+  setDb({
+    ...db,
+    users: nextUsers,
+    vehicles: nextVehicles
+  });
+
+  resetVehicleForm();
+  setView("home");
+
+  alert("Publicado correctamente");
+}
   function chargeSeller(vehicle, action) {
     if (!currentUser) return;
 
