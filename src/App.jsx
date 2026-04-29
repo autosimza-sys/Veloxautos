@@ -13,13 +13,12 @@ export default function App() {
 
   const [user, setUser] = useState(null);
   const [view, setView] = useState("home");
-  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("veloxDB", JSON.stringify(db));
   }, [db]);
 
-  // AUTH
+  // ---------------- AUTH ----------------
   const register = (name, phone, pass, role) => {
     const newUser = {
       id: Date.now(),
@@ -27,7 +26,7 @@ export default function App() {
       phone,
       pass,
       role,
-      creditsPromo: 10000
+      credits: 10000
     };
     setDb({ ...db, users: [...db.users, newUser] });
     setUser(newUser);
@@ -35,43 +34,66 @@ export default function App() {
 
   const login = (phone, pass) => {
     if (phone === "admin" && pass === "v3l0x$2026") {
-      setUser({ role: "admin" });
+      setUser({ role: "admin", name: "Admin" });
       return;
     }
+
     const u = db.users.find(u => u.phone === phone && u.pass === pass);
     if (u) setUser(u);
+    else alert("Datos incorrectos");
   };
 
-  // PUBLICAR
-  const publish = (data) => {
-    const v = {
+  // ---------------- PUBLICAR ----------------
+  const publish = (title, price, phone) => {
+    const vehicle = {
       id: Date.now(),
       ownerId: user.id,
-      ...data,
-      stats: { unlocks: 0, contacts: 0 }
+      title,
+      price,
+      phone,
+      unlockedBy: [],
+      contactedBy: []
     };
-    setDb({ ...db, vehicles: [...db.vehicles, v] });
+
+    setDb({ ...db, vehicles: [...db.vehicles, vehicle] });
+    alert("Vehículo publicado");
   };
 
-  // INTERACCIONES
-  const interact = (id, type) => {
-    const v = db.vehicles.find(x => x.id === id);
+  // ---------------- INTERACCIONES ----------------
+  const unlockPrice = (v) => {
     const owner = db.users.find(u => u.id === v.ownerId);
 
-    if (owner && owner.creditsPromo >= 2) {
-      owner.creditsPromo -= 2;
-      if (type === "unlock") v.stats.unlocks++;
-      if (type === "contact") v.stats.contacts++;
+    if (!v.unlockedBy.includes(user.id)) {
+      if (owner.credits >= 2) {
+        owner.credits -= 2;
+        v.unlockedBy.push(user.id);
+        setDb({ ...db });
+      } else {
+        alert("El vendedor no tiene créditos");
+      }
     }
+  };
 
-    setDb({ ...db });
+  const viewContact = (v) => {
+    const owner = db.users.find(u => u.id === v.ownerId);
+
+    if (!v.contactedBy.includes(user.id)) {
+      if (owner.credits >= 2) {
+        owner.credits -= 2;
+        v.contactedBy.push(user.id);
+        setDb({ ...db });
+      } else {
+        alert("El vendedor no tiene créditos");
+      }
+    }
   };
 
   return (
     <div style={{ background: "#0b0b0b", color: "#fff", minHeight: "100vh", padding: 20 }}>
 
-      <h1 style={{ color: "#00aaff", textAlign: "center" }}>VELOX</h1>
+      <h1 style={{ textAlign: "center", color: "#00aaff" }}>VELOX</h1>
 
+      {/* NAV */}
       {!user && (
         <>
           <button onClick={() => setView("login")}>Login</button>
@@ -81,7 +103,9 @@ export default function App() {
 
       {user && (
         <>
-          <p>{user.name || "Admin"} | Créditos: {user.creditsPromo}</p>
+          <p>
+            {user.name} | Créditos: {user.credits || "-"}
+          </p>
           <button onClick={() => setView("home")}>Inicio</button>
           <button onClick={() => setView("publish")}>Publicar</button>
         </>
@@ -92,10 +116,14 @@ export default function App() {
         <div>
           <input placeholder="Teléfono" id="l1" />
           <input placeholder="Pass" id="l2" />
-          <button onClick={() => login(
-            document.getElementById("l1").value,
-            document.getElementById("l2").value
-          )}>Entrar</button>
+          <button onClick={() =>
+            login(
+              document.getElementById("l1").value,
+              document.getElementById("l2").value
+            )
+          }>
+            Entrar
+          </button>
         </div>
       )}
 
@@ -109,12 +137,16 @@ export default function App() {
             <option value="user">Usuario</option>
             <option value="seller">Vendedor</option>
           </select>
-          <button onClick={() => register(
-            document.getElementById("r1").value,
-            document.getElementById("r2").value,
-            document.getElementById("r3").value,
-            document.getElementById("r4").value
-          )}>Crear</button>
+          <button onClick={() =>
+            register(
+              document.getElementById("r1").value,
+              document.getElementById("r2").value,
+              document.getElementById("r3").value,
+              document.getElementById("r4").value
+            )
+          }>
+            Crear cuenta
+          </button>
         </div>
       )}
 
@@ -124,35 +156,57 @@ export default function App() {
           <input placeholder="Título" id="p1" />
           <input placeholder="Precio" id="p2" />
           <input placeholder="Teléfono" id="p3" />
-          <button onClick={() => publish({
-            title: document.getElementById("p1").value,
-            price: document.getElementById("p2").value,
-            phone: document.getElementById("p3").value
-          })}>Publicar</button>
+
+          <button onClick={() =>
+            publish(
+              document.getElementById("p1").value,
+              document.getElementById("p2").value,
+              document.getElementById("p3").value
+            )
+          }>
+            Publicar
+          </button>
         </div>
       )}
 
       {/* HOME */}
       {view === "home" && (
         <div style={{ display: "grid", gap: 10 }}>
-          {db.vehicles.map(v => (
-            <div key={v.id} style={{ background: "#111", padding: 10 }}>
-              <h3>{v.title}</h3>
+          {db.vehicles.map(v => {
 
-              {!user && <p>Registrate para ver precio</p>}
+            const unlocked = v.unlockedBy.includes(user?.id);
+            const contacted = v.contactedBy.includes(user?.id);
 
-              {user && <button onClick={() => interact(v.id, "unlock")}>
-                Ver precio
-              </button>}
+            return (
+              <div key={v.id} style={{ background: "#111", padding: 10 }}>
 
-              {user && <button onClick={() => interact(v.id, "contact")}>
-                Ver contacto
-              </button>}
+                <h3>{v.title}</h3>
 
-              {user && <p>{v.price}</p>}
-              {user && <p>{v.phone}</p>}
-            </div>
-          ))}
+                {!user && <p>Registrate para ver info</p>}
+
+                {user && !unlocked && (
+                  <button onClick={() => unlockPrice(v)}>
+                    Ver precio
+                  </button>
+                )}
+
+                {user && unlocked && (
+                  <p>💰 Precio: {v.price}</p>
+                )}
+
+                {user && !contacted && (
+                  <button onClick={() => viewContact(v)}>
+                    Ver contacto
+                  </button>
+                )}
+
+                {user && contacted && (
+                  <p>📞 {v.phone}</p>
+                )}
+
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
