@@ -417,8 +417,14 @@ export default function App() {
   const activeVehicles = db.vehicles.filter((v) => v.active);
 
   function commit(next) {
-    setDb(next);
-    localStorage.setItem(STORE_KEY, JSON.stringify(next));
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(next));
+      setDb(next);
+      return true;
+    } catch (error) {
+      notify("No se pudo guardar. El navegador no tiene espacio suficiente: elimina fotos/video pesados e intenta de nuevo.");
+      return false;
+    }
   }
 
   function notify(message) {
@@ -433,9 +439,9 @@ export default function App() {
   function mutateVehicle(vehicleId, updater) {
     const next = structuredClone(db);
     const vehicle = next.vehicles.find((v) => v.id === vehicleId);
-    if (!vehicle) return;
+    if (!vehicle) return false;
     updater(vehicle, next);
-    commit(next);
+    return commit(next);
   }
 
   function chargeSeller(vehicle, action, amount) {
@@ -598,14 +604,14 @@ export default function App() {
   }
 
   function saveMechanicReview(vehicleId, review) {
-    mutateVehicle(vehicleId, (v, next) => {
+    const saved = mutateVehicle(vehicleId, (v, next) => {
       const normalizedReview = normalizeMechanicReview(review, v);
       const score = calculateMechanicScore(normalizedReview);
       v.mechanicScore = score;
       v.mechanicReview = { ...normalizedReview, at: Date.now() };
       log(next, "revision", `Mecanico cargo revision para ${v.title}`);
     });
-    notify("Revision mecanica guardada y score final recalculado.");
+    if (saved) notify("Revision mecanica guardada y score final recalculado.");
   }
 
   function publishVehicle(form) {
@@ -1024,6 +1030,7 @@ function ChecklistSummary({ checklist }) {
 
 function Auth({ mode, setMode, login, register, recoverPassword, tempPass }) {
   const [form, setForm] = useState({ role: "buyer", name: "", phone: "", password: "", businessName: "" });
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <main className="authPanel">
       <div className="authBox">
@@ -1039,7 +1046,12 @@ function Auth({ mode, setMode, login, register, recoverPassword, tempPass }) {
           </>
         )}
         <input placeholder={mode === "login" ? "Telefono o admin" : "Telefono"} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        {mode !== "recover" && <input placeholder="Contrasena" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />}
+        {mode !== "recover" && (
+          <div className="passwordRow">
+            <input placeholder="Contrasena" type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <button type="button" className="ghost" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Ocultar" : "Ver"}</button>
+          </div>
+        )}
         {mode === "login" && <button className="primary" onClick={() => login(form.phone, form.password)}>Ingresar</button>}
         {mode === "register" && <button className="primary" onClick={() => register(form)}>Registrarme y recibir 10.000 creditos</button>}
         {mode === "recover" && <button className="primary" onClick={() => recoverPassword(form.phone)}>Generar temporal</button>}
@@ -1321,6 +1333,7 @@ function AdminPanel({ db, approveOrder, deleteVehicle, assignMechanic }) {
 
 function MechanicPanel({ db, mechanicSessionId, setMechanicSessionId, saveMechanicReview, notify }) {
   const [login, setLogin] = useState({ phone: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const activeMechanic = db.mechanics.find((m) => m.id === mechanicSessionId);
   const mechanicId = activeMechanic?.id || "";
   const assigned = db.vehicles.filter((v) => v.active && v.assignedMechanicId === mechanicId);
@@ -1343,7 +1356,10 @@ function MechanicPanel({ db, mechanicSessionId, setMechanicSessionId, saveMechan
           <h2>Ingresar al panel de revision</h2>
           <p className="notice">El mecanico no se registra solo. El admin lo asigna y le entrega su clave MVP.</p>
           <input placeholder="Telefono del mecanico" value={login.phone} onChange={(e) => setLogin({ ...login, phone: e.target.value })} />
-          <input placeholder="Clave de mecanico" type="password" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} />
+          <div className="passwordRow">
+            <input placeholder="Clave de mecanico" type={showPassword ? "text" : "password"} value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} />
+            <button type="button" className="ghost" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Ocultar" : "Ver"}</button>
+          </div>
           <button className="primary" onClick={enterMechanic}>Entrar como mecanico</button>
         </div>
       </main>
@@ -1364,6 +1380,7 @@ function MechanicPanel({ db, mechanicSessionId, setMechanicSessionId, saveMechan
 
 function MechanicReviewFull({ vehicle, saveMechanicReview }) {
   const [review, setReview] = useState(normalizeMechanicReview(vehicle.mechanicReview, vehicle));
+  const [saving, setSaving] = useState(false);
   const scoreKeys = Object.keys(review.checklist.scores);
   const tireKeys = Object.keys(review.checklist.tires);
   const observationKeys = Object.keys(review.checklist.observations);
@@ -1386,6 +1403,13 @@ function MechanicReviewFull({ vehicle, saveMechanicReview }) {
   async function handleMechanicVideo(file) {
     if (!file || file.size > 25 * 1024 * 1024) return;
     setReview({ ...review, video: await fileToDataUrl(file) });
+  }
+
+  function saveReview(status) {
+    if (saving) return;
+    setSaving(true);
+    saveMechanicReview(vehicle.id, { ...review, estado: status });
+    setTimeout(() => setSaving(false), 700);
   }
 
   return (
@@ -1437,11 +1461,25 @@ function MechanicReviewFull({ vehicle, saveMechanicReview }) {
         <label>Fotos de detalles maximo 8<input type="file" accept="image/*" multiple onChange={(e) => handleMechanicPhotos(e.target.files)} /></label>
         <label>Video de revision<input type="file" accept="video/*" onChange={(e) => handleMechanicVideo(e.target.files[0])} /></label>
       </div>
-      {review.photos?.length > 0 && <div className="previewStrip">{review.photos.map((p) => <img key={p} src={p} alt="Detalle mecanico" />)}</div>}
-      {review.video && <video className="videoPreview" src={review.video} controls />}
+      {review.photos?.length > 0 && (
+        <div className="previewStrip">
+          {review.photos.map((p, index) => (
+            <div className="mediaPreview" key={p}>
+              <img src={p} alt="Detalle mecanico" />
+              <button type="button" className="danger small" onClick={() => setReview({ ...review, photos: review.photos.filter((_, i) => i !== index) })}>Eliminar</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {review.video && (
+        <div className="videoWrap">
+          <video className="videoPreview" src={review.video} controls />
+          <button type="button" className="danger small" onClick={() => setReview({ ...review, video: "" })}>Eliminar video</button>
+        </div>
+      )}
       <div className="cardActions">
-        <button className="secondary" onClick={() => saveMechanicReview(vehicle.id, { ...review, estado: "observado" })}>Observar</button>
-        <button className="primary" onClick={() => saveMechanicReview(vehicle.id, { ...review, estado: "aprobado" })}>Aprobar</button>
+        <button type="button" className="secondary" disabled={saving} onClick={() => saveReview("observado")}>{saving ? "Guardando..." : "Observar"}</button>
+        <button type="button" className="primary" disabled={saving} onClick={() => saveReview("aprobado")}>{saving ? "Guardando..." : "Aprobar"}</button>
       </div>
     </section>
   );
@@ -1476,6 +1514,6 @@ const css = `
 :root{color-scheme:dark;--bg:#05070d;--panel:#0b1020;--panel2:#11182a;--line:#243047;--text:#f5f7fb;--muted:#aab4ca;--blue:#1167ff;--blue2:#00a3ff;--gold:#d8ad54;--danger:#ff5266;--green:#36d17f;--yellow:#f5c84c;--red:#ff5d5d}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0%,#10275d 0,#05070d 36%);font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Arial,sans-serif;color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 56px}.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 28px;background:rgba(5,7,13,.78);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.08)}.brand{display:flex;align-items:center;gap:10px;color:white;background:none;border:0;font-weight:900;font-size:22px;letter-spacing:2px}.logoMark{display:grid;place-items:center;width:38px;height:28px;border:1px solid var(--gold);border-radius:999px;color:var(--blue2);font-size:28px;line-height:1}.topbar nav{display:flex;gap:8px;flex-wrap:wrap}.topbar nav button,.ghost{background:transparent;color:var(--muted);border:1px solid transparent;border-radius:8px;padding:9px 11px}.topbar nav button:hover,.ghost:hover{border-color:var(--line);color:white}.session{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}.primary,.secondary,.danger{border:0;border-radius:8px;padding:11px 15px;font-weight:800;color:white}.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 12px 32px rgba(17,103,255,.28)}.secondary{background:#151e33;border:1px solid var(--line);color:#eef4ff}.danger{background:rgba(255,82,102,.14);border:1px solid rgba(255,82,102,.4);color:#ffb7c0}.small{padding:8px 11px;font-size:13px}.hero{min-height:560px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:36px}.eyebrow{margin:0 0 10px;color:var(--gold);font-size:13px;text-transform:uppercase;letter-spacing:1.6px}.hero h1{font-size:clamp(64px,11vw,138px);line-height:.85;margin:0 0 22px;letter-spacing:0}.heroText{max-width:640px;font-size:21px;line-height:1.55;color:#d5def3}.heroActions,.cardActions{display:flex;gap:12px;flex-wrap:wrap}.heroCar{position:relative;min-height:340px;border:1px solid rgba(216,173,84,.28);background:linear-gradient(145deg,rgba(17,103,255,.22),rgba(255,255,255,.03));border-radius:8px;overflow:hidden}.carShape{position:absolute;inset:30px;display:grid;place-items:center}.carShape:before{content:"";width:80%;height:100px;border:3px solid var(--blue2);border-bottom:12px solid var(--blue2);border-radius:80px 110px 24px 24px;box-shadow:0 0 55px rgba(0,163,255,.4)}.carShape span:before,.carShape span:after{content:"";position:absolute;bottom:94px;width:62px;height:62px;border-radius:50%;background:#070b14;border:8px solid var(--gold)}.carShape span:before{left:23%}.carShape span:after{right:23%}.metricGlass{position:absolute;right:24px;bottom:24px;width:170px;padding:18px;border:1px solid rgba(255,255,255,.16);background:rgba(10,15,28,.7);backdrop-filter:blur(14px);border-radius:8px}.metricGlass strong{display:block;font-size:46px;color:white}.metricGlass small{color:var(--gold)}.categoryBar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:26px}.cat{min-height:88px;text-align:left;border:1px solid var(--line);background:rgba(17,24,42,.78);border-radius:8px;padding:16px;color:white}.cat span{display:block;font-weight:900;font-size:18px}.cat small{color:var(--muted)}.cat.active{border-color:var(--blue2);box-shadow:inset 0 0 0 1px rgba(0,163,255,.35)}.vehicleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.vehicleCard,.authBox,.pack,.reviewCard{border:1px solid var(--line);background:linear-gradient(180deg,rgba(17,24,42,.92),rgba(8,12,23,.94));border-radius:8px;overflow:hidden}.imageButton{position:relative;width:100%;border:0;background:#0b1020;padding:0}.imageButton img{width:100%;aspect-ratio:1.55;object-fit:cover;display:block}.badge{position:absolute;left:12px;bottom:12px;padding:7px 10px;background:rgba(5,7,13,.72);border:1px solid rgba(216,173,84,.45);border-radius:999px;color:white;font-size:13px}.cardBody{padding:16px}.cardTop{display:flex;justify-content:space-between;gap:12px}.cardTop h3,.detailInfo h2{margin:0;font-size:20px}.cardBody p,.detailInfo p,.servicePanel p,.credits p{color:var(--muted);line-height:1.55}.lockedRow{display:flex;justify-content:space-between;gap:12px;margin:14px 0;color:#dce7ff;font-weight:800}.detailLayout{display:grid;grid-template-columns:1fr 1fr;gap:22px}.gallery,.detailInfo,.widePanel,.publish,.dashboard,.credits,.admin,.mechanic{border:1px solid rgba(255,255,255,.08);background:rgba(8,12,23,.62);border-radius:8px;padding:18px}.mainPhoto{width:100%;aspect-ratio:1.45;object-fit:cover;border-radius:8px}.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.thumbs button{border:1px solid var(--line);background:#0b1020;padding:0;border-radius:8px;overflow:hidden}.thumbs img{width:100%;height:72px;object-fit:cover;display:block}.videoBox{width:100%;margin-top:10px;border:1px dashed var(--blue2);background:rgba(17,103,255,.1);color:white;border-radius:8px;padding:18px}.specGrid,.statGrid,.packGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.info{padding:14px;background:#0c1324;border:1px solid var(--line);border-radius:8px}.info small{display:block;color:var(--muted);margin-bottom:6px}.pricePanel,.contactPanel,.panelHeader{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding:16px;background:#0c1324;border:1px solid var(--line);border-radius:8px}.pricePanel strong{display:block;font-size:30px}.widePanel{grid-column:1/-1;display:grid;grid-template-columns:.85fr 1.15fr;gap:18px}.widePanel.two{grid-template-columns:1fr 1fr}.scoreBox,.croquis,.checkSummary,.servicePanel{background:#0c1324;border:1px solid var(--line);border-radius:8px;padding:18px}.scoreBox strong{display:block;font-size:58px}.scoreBox span{color:var(--gold);font-weight:900}.scoreBars{height:10px;background:#1a2337;border-radius:999px;overflow:hidden;margin:14px 0}.scoreBars i{display:block;height:100%;background:var(--blue2)}.scoreBars .gold{background:var(--gold);margin-top:-10px;opacity:.75}.miniCar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;min-height:180px;padding:18px;border:1px solid rgba(255,255,255,.09);border-radius:80px 80px 22px 22px}.miniCar span,.chips span{display:grid;place-items:center;border-radius:8px;padding:12px;text-transform:capitalize;font-weight:800}.ok{background:rgba(54,209,127,.18);border:1px solid rgba(54,209,127,.38);color:#bfffd9}.warn{background:rgba(245,200,76,.16);border:1px solid rgba(245,200,76,.38);color:#ffe39a}.bad{background:rgba(255,93,93,.16);border:1px solid rgba(255,93,93,.38);color:#ffb7b7}.chips{display:flex;flex-wrap:wrap;gap:8px}.chips span{display:block;background:#121b30;color:#dbe7ff}.serviceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.service{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);background:#121b30;color:white;border-radius:8px;padding:14px;text-align:left}.service.premium{border-color:rgba(216,173,84,.62);background:linear-gradient(135deg,rgba(216,173,84,.2),rgba(17,103,255,.12))}.authPanel{display:grid;place-items:center;min-height:70vh}.authBox{width:min(460px,100%);padding:24px}.authBox h2{margin-top:0}.authBox input,.authBox select,.authBox textarea,.formGrid input,.formGrid select,.formGrid textarea,.panelHeader select,.row select,.reviewCard textarea{width:100%;margin-top:7px;background:#090f1d;border:1px solid var(--line);border-radius:8px;color:white;padding:12px}.authBox input{margin-bottom:10px}.segmented{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.segmented button{border:1px solid var(--line);background:#0c1324;color:white;border-radius:8px;padding:10px}.segmented .active{border-color:var(--blue2);background:rgba(17,103,255,.22)}.authLinks{display:flex;justify-content:space-between;gap:8px;margin-top:14px}.authLinks button{background:none;border:0;color:var(--muted)}.notice{padding:14px;background:rgba(216,173,84,.12);border:1px solid rgba(216,173,84,.35);border-radius:8px;margin:14px 0}.formGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.formGrid label,.slider{color:var(--muted);font-size:13px;text-transform:capitalize}.full{grid-column:1/-1}.formGrid textarea{min-height:110px}.previewStrip{display:flex;gap:8px;overflow:auto;margin:12px 0}.previewStrip img{width:130px;height:88px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}.checkEditor{margin-top:18px}.sliderGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.slider{display:block;background:#0c1324;border:1px solid var(--line);border-radius:8px;padding:12px}.slider span{display:flex;justify-content:space-between}.slider input{width:100%;accent-color:var(--blue2)}.stickyActions{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:10px;padding:14px;background:rgba(5,7,13,.82);backdrop-filter:blur(14px);border-top:1px solid var(--line)}.table{display:grid;gap:10px}.row{display:grid;grid-template-columns:1.4fr repeat(7,auto);align-items:center;gap:12px;padding:13px;background:#0c1324;border:1px solid var(--line);border-radius:8px;color:var(--muted)}.row b{color:white}.interest{padding:6px 9px;border-radius:999px}.interest.alto{background:rgba(54,209,127,.16);color:#bfffd9}.interest.medio{background:rgba(245,200,76,.16);color:#ffe39a}.interest.bajo{background:rgba(255,255,255,.08);color:#c8d2e8}.packGrid{grid-template-columns:repeat(4,1fr)}.pack{padding:18px}.pack strong{font-size:30px}.activity p{padding:12px;background:#0c1324;border:1px solid var(--line);border-radius:8px;color:var(--muted)}.activity b{color:white}.activity small{display:block;color:#7987a1}.reviewCard{padding:18px;margin-top:14px}.toast{position:fixed;right:18px;bottom:18px;z-index:30;max-width:360px;padding:14px 16px;background:#101a30;border:1px solid var(--blue2);border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.38)}.photoModal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.86)}.photoModal img{max-width:96vw;max-height:92vh;border-radius:8px;border:1px solid rgba(255,255,255,.2)}
 .videoPreview{width:100%;max-height:320px;margin-top:10px;background:#02040a;border:1px solid var(--line);border-radius:8px}
-.reviewStack{display:grid;gap:12px}.diffBox{display:grid;gap:6px;margin-top:12px;padding:12px;background:rgba(255,93,93,.1);border:1px solid rgba(255,93,93,.28);border-radius:8px;color:#ffd0d0}.diffBox span{font-size:13px;color:#ffdada}.confirmModal{position:fixed;inset:0;z-index:35;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}.confirmBox{width:min(620px,100%);padding:22px;background:#0c1324;border:1px solid var(--line);border-radius:8px;box-shadow:0 24px 80px rgba(0,0,0,.45)}button:disabled{cursor:not-allowed;opacity:.58}
+.reviewStack{display:grid;gap:12px}.passwordRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.passwordRow input{margin-bottom:0}.mediaPreview{display:grid;gap:6px;min-width:130px}.mediaPreview img{width:130px;height:88px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}.videoWrap{display:grid;gap:8px}.diffBox{display:grid;gap:6px;margin-top:12px;padding:12px;background:rgba(255,93,93,.1);border:1px solid rgba(255,93,93,.28);border-radius:8px;color:#ffd0d0}.diffBox span{font-size:13px;color:#ffdada}.confirmModal{position:fixed;inset:0;z-index:35;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}.confirmBox{width:min(620px,100%);padding:22px;background:#0c1324;border:1px solid var(--line);border-radius:8px;box-shadow:0 24px 80px rgba(0,0,0,.45)}button:disabled{cursor:not-allowed;opacity:.58}
 @media(max-width:900px){.topbar{align-items:flex-start;flex-direction:column}.hero,.detailLayout,.widePanel,.widePanel.two{grid-template-columns:1fr}.categoryBar,.vehicleGrid,.specGrid,.packGrid,.formGrid,.sliderGrid,.statGrid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.hero{min-height:auto}.heroCar{min-height:260px}.serviceGrid{grid-template-columns:1fr}}
 `;
