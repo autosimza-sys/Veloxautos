@@ -63,64 +63,167 @@ const seedImages = [
   "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1200&q=80",
 ];
 
+const demoUsers = [
+  {
+    id: "u-demo",
+    role: "seller",
+    name: "Tomas Rivera",
+    phone: "1130000000",
+    password: "1234",
+    businessName: "Rivera Select",
+    promoCredits: 10000,
+    realCredits: 60000,
+    freePostsUsed: 3,
+    promoBonusCycles: 0,
+    createdAt: Date.now(),
+  },
+  {
+    id: "u-particular-demo",
+    role: "buyer",
+    name: "Martina Lopez",
+    phone: "1122223333",
+    password: "1234",
+    businessName: "",
+    promoCredits: 10000,
+    realCredits: 15000,
+    freePostsUsed: 1,
+    promoBonusCycles: 0,
+    createdAt: Date.now(),
+  },
+];
+
+const demoVehicles = [
+  {
+    id: "v-1",
+    ownerId: "u-demo",
+    type: "auto",
+    subtype: "auto",
+    saleType: "propio",
+    brand: "Audi",
+    model: "A4 2.0 TFSI",
+    title: "Audi A4 impecable con historial completo",
+    year: 2021,
+    km: 41000,
+    price: 45800000,
+    plate: "AF123CD",
+    location: "Palermo, CABA",
+    phone: "1130000000",
+    fuel: "Nafta",
+    description:
+      "Unidad cuidada, service oficial, interior premium y cubiertas nuevas. Ideal para quien busca confort sin resignar respuesta.",
+    photos: seedImages,
+    video: "",
+    checklist: initialChecklist,
+    sellerScore: 8.4,
+    mechanicScore: null,
+    mechanicReview: null,
+    assignedMechanicId: "",
+    active: true,
+    createdAt: Date.now() - 86400000,
+    stats: { visits: 42, photoClicks: 17, videoViews: 5, priceUnlocks: 9, contacts: 4, creditsConsumed: 47 },
+  },
+  {
+    id: "v-demo-seller-2",
+    ownerId: "u-demo",
+    type: "camioneta",
+    subtype: "SUV",
+    saleType: "consignacion",
+    brand: "Toyota",
+    model: "Corolla Cross XEI",
+    title: "Toyota Corolla Cross XEI en consignacion",
+    year: 2022,
+    km: 36000,
+    price: 39500000,
+    plate: "AG456EF",
+    location: "Vicente Lopez, Buenos Aires",
+    phone: "1130000000",
+    fuel: "Nafta",
+    description: "SUV familiar con excelente estado general, service al dia y muy buen nivel de equipamiento.",
+    photos: [
+      "https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1200&q=80",
+      ...seedImages.slice(1),
+    ],
+    video: "",
+    checklist: initialChecklist,
+    sellerScore: 8.1,
+    mechanicScore: null,
+    mechanicReview: null,
+    assignedMechanicId: "",
+    active: true,
+    createdAt: Date.now() - 7200000,
+    stats: { visits: 18, photoClicks: 6, videoViews: 0, priceUnlocks: 3, contacts: 1, creditsConsumed: 14 },
+  },
+  {
+    id: "v-demo-seller-3",
+    ownerId: "u-demo",
+    type: "camioneta",
+    subtype: "pick-up",
+    saleType: "propio",
+    brand: "Ford",
+    model: "Ranger Limited",
+    title: "Ford Ranger Limited 4x4 lista para transferir",
+    year: 2020,
+    km: 78000,
+    price: 36500000,
+    plate: "AE789GH",
+    location: "San Isidro, Buenos Aires",
+    phone: "1130000000",
+    fuel: "Diesel",
+    description: "Pick-up con caja, doble cabina, muy cuidada y con cubiertas en buen estado.",
+    photos: [
+      "https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&fit=crop&w=1200&q=80",
+      ...seedImages.slice(0, 2),
+    ],
+    video: "",
+    checklist: initialChecklist,
+    sellerScore: 7.8,
+    mechanicScore: null,
+    mechanicReview: null,
+    assignedMechanicId: "",
+    active: true,
+    createdAt: Date.now() - 3600000,
+    stats: { visits: 25, photoClicks: 9, videoViews: 1, priceUnlocks: 4, contacts: 2, creditsConsumed: 22 },
+  },
+  {
+    id: "v-demo-particular-1",
+    ownerId: "u-particular-demo",
+    type: "moto",
+    subtype: "moto",
+    saleType: "propio",
+    brand: "Honda",
+    model: "CB 500F",
+    title: "Honda CB 500F particular, muy cuidada",
+    year: 2019,
+    km: 22000,
+    price: 7800000,
+    plate: "A123BCD",
+    location: "Caballito, CABA",
+    phone: "1122223333",
+    fuel: "Nafta",
+    description: "Moto de uso particular, duerme bajo techo, con mantenimiento reciente y papeles al dia.",
+    photos: [
+      "https://images.unsplash.com/photo-1558981285-6f0c94958bb6?auto=format&fit=crop&w=1200&q=80",
+      ...seedImages.slice(0, 2),
+    ],
+    video: "",
+    checklist: initialChecklist,
+    sellerScore: 8.7,
+    mechanicScore: null,
+    mechanicReview: null,
+    assignedMechanicId: "",
+    active: true,
+    createdAt: Date.now() - 5400000,
+    stats: { visits: 11, photoClicks: 3, videoViews: 0, priceUnlocks: 2, contacts: 1, creditsConsumed: 9 },
+  },
+];
+
 const seedState = {
-  users: [
-    {
-      id: "u-demo",
-      role: "seller",
-      name: "Tomas Rivera",
-      phone: "1130000000",
-      password: "1234",
-      businessName: "Rivera Select",
-      promoCredits: 10000,
-      realCredits: 60000,
-      freePostsUsed: 1,
-      promoBonusCycles: 0,
-      createdAt: Date.now(),
-    },
-  ],
+  users: demoUsers,
   mechanics: [
     { id: "m-1", name: "Lucia Ferrer", phone: "1144556677", password: "lucia2026" },
     { id: "m-2", name: "Mateo Silva", phone: "1166778899", password: "mateo2026" },
   ],
-  vehicles: [
-    {
-      id: "v-1",
-      ownerId: "u-demo",
-      type: "auto",
-      subtype: "auto",
-      saleType: "propio",
-      brand: "Audi",
-      model: "A4 2.0 TFSI",
-      title: "Audi A4 impecable con historial completo",
-      year: 2021,
-      km: 41000,
-      price: 45800000,
-      plate: "AF123CD",
-      location: "Palermo, CABA",
-      phone: "1130000000",
-      fuel: "Nafta",
-      description:
-        "Unidad cuidada, service oficial, interior premium y cubiertas nuevas. Ideal para quien busca confort sin resignar respuesta.",
-      photos: seedImages,
-      video: "",
-      checklist: initialChecklist,
-      sellerScore: 8.4,
-      mechanicScore: null,
-      mechanicReview: null,
-      assignedMechanicId: "",
-      active: true,
-      createdAt: Date.now() - 86400000,
-      stats: {
-        visits: 42,
-        photoClicks: 17,
-        videoViews: 5,
-        priceUnlocks: 9,
-        contacts: 4,
-        creditsConsumed: 47,
-      },
-    },
-  ],
+  vehicles: demoVehicles,
   orders: [],
   activity: [
     { id: "a-1", type: "publicacion", text: "Rivera Select publico Audi A4", at: Date.now() - 86400000 },
@@ -139,6 +242,23 @@ function normalizeState(state) {
   const next = structuredClone(state);
   const now = Date.now();
   let changed = false;
+  next.users = next.users || [];
+  next.vehicles = next.vehicles || [];
+  next.mechanics = next.mechanics || [];
+  next.orders = next.orders || [];
+  next.activity = next.activity || [];
+  demoUsers.forEach((demoUser) => {
+    if (!next.users.some((user) => user.id === demoUser.id)) {
+      next.users.push(structuredClone(demoUser));
+      changed = true;
+    }
+  });
+  demoVehicles.forEach((demoVehicle) => {
+    if (!next.vehicles.some((vehicle) => vehicle.id === demoVehicle.id)) {
+      next.vehicles.push(structuredClone(demoVehicle));
+      changed = true;
+    }
+  });
   next.mechanics = (next.mechanics || []).map((mechanic, index) => ({
     ...mechanic,
     password: mechanic.password || (index === 0 ? "lucia2026" : "mateo2026"),
