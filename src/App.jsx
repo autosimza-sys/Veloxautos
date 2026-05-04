@@ -399,6 +399,28 @@ function fileToDataUrl(file) {
   });
 }
 
+function imageToCompressedDataUrl(file, maxSize = 900, quality = 0.68) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function App() {
   const [db, setDb] = useState(loadState);
   const [screen, setScreen] = useState("home");
@@ -651,7 +673,8 @@ export default function App() {
     };
     next.vehicles.unshift(vehicle);
     log(next, "publicacion", `${user.name} publico ${vehicle.title}`);
-    commit(next);
+    const saved = commit(next);
+    if (!saved) return false;
     setSelectedVehicleId(vehicle.id);
     setScreen("detail");
     notify("Publicacion confirmada y activa.");
@@ -850,7 +873,7 @@ function VehicleCard({ vehicle, currentUser, onOpen, chargeSeller, openPhoto }) 
         <p>{vehicle.description}</p>
         <div className="lockedRow">
           <span>{currentUser ? `${vehicle.km.toLocaleString("es-AR")} km` : "Km ocultos"}</span>
-          <span>{currentUser ? money(vehicle.price) : "Precio bloqueado"}</span>
+          <span>Precio bloqueado</span>
         </div>
         <div className="cardActions">
           <button className="secondary" onClick={() => onOpen(vehicle)}>Ver detalle</button>
@@ -1090,11 +1113,15 @@ function Publish({ currentUser, publishVehicle, setScreen }) {
   });
   async function handlePhotos(files) {
     const valid = [...files].slice(0, 8).filter((f) => f.size <= 3 * 1024 * 1024);
-    const urls = await Promise.all(valid.map(fileToDataUrl));
+    const urls = await Promise.all(valid.map((file) => imageToCompressedDataUrl(file)));
     setForm({ ...form, photos: urls });
   }
   async function handleVideo(file) {
-    if (!file || file.size > 25 * 1024 * 1024) return;
+    if (!file) return;
+    if (file.size > 1200 * 1024) {
+      alert("Para este MVP con LocalStorage, el video debe pesar menos de 1.2 MB. En produccion se sube a Supabase Storage.");
+      return;
+    }
     setForm({ ...form, video: await fileToDataUrl(file) });
   }
   function updateChecklist(path, value) {
@@ -1396,12 +1423,16 @@ function MechanicReviewFull({ vehicle, saveMechanicReview }) {
 
   async function handleMechanicPhotos(files) {
     const valid = [...files].slice(0, 8).filter((f) => f.size <= 3 * 1024 * 1024);
-    const urls = await Promise.all(valid.map(fileToDataUrl));
+    const urls = await Promise.all(valid.map((file) => imageToCompressedDataUrl(file)));
     setReview({ ...review, photos: urls });
   }
 
   async function handleMechanicVideo(file) {
-    if (!file || file.size > 25 * 1024 * 1024) return;
+    if (!file) return;
+    if (file.size > 1200 * 1024) {
+      alert("Para este MVP con LocalStorage, el video debe pesar menos de 1.2 MB. En produccion se sube a Supabase Storage.");
+      return;
+    }
     setReview({ ...review, video: await fileToDataUrl(file) });
   }
 
