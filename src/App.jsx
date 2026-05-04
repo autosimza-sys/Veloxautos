@@ -24,6 +24,8 @@ const paidServices = [
   { key: "compra", name: "Compra Velox", cost: 55000, premium: true },
 ];
 
+const MECHANIC_UNLOCK_COST = 15000;
+
 const initialChecklist = {
   docs: true,
   greenCard: true,
@@ -259,6 +261,11 @@ function normalizeState(state) {
       changed = true;
     }
   });
+  next.vehicles = next.vehicles.map((vehicle) => ({
+    ...vehicle,
+    mechanicReviewRequesterIds: vehicle.mechanicReviewRequesterIds || [],
+    mechanicReviewUnlockedByIds: vehicle.mechanicReviewUnlockedByIds || [],
+  }));
   next.mechanics = (next.mechanics || []).map((mechanic, index) => ({
     ...mechanic,
     password: mechanic.password || (index === 0 ? "lucia2026" : "mateo2026"),
@@ -374,6 +381,23 @@ function compareChecklists(sellerChecklist, mechanicChecklist) {
 function finalScore(vehicle) {
   if (!vehicle.mechanicScore) return vehicle.sellerScore || calculateSellerScore(vehicle.checklist);
   return (vehicle.sellerScore || 0) * 0.4 + vehicle.mechanicScore * 0.6;
+}
+
+function canViewMechanicReview(vehicle, user) {
+  if (!user) return false;
+  return (
+    vehicle.mechanicReviewRequesterIds?.includes(user.id) ||
+    vehicle.mechanicReviewUnlockedByIds?.includes(user.id)
+  );
+}
+
+function canUseMechanicScore(vehicle, user) {
+  return vehicle.mechanicReviewRequesterIds?.includes(vehicle.ownerId) || canViewMechanicReview(vehicle, user);
+}
+
+function visibleScore(vehicle, user) {
+  if (vehicle.mechanicScore && canUseMechanicScore(vehicle, user)) return finalScore(vehicle);
+  return vehicle.sellerScore || calculateSellerScore(vehicle.checklist);
 }
 
 function scoreLabel(score) {
@@ -594,10 +618,50 @@ export default function App() {
     }
     const next = structuredClone(db);
     const user = next.users.find((u) => u.id === currentUser.id);
+    const target = next.vehicles.find((v) => v.id === vehicle.id);
     user.realCredits -= service.cost;
+    if (service.key === "mechanic" && target) {
+      target.mechanicReviewRequesterIds = target.mechanicReviewRequesterIds || [];
+      if (!target.mechanicReviewRequesterIds.includes(user.id)) {
+        target.mechanicReviewRequesterIds.push(user.id);
+      }
+    }
     log(next, "servicio", `${user.name} solicito ${service.name} para ${vehicle.title}`);
     commit(next);
-    notify(`${service.name} solicitado. Se descontaron ${service.cost} creditos reales.`);
+    notify(service.key === "mechanic"
+      ? "Revision mecanica solicitada. El admin debe asignar un mecanico. La revision solo la vera quien la pidio."
+      : `${service.name} solicitado. Se descontaron ${service.cost} creditos reales.`
+    );
+  }
+
+  function unlockMechanicReview(vehicle) {
+    if (!currentUser) {
+      setScreen("auth");
+      notify("Registrate para desbloquear la revision mecanica.");
+      return;
+    }
+    if (!vehicle.mechanicReview) {
+      notify("Este vehiculo todavia no tiene revision mecanica cargada.");
+      return;
+    }
+    if (canViewMechanicReview(vehicle, currentUser)) {
+      notify("Ya tenes acceso a esta revision mecanica.");
+      return;
+    }
+    if (currentUser.realCredits < MECHANIC_UNLOCK_COST) {
+      notify("Para desbloquear esta revision necesitas 15.000 creditos reales. Los promocionales no aplican.");
+      setScreen("credits");
+      return;
+    }
+    const next = structuredClone(db);
+    const user = next.users.find((u) => u.id === currentUser.id);
+    const target = next.vehicles.find((v) => v.id === vehicle.id);
+    user.realCredits -= MECHANIC_UNLOCK_COST;
+    target.mechanicReviewUnlockedByIds = target.mechanicReviewUnlockedByIds || [];
+    target.mechanicReviewUnlockedByIds.push(user.id);
+    log(next, "desbloqueo_revision", `${user.name} desbloqueo revision mecanica de ${target.title}`);
+    const saved = commit(next);
+    if (saved) notify("Revision mecanica desbloqueada.");
   }
 
   function approveOrder(orderId) {
@@ -687,6 +751,8 @@ export default function App() {
       sellerScore: calculateSellerScore(checklist),
       mechanicScore: null,
       mechanicReview: null,
+      mechanicReviewRequesterIds: [],
+      mechanicReviewUnlockedByIds: [],
       assignedMechanicId: "",
       active: true,
       createdAt: Date.now(),
@@ -755,6 +821,7 @@ export default function App() {
             if (chargeSeller(selectedVehicle, "foto", 1)) setModalPhoto(url);
           }}
           requestService={requestService}
+          unlockMechanicReview={unlockMechanicReview}
           setScreen={setScreen}
         />
       )}
@@ -880,7 +947,7 @@ function Home({ vehicles, category, setCategory, onOpen, currentUser, chargeSell
 }
 
 function VehicleCard({ vehicle, currentUser, onOpen, chargeSeller, openPhoto }) {
-  const score = finalScore(vehicle);
+  const score = visibleScore(vehicle, currentUser);
   return (
     <article className="vehicleCard">
       <button className="imageButton" onClick={() => openPhoto(vehicle.photos[0], vehicle)}>
@@ -906,10 +973,10 @@ function VehicleCard({ vehicle, currentUser, onOpen, chargeSeller, openPhoto }) 
   );
 }
 
-function VehicleDetail({ vehicle, seller, currentUser, chargeSeller, openPhoto, requestService, setScreen }) {
+function VehicleDetail({ vehicle, seller, currentUser, chargeSeller, openPhoto, requestService, unlockMechanicReview, setScreen }) {
   const [showPrice, setShowPrice] = useState(false);
   const [showContact, setShowContact] = useState(false);
-  const score = finalScore(vehicle);
+  const score = visibleScore(vehicle, currentUser);
   return (
     <main className="detailLayout">
       <section className="gallery">
@@ -951,10 +1018,10 @@ function VehicleDetail({ vehicle, seller, currentUser, chargeSeller, openPhoto, 
       </section>
 
       <section className="widePanel">
-        <ScoreBlock vehicle={vehicle} />
+        <ScoreBlock vehicle={vehicle} currentUser={currentUser} />
         <div className="reviewStack">
           <Croquis checklist={vehicle.checklist} />
-          <MechanicReviewSummary vehicle={vehicle} />
+          <MechanicReviewSummary vehicle={vehicle} currentUser={currentUser} unlockMechanicReview={unlockMechanicReview} />
         </div>
       </section>
 
@@ -982,29 +1049,40 @@ function Info({ label, value }) {
   return <div className="info"><small>{label}</small><b>{value}</b></div>;
 }
 
-function ScoreBlock({ vehicle }) {
+function ScoreBlock({ vehicle, currentUser }) {
   const seller = vehicle.sellerScore || calculateSellerScore(vehicle.checklist);
-  const score = finalScore(vehicle);
+  const canUse = canUseMechanicScore(vehicle, currentUser);
+  const score = canUse ? finalScore(vehicle) : seller;
   return (
     <div className="scoreBox">
-      <small>{vehicle.mechanicScore ? "Score final VELOX" : "Score preliminar del vendedor"}</small>
+      <small>{vehicle.mechanicScore && canUse ? "Score final VELOX" : "Score preliminar del vendedor"}</small>
       <strong>{score.toFixed(1)}</strong>
       <span>{scoreLabel(score)}</span>
       <div className="scoreBars">
         <i style={{ width: `${seller * 10}%` }} />
-        {vehicle.mechanicScore && <i className="gold" style={{ width: `${vehicle.mechanicScore * 10}%` }} />}
+        {vehicle.mechanicScore && canUse && <i className="gold" style={{ width: `${vehicle.mechanicScore * 10}%` }} />}
       </div>
-      <p>{vehicle.mechanicScore ? "40% vendedor + 60% mecanico." : "Aun no tiene revision mecanica asignada."}</p>
+      <p>{vehicle.mechanicScore && canUse ? "40% vendedor + 60% mecanico." : "La revision mecanica es privada hasta pedirla o desbloquearla."}</p>
     </div>
   );
 }
 
-function MechanicReviewSummary({ vehicle }) {
+function MechanicReviewSummary({ vehicle, currentUser, unlockMechanicReview }) {
+  const hasAccess = canViewMechanicReview(vehicle, currentUser);
   if (!vehicle.mechanicReview) {
     return (
       <div className="checkSummary">
         <h3>Revision mecanica</h3>
-        <p>Aun no hay novedades cargadas por el mecanico asignado.</p>
+        <p>Aun no hay revision cargada. La puede pedir el comprador o el vendedor con creditos reales.</p>
+      </div>
+    );
+  }
+  if (!hasAccess) {
+    return (
+      <div className="checkSummary lockedReview">
+        <h3>Revision mecanica privada</h3>
+        <p>Esta revision solo la ve quien la pidio. Si queres verla, podes desbloquearla pagando la mitad del costo: 15.000 creditos reales.</p>
+        <button className="primary" onClick={() => unlockMechanicReview(vehicle)}>Desbloquear revision - 15.000 cr</button>
       </div>
     );
   }
