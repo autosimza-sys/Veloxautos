@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Info from "../components/Info";
+import AuthModal from "../features/auth/AuthModal";
 import AuthSection from "../features/auth/AuthSection";
 import { useAuth } from "../features/auth/use-auth";
 import ChatPreview from "../features/chat/ChatPreview";
@@ -19,6 +20,10 @@ import { isSellerRole } from "../lib/roles";
 
 export default function HomePage() {
   const [chatOpen, setChatOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [publishIntent, setPublishIntent] = useState(false);
+  const assistantRef = useRef(null);
+
   const auth = useAuth();
   const credits = useCredits(auth.session);
   const catalog = useVehicleCatalog({
@@ -32,11 +37,34 @@ export default function HomePage() {
   const canPublish = isSellerRole(auth.profile?.role)
     && (credits.balance === null || credits.balance.remaining > 0);
 
+  // Cuando el usuario se autentica con intención de publicar → cerrar modal y scrollear
+  useEffect(() => {
+    if (auth.session && publishIntent) {
+      setPublishIntent(false);
+      // Pequeño delay para que el perfil se cargue y el DOM se actualice
+      setTimeout(() => {
+        setAuthModalOpen(false);
+        assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 350);
+    }
+  }, [auth.session, publishIntent]);
+
+  function handlePublishClick() {
+    if (auth.session) {
+      assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      auth.setAuthMode("register");
+      setPublishIntent(true);
+      setAuthModalOpen(true);
+    }
+  }
+
   return (
     <main>
       <header className="topbar">
         <button
           className="brand"
+          type="button"
           onClick={() => catalog.setSelectedVehicle(catalog.catalogVehicles[0])}
         >
           <span className="mark">VX</span>
@@ -50,15 +78,17 @@ export default function HomePage() {
         </nav>
 
         {auth.profile ? (
-          <button className="accountPill" onClick={auth.logout}>
+          <button className="accountPill" type="button" onClick={auth.logout}>
             {auth.profile.display_name} | salir
           </button>
         ) : (
-          <a className="primary headerCta" href="#asistente">Vender mi vehiculo</a>
+          <button className="primary headerCta" type="button" onClick={handlePublishClick}>
+            Vender mi vehiculo
+          </button>
         )}
       </header>
 
-      <HomeHero />
+      <HomeHero onPublishClick={handlePublishClick} />
 
       <CatalogSection
         canSeePrice={canSeePrice}
@@ -86,12 +116,15 @@ export default function HomePage() {
         setAuthMode={auth.setAuthMode}
       />
 
-      <PublicationAssistant
-        canPublish={canPublish}
-        onPublish={catalog.publishVehicle}
-        profile={auth.profile}
-        publishStatus={catalog.publishStatus}
-      />
+      <div ref={assistantRef} style={{ scrollMarginTop: "92px" }}>
+        <PublicationAssistant
+          canPublish={canPublish}
+          onNeedAuth={handlePublishClick}
+          onPublish={catalog.publishVehicle}
+          profile={auth.profile}
+          publishStatus={catalog.publishStatus}
+        />
+      </div>
 
       <QualitySection vehicle={catalog.selectedVehicle} />
       <SalesAssistantSection vehicle={catalog.selectedVehicle} />
@@ -125,6 +158,19 @@ export default function HomePage() {
           onClose={() => setChatOpen(false)}
           session={auth.session}
           vehicle={catalog.selectedVehicle}
+        />
+      )}
+
+      {authModalOpen && (
+        <AuthModal
+          authForm={auth.authForm}
+          authMode={auth.authMode}
+          authStatus={auth.authStatus}
+          onClose={() => { setAuthModalOpen(false); setPublishIntent(false); }}
+          onSubmit={auth.submitAuth}
+          profile={auth.profile}
+          setAuthForm={auth.setAuthForm}
+          setAuthMode={auth.setAuthMode}
         />
       )}
     </main>

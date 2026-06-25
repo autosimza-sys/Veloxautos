@@ -1,4 +1,4 @@
-export default function HomeHero() {
+export default function HomeHero({ onPublishClick }) {
   return (
     <>
       <section className="salesHero">
@@ -7,13 +7,13 @@ export default function HomeHero() {
           <p className="eyebrow">Tu especialista digital en venta de vehiculos</p>
           <h1>Vende tu vehiculo con ayuda de IA</h1>
           <p className="salesHeroLead">
-            Publica mejor.<br />
-            Responde menos.<br />
-            Coordina visitas.<br />
-            Genera mas confianza.
+            Publica mejor. Responde menos.<br />
+            Coordina visitas. Genera mas confianza.
           </p>
           <div className="actions">
-            <a className="primary heroPrimary" href="#asistente">Vender mi vehiculo</a>
+            <button className="primary heroPrimary" type="button" onClick={onPublishClick}>
+              Vender mi vehiculo
+            </button>
             <a className="secondary heroSecondary" href="#catalogo">Buscar vehiculos</a>
           </div>
           <div className="heroProof">

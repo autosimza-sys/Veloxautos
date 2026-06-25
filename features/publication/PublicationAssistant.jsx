@@ -22,6 +22,7 @@ const steps = [
 
 export default function PublicationAssistant({
   canPublish,
+  onNeedAuth,
   onPublish,
   profile,
   publishStatus,
@@ -109,6 +110,19 @@ export default function PublicationAssistant({
 
   return (
     <section className="assistantWorkspace" id="asistente">
+      {!profile && (
+        <div className="assistantAuthBanner">
+          <span>Para publicar tu vehículo necesitás una cuenta gratuita.</span>
+          <button className="primary" type="button" onClick={onNeedAuth}>
+            Crear cuenta o ingresar
+          </button>
+        </div>
+      )}
+      {profile && !canPublish && (
+        <div className="assistantAuthBanner" style={{ borderColor: "rgba(216,173,84,0.4)", background: "rgba(216,173,84,0.08)" }}>
+          <span>Tu cuenta tipo <b>{profile.role}</b> no tiene permiso de publicación. Contactá a soporte para cambiar tu rol a Particular, Revendedor o Agencia.</span>
+        </div>
+      )}
       <aside className="assistantProgress" aria-label="Progreso de publicacion">
         <p className="eyebrow">Asistente de publicacion</p>
         <strong>{quality}% completa</strong>

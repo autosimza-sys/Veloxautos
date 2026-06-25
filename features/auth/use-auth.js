@@ -8,7 +8,7 @@ const emptyAuthForm = {
   password: "",
   displayName: "",
   phone: "",
-  role: "registered",
+  role: "particular",
   businessName: "",
 };
 
@@ -114,16 +114,28 @@ export function useAuth() {
     }
 
     if (!data.user) {
-      setAuthStatus("Revisa tu email para confirmar la cuenta.");
+      setAuthStatus("Algo salió mal. Intentá de nuevo.");
       return;
     }
 
     if (data.session) {
       await ensureProfile(data.user);
       await loadProfile(data.user.id);
-      setAuthStatus("Cuenta creada. Ya podes usar VELOX.");
+      setAuthStatus("Cuenta creada. ¡Ya podés publicar!");
     } else {
-      setAuthStatus("Cuenta creada. Revisa tu email para confirmar el acceso.");
+      // Si Supabase requiere confirmación de email, intentar login automático.
+      // Esto funciona en proyectos con email confirm desactivado o donde
+      // el usuario ya confirmó previamente.
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: authForm.email,
+        password: authForm.password,
+      });
+      if (!loginError && loginData.session) {
+        await ensureProfile(loginData.user);
+        setAuthStatus("Cuenta creada. ¡Ya podés publicar!");
+      } else {
+        setAuthStatus("Cuenta creada. Revisá tu email para confirmar y luego ingresá.");
+      }
     }
   }
 

@@ -1677,3 +1677,231 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── AuthModal ─────────────────────────────────────────── */
+
+.authModal {
+  display: flex;
+  flex-direction: column;
+  width: min(480px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #0f1826 0%, #080d17 100%);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65);
+}
+
+.authModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.authModalHeader h3 {
+  margin-top: 6px;
+  font-size: 22px;
+}
+
+.authModalBody {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px 24px;
+}
+
+.authModalBody label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.authModalBody input,
+.authModalBody select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #08101f;
+  color: white;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.authModalBody input:focus,
+.authModalBody select:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.authError {
+  border: 1px solid rgba(255, 102, 120, 0.4);
+  border-radius: 8px;
+  background: rgba(255, 102, 120, 0.08);
+  padding: 12px;
+  color: #ffb0b8;
+  font-size: 13px;
+}
+
+/* ─── Banner de auth en el asistente de publicación ─────── */
+
+.assistantAuthBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  grid-column: 1 / -1;
+  padding: 18px 22px;
+  border: 1px solid rgba(18, 103, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(18, 103, 255, 0.1);
+  margin-bottom: 4px;
+  color: #c8d8ff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.assistantAuthBanner .primary {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+/* ─── Chat asistente de venta ────────────────────────────── */
+
+.salesChat {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0a101b;
+  overflow: hidden;
+}
+
+.salesChatMessages {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 14px;
+  min-height: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.salesChatMsg {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 88%;
+}
+
+.salesChatMsg p {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.salesChatMsg.assistant {
+  align-self: flex-start;
+}
+
+.salesChatMsg.assistant p {
+  background: #111c32;
+  color: #dce8ff;
+  border-radius: 2px 10px 10px 10px;
+}
+
+.salesChatMsg.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.salesChatMsg.user p {
+  background: rgba(18, 103, 255, 0.22);
+  color: #dce8ff;
+  border-radius: 10px 2px 10px 10px;
+}
+
+.salesChatQuick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  background: #080f1a;
+}
+
+.chatQuickBtn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #0d1827;
+  color: #9db8e8;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 120ms;
+}
+
+.chatQuickBtn:hover {
+  border-color: var(--blue);
+  color: white;
+}
+
+.salesChatComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.salesChatComposer input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #060c16;
+  color: white;
+  padding: 11px 14px;
+  font: inherit;
+  outline: none;
+}
+
+.salesChatComposer input:focus {
+  border-color: var(--blue);
+}
+
+@media (max-width: 900px) {
+  .salesAssistantSection {
+    grid-template-columns: 1fr;
+  }
+
+  .salesChatMessages {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 560px) {
+  .authModal {
+    border-radius: 12px 12px 0 0;
+    align-self: flex-end;
+    max-height: 95vh;
+  }
+
+  .chatModal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .assistantAuthBanner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
