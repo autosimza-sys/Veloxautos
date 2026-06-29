@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const QUICK_QUESTIONS = [
   "¿Sigue disponible?",
@@ -14,6 +14,7 @@ const QUICK_QUESTIONS = [
 ];
 
 function generateAnswer(question, vehicle) {
+  if (!vehicle) return "Cargando datos del vehículo...";
   const q = question.toLowerCase();
 
   if (q.includes("disponib") || q.includes("sigue")) {
@@ -32,7 +33,13 @@ function generateAnswer(question, vehicle) {
       : "La publicación no ofrece financiación actualmente.";
   }
 
-  if (q.includes("donde") || q.includes("ubic") || q.includes("zona") || q.includes("ver") || q.includes("visitar")) {
+  if (q.includes("donde") || q.includes("ubic") || q.includes("zona") || q.includes("visitar")) {
+    const zona = vehicle.zone ? `El vehículo está en ${vehicle.zone}.` : "";
+    const lugar = vehicle.viewLocation ? ` Se puede ver en ${vehicle.viewLocation}.` : " El punto exacto se coordina por chat con el vendedor.";
+    return (zona + lugar).trim() || "La ubicación se coordina por chat con el vendedor.";
+  }
+
+  if (q.includes("ver ") || q.includes("ver?") || q.includes("ver.")) {
     const zona = vehicle.zone ? `El vehículo está en ${vehicle.zone}.` : "";
     const lugar = vehicle.viewLocation ? ` Se puede ver en ${vehicle.viewLocation}.` : " El punto exacto se coordina por chat con el vendedor.";
     return (zona + lugar).trim() || "La ubicación se coordina por chat con el vendedor.";
@@ -44,7 +51,7 @@ function generateAnswer(question, vehicle) {
       : "El vendedor aún no definió horarios específicos. Podés proponérselos abriendo el chat.";
   }
 
-  if (q.includes("kilometr") || q.includes(" km") || q.includes("km ") || q.includes("recorrió") || q.includes("kilómetros")) {
+  if (q.includes("kilometr") || q.includes("km") || q.includes("recorrió")) {
     return vehicle.km != null
       ? `La publicación declara ${vehicle.km.toLocaleString("es-AR")} km.`
       : "No se informaron los kilómetros en esta publicación.";
@@ -61,44 +68,62 @@ function generateAnswer(question, vehicle) {
     const items = Object.entries(checklist).slice(0, 4).map(([key, value]) => `${key}: ${value}`).join(", ");
     return items
       ? `Estado declarado por el propietario — ${items}.`
-      : "El propietario completó una autorevision declarada en la publicación.";
+      : "El propietario completó una autorevisión declarada en la publicación.";
   }
 
   return "No tengo ese dato cargado todavía, pero podés abrirle el chat al vendedor y preguntarle directamente.";
 }
 
+function welcomeMsg(vehicle) {
+  const name = vehicle ? `${vehicle.brand} ${vehicle.model}` : "este vehículo";
+  return {
+    id: "welcome",
+    role: "assistant",
+    text: `Hola. Soy el asistente de ${name}. Hacé clic en una pregunta frecuente o escribí la tuya.`,
+  };
+}
+
 export default function SalesAssistantSection({ vehicle }) {
-  const [messages, setMessages] = useState([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: `Hola. Soy el asistente de ${vehicle.brand} ${vehicle.model}. Respondé cualquier pregunta con los datos de esta publicación.`,
-    },
-  ]);
+  const [messages, setMessages] = useState(() => [welcomeMsg(vehicle)]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
+  // Reiniciar chat cuando cambia el vehículo
+  useEffect(() => {
+    setMessages([welcomeMsg(vehicle)]);
+    setInput("");
+  }, [vehicle?.id]);
+
   function scrollToBottom() {
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 60);
   }
 
   function ask(question) {
-    if (!question.trim()) return;
-    const userMsg = { id: `u-${Date.now()}`, role: "user", text: question.trim() };
-    const answer = generateAnswer(question, vehicle);
-    const assistantMsg = { id: `a-${Date.now()}`, role: "assistant", text: answer };
+    const q = question.trim();
+    if (!q) return;
 
-    setMessages((current) => [...current, userMsg, assistantMsg]);
+    const userMsg = { id: `u-${Date.now()}`, role: "user", text: q };
+    let answer;
+    try {
+      answer = generateAnswer(question, vehicle);
+    } catch (err) {
+      answer = "Ocurrió un error al procesar la pregunta. Intentá de nuevo.";
+    }
+    const botMsg = { id: `a-${Date.now() + 1}`, role: "assistant", text: answer };
+
+    setMessages((prev) => [...prev, userMsg, botMsg]);
     setInput("");
     scrollToBottom();
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
+  function handleSubmit(e) {
+    e.preventDefault();
     ask(input);
   }
+
+  if (!vehicle) return null;
 
   return (
     <section className="section salesAssistantSection" id="asistente-venta">
@@ -112,36 +137,36 @@ export default function SalesAssistantSection({ vehicle }) {
         <div className="assistantContext">
           <div><span>Vehículo</span><strong>{vehicle.brand} {vehicle.model}</strong></div>
           <div><span>Zona</span><strong>{vehicle.zone || "No informada"}</strong></div>
-          <div><span>Permuta</span><strong>{vehicle.acceptsTrade ? "Acepta" : "No acepta"}</strong></div>
-          <div><span>Financiación</span><strong>{vehicle.acceptsFinancing ? "Disponible" : "No disponible"}</strong></div>
+          <div><span>Permuta</span><strong>{vehicle.acceptsTrade ? "Acepta ✓" : "No acepta"}</strong></div>
+          <div><span>Financiación</span><strong>{vehicle.acceptsFinancing ? "Disponible ✓" : "No disponible"}</strong></div>
         </div>
       </div>
 
       <div className="salesChat">
         <div className="salesChatMessages">
-          {messages.map((message) => (
+          {messages.map((msg) => (
             <div
-              className={message.role === "user" ? "salesChatMsg user" : "salesChatMsg assistant"}
-              key={message.id}
+              key={msg.id}
+              className={msg.role === "user" ? "salesChatMsg user" : "salesChatMsg assistant"}
             >
-              {message.role === "assistant" && (
+              {msg.role === "assistant" && (
                 <span className="assistantAvatar" style={{ flexShrink: 0, fontSize: "11px", width: "32px", height: "32px" }}>VX</span>
               )}
-              <p>{message.text}</p>
+              <p>{msg.text}</p>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
 
         <div className="salesChatQuick">
-          {QUICK_QUESTIONS.map((question) => (
+          {QUICK_QUESTIONS.map((q) => (
             <button
+              key={q}
               className="chatQuickBtn"
-              key={question}
               type="button"
-              onClick={() => ask(question)}
+              onClick={() => ask(q)}
             >
-              {question}
+              {q}
             </button>
           ))}
         </div>
@@ -150,9 +175,9 @@ export default function SalesAssistantSection({ vehicle }) {
           <input
             placeholder="Escribí tu pregunta..."
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(e) => setInput(e.target.value)}
           />
-          <button className="primary" disabled={!input.trim()} type="submit">
+          <button className="primary" type="submit" disabled={!input.trim()}>
             Preguntar
           </button>
         </form>
