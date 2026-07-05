@@ -16,20 +16,41 @@ export default function AdminPage() {
   }, []);
 
   async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = "/"; return; }
+    if (!supabase) {
+      setStatus("Error: Supabase no configurado.");
+      setLoading(false);
+      return;
+    }
 
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { window.location.href = "/"; return; }
 
-    if (!prof || prof.role !== "admin") { window.location.href = "/"; return; }
+      const { data: prof, error: profError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
-    setProfile(prof);
-    await loadVehicles();
-    setLoading(false);
+      if (profError) {
+        setStatus("Error al cargar perfil: " + profError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!prof || prof.role !== "admin") {
+        setStatus("Acceso denegado. Tu cuenta no tiene permisos de admin.");
+        setLoading(false);
+        return;
+      }
+
+      setProfile(prof);
+      await loadVehicles();
+    } catch (err) {
+      setStatus("Error inesperado: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function loadVehicles() {
@@ -97,7 +118,21 @@ export default function AdminPage() {
           <span className="mark">VX</span>
           <span>VELOX Admin</span>
         </div>
-        <p>Verificando acceso...</p>
+        <p style={{ color: "var(--muted)" }}>Verificando acceso...</p>
+        {status && <p style={{ color: "var(--danger)", fontSize: "14px", marginTop: "8px" }}>{status}</p>}
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="adminLoading">
+        <div className="adminBrand">
+          <span className="mark">VX</span>
+          <span>VELOX Admin</span>
+        </div>
+        <p style={{ color: "var(--danger)", marginTop: "12px" }}>{status || "Acceso denegado."}</p>
+        <a href="/" style={{ marginTop: "16px", color: "var(--blue-2)", fontSize: "14px" }}>← Volver al sitio</a>
       </div>
     );
   }
