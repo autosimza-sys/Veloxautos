@@ -2495,3 +2495,344 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   VELOX Admin Panel
+═══════════════════════════════════════════════════════════ */
+
+.adminShell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.adminLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  color: var(--muted);
+}
+
+/* ── Admin topbar ──────────────────────────────────────── */
+
+.adminTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.adminBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: white;
+}
+
+.adminUser {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.adminUserName {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.adminBackLink {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 150ms, color 150ms;
+}
+
+.adminBackLink:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+/* ── Admin main ────────────────────────────────────────── */
+
+.adminMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+  display: grid;
+  gap: 24px;
+}
+
+/* ── Stats row ─────────────────────────────────────────── */
+
+.adminStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 16px;
+}
+
+.adminStatCard {
+  display: grid;
+  gap: 6px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.adminStatCard span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.adminStatCard strong {
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  line-height: 1;
+}
+
+/* ── Status bar ────────────────────────────────────────── */
+
+.adminStatusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: var(--radius);
+  background: rgba(16,185,129,0.08);
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.adminStatusClose {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 2px 6px;
+  transition: color 140ms;
+}
+
+.adminStatusClose:hover { color: var(--text); }
+
+/* ── Bulk action bar ───────────────────────────────────── */
+
+.adminBulkBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border: 1px solid rgba(244,63,94,0.25);
+  border-radius: var(--radius);
+  background: rgba(244,63,94,0.06);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.adminBulkActions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+
+.adminBtnDanger {
+  padding: 9px 18px;
+  border: 1px solid rgba(244,63,94,0.4);
+  border-radius: var(--radius-sm);
+  background: rgba(244,63,94,0.12);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 150ms, border-color 150ms;
+}
+
+.adminBtnDanger:hover:not(:disabled) {
+  background: rgba(244,63,94,0.22);
+  border-color: var(--danger);
+}
+
+.adminBtnDanger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.adminBtnDangerSm {
+  padding: 6px 12px;
+  border: 1px solid rgba(244,63,94,0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(244,63,94,0.08);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 150ms, border-color 150ms;
+  white-space: nowrap;
+}
+
+.adminBtnDangerSm:hover:not(:disabled) {
+  background: rgba(244,63,94,0.18);
+  border-color: var(--danger);
+}
+
+.adminBtnDangerSm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.adminBtnSecondary {
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  transition: border-color 150ms, color 150ms;
+}
+
+.adminBtnSecondary:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+/* ── Table ─────────────────────────────────────────────── */
+
+.adminTableWrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.adminTable thead {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.adminTable th {
+  padding: 13px 16px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+.adminTable td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+
+.adminTable tbody tr:last-child td { border-bottom: 0; }
+
+.adminTable tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+.adminRowSelected { background: rgba(37,99,235,0.06) !important; }
+.adminRowSelected td { border-bottom-color: rgba(37,99,235,0.12) !important; }
+
+.adminTable input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--blue-2);
+  cursor: pointer;
+}
+
+.adminVehicleName {
+  display: block;
+  color: white;
+  font-weight: 700;
+}
+
+.adminVehicleSub {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.adminTdMuted { color: var(--muted); }
+
+.adminTdPrice {
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.adminScoreBadge {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* ── Empty state ───────────────────────────────────────── */
+
+.adminEmptyState {
+  padding: 60px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+  display: grid;
+  gap: 8px;
+}
+
+.adminEmptyState p {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.adminEmptyState span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ── Footer ────────────────────────────────────────────── */
+
+.adminFooter {
+  color: var(--subtle);
+  font-size: 12px;
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .adminStats { grid-template-columns: repeat(2, 1fr); }
+  .adminTopbar { padding: 12px 16px; }
+  .adminMain { padding: 20px 16px 40px; }
+  .adminTable th, .adminTable td { padding: 10px 12px; }
+}
