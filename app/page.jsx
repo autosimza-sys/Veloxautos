@@ -78,9 +78,14 @@ export default function HomePage() {
         </nav>
 
         {auth.profile ? (
-          <button className="accountPill" type="button" onClick={auth.logout}>
-            {auth.profile.display_name} | salir
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {auth.profile.role === "admin" && (
+              <a href="/velox-admin" className="adminPill">⚙ Admin</a>
+            )}
+            <button className="accountPill" type="button" onClick={auth.logout}>
+              {auth.profile.display_name} | salir
+            </button>
+          </div>
         ) : (
           <button className="primary headerCta" type="button" onClick={handlePublishClick}>
             Vender mi vehiculo

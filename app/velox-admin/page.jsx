@@ -46,22 +46,33 @@ export default function AdminPage() {
   async function checkAuth() {
     if (!supabase) { setStatus("Supabase no configurado."); setLoading(false); return; }
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Timeout de 10s para no colgarse nunca
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout de conexión. Recargá la página.")), 10000)
+      );
+
+      const sessionResult = await Promise.race([
+        supabase.auth.getSession(),
+        timeout,
+      ]);
+
+      const session = sessionResult?.data?.session;
       if (!session) { window.location.href = "/"; return; }
 
       const { data: prof, error: profError } = await supabase
         .from("profiles").select("*").eq("id", session.user.id).single();
 
-      if (profError) { setStatus("Error perfil: " + profError.message); setLoading(false); return; }
+      if (profError) throw new Error("Error perfil: " + profError.message);
       if (!prof || prof.role !== "admin") {
-        setStatus("Acceso denegado.");
+        setStatus("Acceso denegado. Tu cuenta no tiene permisos de admin.");
         setLoading(false);
         return;
       }
       setProfile(prof);
-      await Promise.all([loadVehicles(), loadLeads()]);
+      // Cargar datos en paralelo, sin bloquear si alguno falla
+      await Promise.allSettled([loadVehicles(), loadLeads()]);
     } catch (err) {
-      setStatus("Error inesperado: " + err.message);
+      setStatus("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -141,16 +152,41 @@ export default function AdminPage() {
 
   /* ── CRM / Leads ───────────────────────────────────────── */
   async function loadLeads() {
-    const { data, error } = await supabase
+    // Query simple sin FK hints — evita errores de constraint name
+    const { data: convs, error } = await supabase
       .from("conversations")
       .select(`id, lead_status, is_blocked, is_reported, created_at,
+               buyer_id, seller_id, vehicle_id,
                vehicles ( brand, model, year, zone ),
-               buyer:profiles!conversations_buyer_id_fkey ( display_name, phone ),
-               seller:profiles!conversations_seller_id_fkey ( display_name ),
                messages ( id, body, sender_id, created_at )`)
       .order("created_at", { ascending: false });
-    if (error) { setStatus("Error CRM: " + error.message); return; }
-    setLeads(data || []);
+
+    if (error) {
+      setStatus("CRM: " + error.message);
+      return;
+    }
+    if (!convs?.length) { setLeads([]); return; }
+
+    // Obtener perfiles únicos en una sola query
+    const profileIds = [...new Set([
+      ...convs.map(c => c.buyer_id).filter(Boolean),
+      ...convs.map(c => c.seller_id).filter(Boolean),
+    ])];
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, display_name, phone")
+      .in("id", profileIds);
+
+    const profileMap = {};
+    (profileRows || []).forEach(p => { profileMap[p.id] = p; });
+
+    const enriched = convs.map(c => ({
+      ...c,
+      buyer:  profileMap[c.buyer_id]  || null,
+      seller: profileMap[c.seller_id] || null,
+    }));
+
+    setLeads(enriched);
   }
 
   async function setLeadStatus(convId, newStatus) {
@@ -350,8 +386,8 @@ export default function AdminPage() {
                     <span className="crmLeadVehicle">
                       {conv.vehicles?.brand} {conv.vehicles?.model} {conv.vehicles?.year}
                     </span>
-                    <span className="crmLeadBadge" style={{ background: LEAD_COLORS[conv.lead_status] + "22", color: LEAD_COLORS[conv.lead_status] }}>
-                      {LEAD_LABELS[conv.lead_status]}
+                    <span className="crmLeadBadge" style={{ background: (LEAD_COLORS[conv.lead_status] || "#7a91b8") + "22", color: LEAD_COLORS[conv.lead_status] || "#7a91b8" }}>
+                      {LEAD_LABELS[conv.lead_status] || "Nuevo"}
                     </span>
                   </div>
                   <div className="crmLeadBuyer">{conv.buyer?.display_name || "Comprador"}</div>
@@ -382,7 +418,7 @@ export default function AdminPage() {
                     <div className="crmStatusSelect">
                       <label>Estado del lead</label>
                       <select
-                        value={activeConv.lead_status}
+                        value={activeConv.lead_status || "new"}
                         onChange={e => setLeadStatus(activeConv.id, e.target.value)}
                       >
                         {Object.entries(LEAD_LABELS).map(([v, l]) => (

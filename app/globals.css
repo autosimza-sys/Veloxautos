@@ -154,6 +154,22 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   font-size: 14px;
 }
 
+.adminPill {
+  padding: 8px 14px;
+  border: 1px solid rgba(245,158,11,0.4);
+  border-radius: 999px;
+  background: rgba(245,158,11,0.08);
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 150ms, border-color 150ms;
+}
+
+.adminPill:hover {
+  background: rgba(245,158,11,0.16);
+  border-color: var(--gold);
+}
+
 /* ─── Buttons ───────────────────────────────────────────── */
 
 .primary,
