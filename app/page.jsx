@@ -171,13 +171,4 @@ export default function HomePage() {
           authForm={auth.authForm}
           authMode={auth.authMode}
           authStatus={auth.authStatus}
-          onClose={() => { setAuthModalOpen(false); setPublishIntent(false); }}
-          onSubmit={auth.submitAuth}
-          profile={auth.profile}
-          setAuthForm={auth.setAuthForm}
-          setAuthMode={auth.setAuthMode}
-        />
-      )}
-    </main>
-  );
-}
+          onClose={() => { setAut
