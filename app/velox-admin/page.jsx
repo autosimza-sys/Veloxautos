@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase-client";
 
@@ -226,7 +227,7 @@ export default function AdminPage() {
     <div className="adminLoading">
       <div className="adminBrand"><span className="mark">VX</span><span>VELOX Admin</span></div>
       <p style={{ color: "var(--danger)", marginTop: 12 }}>{status || "Acceso denegado."}</p>
-      <a href="/" style={{ marginTop: 16, color: "var(--blue-2)", fontSize: 14 }}>← Volver al sitio</a>
+      <Link href="/" style={{ marginTop: 16, color: "var(--blue-2)", fontSize: 14 }}>← Volver al sitio</Link>
     </div>
   );
 
@@ -239,7 +240,7 @@ export default function AdminPage() {
         <div className="adminBrand"><span className="mark">VX</span><span>VELOX Admin</span></div>
         <div className="adminUser">
           <span className="adminUserName">{profile.display_name}</span>
-          <a href="/" className="adminBackLink">← Volver al sitio</a>
+          <Link href="/" className="adminBackLink">← Volver al sitio</Link>
         </div>
       </header>
 

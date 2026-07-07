@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Info from "../components/Info";
 import AuthModal from "../features/auth/AuthModal";
@@ -80,7 +81,7 @@ export default function HomePage() {
         {auth.profile ? (
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {auth.profile.role === "admin" && (
-              <a href="/velox-admin" className="adminPill">⚙ Admin</a>
+              <Link href="/velox-admin" className="adminPill">⚙ Admin</Link>
             )}
             <button className="accountPill" type="button" onClick={auth.logout}>
               {auth.profile.display_name} | salir
