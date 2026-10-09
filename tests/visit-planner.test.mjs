@@ -8,6 +8,21 @@ Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configu
 const {render,fireEvent,act,cleanup}=await import('@testing-library/react');
 const {default:VisitPlanner}=await import('../features/agenda/VisitPlanner.jsx');
 afterEach(cleanup);
+test('free text prepares an editable proposal and still needs explicit submission',async()=>{
+ const calls=[];const view=render(React.createElement(VisitPlanner,{onPropose:async data=>{calls.push(data);return true;},onClose:()=>{}}));
+ fireEvent.change(view.getByLabelText('Escribí tu propuesta de visita'),{target:{value:'01/01/2099 a las 14:30 durante 30 minutos en Lugar sintético'}});
+ fireEvent.click(view.getByRole('button',{name:'Preparar propuesta desde el texto'}));
+ assert.equal(calls.length,0);assert.match(view.container.textContent,/Lugar sintético/);
+ await act(async()=>fireEvent.click(view.getByRole('button',{name:'Enviar propuesta'})));
+ assert.deepEqual(calls,[{scheduledAt:'2099-01-01T14:30',durationMinutes:'30',location:'Lugar sintético'}]);
+});
+test('free text asks for missing details instead of inventing a duration',()=>{
+ const view=render(React.createElement(VisitPlanner,{onPropose:async()=>{throw Error('Must not submit');},onClose:()=>{}}));
+ fireEvent.change(view.getByLabelText('Escribí tu propuesta de visita'),{target:{value:'01/01/2099 a las 14:30'}});
+ fireEvent.click(view.getByRole('button',{name:'Preparar propuesta desde el texto'}));
+ assert.equal(view.getByLabelText('Minutos para la visita').value,'');
+ assert.match(view.container.textContent,/faltan datos/i);
+});
 async function fill(view){
  fireEvent.change(view.getByLabelText('Fecha y hora de la visita'),{target:{value:'2099-01-01T14:30'}});
  fireEvent.click(view.getByRole('button',{name:'Siguiente'}));
