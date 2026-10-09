@@ -8,7 +8,7 @@
 -- PostgreSQL can see only some PostgREST configuration. Dashboard/runtime exposure,
 -- frontend cutover and signed-URL smoke tests always require independent review.
 -- Fingerprints below describe local schema + ordered migrations through
--- 202610090004. A PostgreSQL deparser change may cause a conservative REVIEW.
+-- 202610090005. A PostgreSQL deparser change may cause a conservative REVIEW.
 -- Update fingerprints only after reviewing the corresponding source change.
 begin transaction isolation level repeatable read read only;
 set transaction read only;
@@ -33,7 +33,7 @@ expected_relations(object_name) as (values
   ('velox_private.appointment_reservations'), ('velox_private.appointment_proposal_requests'),
   ('velox_private.message_requests'), ('public.launch_promotion'),
   ('velox_private.launch_promotion_events'), ('velox_private.ai_reply_jobs'), ('velox_private.faq_catalog'),
-  ('velox_private.faq_requests'), ('velox_private.faq_answer_history')
+  ('velox_private.faq_requests'), ('velox_private.faq_answer_history'), ('velox_private.visit_authorizations')
 ),
 relations as materialized (
   select c.*, n.nspname, n.nspname || '.' || c.relname as object_name,
@@ -124,6 +124,10 @@ policies as materialized (
 ),
 -- FUNCTION_MANIFEST_START
 expected_functions(object_name, fingerprint) as (values
+  ('velox_private.guard_visit_authorization()','e9622014f4646e8bec109775495f4753'),
+  ('public.get_visit_authorizations(uuid)','cf50ca9177b85e0d5bd04c561c137ba6'),
+  ('public.authorize_visit_window(uuid,timestamp with time zone,timestamp with time zone,integer,text,text,boolean,uuid)','955229676578bbccf83d4c831d2fbcbc'),
+  ('public.revoke_visit_authorization(uuid)','760c1c191fe7bd3a54dacc66023a2d4c'),
   ('public.answer_listing_faq(uuid,text,text,text,integer)','a2fb56633e9d9d013c3c90634c1d7586'),
   ('velox_private.faq_match(text)','c3eaa1b47b6dd868dc325c2c680d51fa'),
   ('velox_private.faq_normalize(text)','ba5e705f8efc71caece14231872114e3'),
@@ -189,6 +193,8 @@ functions as materialized (
 -- Function bodies are not enough: triggers must still exist, be enabled for
 -- ordinary writes, fire at the reviewed timing/events, and call the right guard.
 expected_triggers(table_name, trigger_name, function_name, definition) as (values
+ ('velox_private.visit_authorizations','guard_visit_authorization','velox_private.guard_visit_authorization()',
+  'CREATE TRIGGER guard_visit_authorization BEFORE UPDATE ON velox_private.visit_authorizations FOR EACH ROW EXECUTE FUNCTION velox_private.guard_visit_authorization()'),
  ('public.credit_balances','global_credit_expiry','velox_private.apply_global_credit_expiry()',
   'CREATE TRIGGER global_credit_expiry BEFORE INSERT ON public.credit_balances FOR EACH ROW EXECUTE FUNCTION velox_private.apply_global_credit_expiry()'),
  ('public.vehicles','guard_launch_publication','velox_private.guard_launch_publication()',
@@ -317,7 +323,7 @@ expected_versions(version) as (values
  ('202606230001'),('202606230002'),('202606230003'),('202606230004'),('202606230005'),
  ('202606230006'),('202606230007'),('202606230008'),('202606230009'),
  ('202610030001'),('202610030002'),('202610030003'),('202610030004'),('202610030005'),
- ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004')
+ ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005')
 ),
 bucket_rows as (
  select wanted.id,m.oid,m.can_inspect_all_rows,b.value as configuration

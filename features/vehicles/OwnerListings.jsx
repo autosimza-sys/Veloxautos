@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { canManageOwnListings, ownerListingForm, useOwnerListings } from "./use-owner-listings";
 import SellerFaqPanel from '../faq/SellerFaqPanel';
+import SellerVisitAuthorization from '../agenda/SellerVisitAuthorization';
 
 const STATUS_LABELS = { active: "Activa", paused: "Pausada", deleted: "Retirada", draft: "Borrador" };
 const FIELDS = [
@@ -89,6 +90,7 @@ function OwnerListingsContent(props) {
             )}
             {vehicle.status === "draft" && <p className="warning">Este borrador debe pasar por el flujo de publicación con crédito para activarse.</p>}
             <SellerFaqPanel vehicleId={vehicle.id} client={props.client} />
+            <SellerVisitAuthorization vehicleId={vehicle.id} client={props.client} listingActive={vehicle.status==='active'} />
             {withdrawId === vehicle.id && <div className="warning" style={{ marginTop: 12 }}>
               <p>Se ocultará del catálogo. El registro y sus fotos se conservan; podés reactivarla después.</p>
               <button className="secondary" type="button" disabled={Boolean(busyId)} onClick={async () => { if (await changeStatus(vehicle.id, "deleted")) setWithdrawId(null); }}>Confirmar retiro</button>{" "}
