@@ -7,7 +7,7 @@ create extension if not exists btree_gist;
 alter table public.appointments add column if not exists duration_minutes integer;
 do $$
 begin
-  if exists (select 1 from public.appointments where duration_minutes is null and status in ('proposed','accepted','confirmed')) then
+  if exists (select 1 from public.appointments where not legacy_unverified and duration_minutes is null and status in ('proposed','accepted','confirmed')) then
     raise exception 'Hay visitas legacy vigentes sin duración explícita. Revisar cada visita y acordar su duración antes de aplicar esta migración; no se asignó ningún valor por defecto';
   end if;
 end;
@@ -18,7 +18,8 @@ $$;
 alter table public.appointments alter column duration_minutes drop not null;
 alter table public.appointments drop constraint if exists appointments_duration_check;
 alter table public.appointments add constraint appointments_duration_check check (
-  (duration_minutes is not null and duration_minutes > 0)
+  legacy_unverified
+  or (duration_minutes is not null and duration_minutes > 0)
   or (duration_minutes is null and status in ('rejected','cancelled'))
 );
 
@@ -27,6 +28,9 @@ alter table public.appointments add constraint appointments_duration_check check
 create or replace function velox_private.guard_appointment_duration()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
+  if new.legacy_unverified or (tg_op = 'UPDATE' and old.legacy_unverified) then
+    raise exception 'Este registro histórico conserva un acuerdo no verificado y es sólo de consulta' using errcode = '42501';
+  end if;
   if new.duration_minutes is null or new.duration_minutes <= 0 then
     raise exception 'Indicá una duración explícita en minutos enteros positivos';
   end if;

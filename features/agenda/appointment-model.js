@@ -33,6 +33,7 @@ export function appointmentEnd(scheduledAt, durationMinutes) {
 }
 
 export function appointmentActions(appointment, conversation, userId, now = Date.now()) {
+  if (appointment.legacy_unverified) return [];
   if (!isConversationMember(conversation, userId) || appointment.conversation_id !== conversation.id) return [];
   const future = Boolean(appointmentEnd(appointment.scheduled_at, appointment.duration_minutes)) &&
     new Date(appointment.scheduled_at).getTime() > now;

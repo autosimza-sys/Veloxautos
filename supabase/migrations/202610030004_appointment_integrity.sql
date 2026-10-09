@@ -7,24 +7,32 @@ alter table public.appointments
   add column if not exists buyer_id uuid references public.profiles(id) on delete cascade,
   add column if not exists seller_id uuid references public.profiles(id) on delete cascade,
   add column if not exists buyer_confirmed_at timestamptz,
-  add column if not exists seller_confirmed_at timestamptz;
+  add column if not exists seller_confirmed_at timestamptz,
+  add column if not exists legacy_unverified boolean not null default false;
 
 -- Participants are a server-owned snapshot of the immutable conversation identity.
 update public.appointments a set buyer_id = c.buyer_id, seller_id = c.seller_id
 from public.conversations c
 where c.id = a.conversation_id and (a.buyer_id is null or a.seller_id is null);
 
--- Old accepted/confirmed rows do not prove consent: the old client allowed the
--- proposal author to accept and either party to confirm. Never fabricate consent
--- or silently cancel real visits. Stop for review/reconfirmation before rollout.
+-- Preserve pre-pilot history, including its original status and timestamps.
+-- The fixed cutoff predates this security release; it does not slide with time.
+-- An immutable flag records missing evidence, never completion or cancellation.
+update public.appointments a set legacy_unverified = true
+where not legacy_unverified and scheduled_at < timestamptz '2026-10-03 00:00:00+00'
+  and status in ('proposed','accepted','confirmed')
+  and (buyer_confirmed_at is null or seller_confirmed_at is null
+    or to_jsonb(a)->>'duration_minutes' is null);
+
+-- More recent/future visits still require explicit review/reconfirmation.
 do $$
 begin
   if exists (
-    select 1 from public.appointments a where
+    select 1 from public.appointments a where not a.legacy_unverified and (
       (a.status = 'accepted' and not (
         (a.proposed_by = a.buyer_id and a.buyer_confirmed_at is null and a.seller_confirmed_at is not null)
         or (a.proposed_by = a.seller_id and a.seller_confirmed_at is null and a.buyer_confirmed_at is not null)
-      )) or (a.status = 'confirmed' and (a.buyer_confirmed_at is null or a.seller_confirmed_at is null))
+      )) or (a.status = 'confirmed' and (a.buyer_confirmed_at is null or a.seller_confirmed_at is null)))
   ) then
     raise exception 'Hay visitas aceptadas o confirmadas legacy sin consentimiento verificable. Revisar y reconfirmar antes de aplicar esta migracion';
   end if;
@@ -38,9 +46,13 @@ alter table public.appointments add constraint appointments_identity_check
 alter table public.appointments drop constraint if exists appointments_values_check;
 alter table public.appointments add constraint appointments_values_check
   check (isfinite(scheduled_at) and nullif(btrim(location), '') is not null);
+alter table public.appointments drop constraint if exists appointments_legacy_cutoff_check;
+alter table public.appointments add constraint appointments_legacy_cutoff_check
+  check (not legacy_unverified or scheduled_at < timestamptz '2026-10-03 00:00:00+00');
 alter table public.appointments drop constraint if exists appointments_consent_check;
 alter table public.appointments add constraint appointments_consent_check check (
-  (status = 'proposed' and buyer_confirmed_at is null and seller_confirmed_at is null)
+  legacy_unverified
+  or (status = 'proposed' and buyer_confirmed_at is null and seller_confirmed_at is null)
   or (status = 'accepted' and (
     (proposed_by = buyer_id and buyer_confirmed_at is null and seller_confirmed_at is not null)
     or (proposed_by = seller_id and seller_confirmed_at is null and buyer_confirmed_at is not null)
@@ -52,10 +64,12 @@ alter table public.appointments add constraint appointments_consent_check check 
 -- UNIQUE constraints arbitrate concurrent transactions even if both callers saw
 -- an empty slot. A SELECT-then-UPDATE availability check alone is insufficient.
 -- Existing conflicts intentionally stop the migration instead of deleting rows.
-create unique index if not exists appointments_reserved_buyer_instant
-  on public.appointments (buyer_id, scheduled_at) where status in ('accepted', 'confirmed');
-create unique index if not exists appointments_reserved_seller_instant
-  on public.appointments (seller_id, scheduled_at) where status in ('accepted', 'confirmed');
+drop index if exists public.appointments_reserved_buyer_instant;
+create unique index appointments_reserved_buyer_instant
+  on public.appointments (buyer_id, scheduled_at) where status in ('accepted', 'confirmed') and not legacy_unverified;
+drop index if exists public.appointments_reserved_seller_instant;
+create unique index appointments_reserved_seller_instant
+  on public.appointments (seller_id, scheduled_at) where status in ('accepted', 'confirmed') and not legacy_unverified;
 
 -- One reservation per person, regardless of their role in each conversation.
 -- The two role-specific indexes above are additional guards; this UNIQUE key is
@@ -75,7 +89,7 @@ insert into velox_private.appointment_reservations (appointment_id, user_id, sch
 select a.id, attendee.user_id, a.scheduled_at
 from public.appointments a
 cross join lateral (values (a.buyer_id), (a.seller_id)) attendee(user_id)
-where a.status in ('accepted', 'confirmed')
+where a.status in ('accepted', 'confirmed') and not a.legacy_unverified
 order by attendee.user_id, a.scheduled_at, a.id
 on conflict (appointment_id, user_id) do nothing;
 
@@ -88,6 +102,9 @@ declare
   caller uuid := auth.uid();
   cancellation boolean := false;
 begin
+  if new.legacy_unverified or (tg_op = 'UPDATE' and old.legacy_unverified) then
+    raise exception 'Este registro histórico conserva un acuerdo no verificado y es sólo de consulta' using errcode = '42501';
+  end if;
   if tg_op = 'UPDATE' then
     cancellation := new.status = 'cancelled' and old.status in ('proposed', 'accepted', 'confirmed');
   end if;

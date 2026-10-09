@@ -81,7 +81,7 @@ function AgendaContent({ conversation, userId, client }) {
         const date = new Date(appointment.scheduled_at);
         const validDate = Number.isFinite(date.getTime());
         const end = appointmentEnd(appointment.scheduled_at, appointment.duration_minutes);
-        const historical = appointment.status === "cancelled" || appointment.status === "rejected";
+        const historical = appointment.legacy_unverified || appointment.status === "cancelled" || appointment.status === "rejected";
         const expired = validDate && date.getTime() <= now;
         return (
           <article className="appointment" key={appointment.id}>
@@ -92,15 +92,16 @@ function AgendaContent({ conversation, userId, client }) {
               <small>{end ? `Duración: ${appointment.duration_minutes} minutos`
                 : historical ? "Duración no registrada" : "Duración pendiente"}</small>
               <span>{appointment.location}</span>
-              <small>{statusLabel(appointment.status)}{expired ? " · Horario pasado" : ""}</small>
-              {appointment.status === "proposed" && <small>{appointment.proposed_by === userId
+              <small>{appointment.legacy_unverified ? `Registro anterior: ${statusLabel(appointment.status)} (sin verificar)` : statusLabel(appointment.status)}{expired ? " · Horario pasado" : ""}</small>
+              {appointment.legacy_unverified && <small>Se conserva el estado original. El acuerdo no tiene constancias verificables y este registro es sólo de consulta.</small>}
+              {!appointment.legacy_unverified && appointment.status === "proposed" && <small>{appointment.proposed_by === userId
                 ? "Esperando que la otra persona acepte tu propuesta."
                 : "Al aceptar, queda registrada tu confirmación."}</small>}
-              {appointment.status === "accepted" && <small>{appointment.proposed_by === userId
+              {!appointment.legacy_unverified && appointment.status === "accepted" && <small>{appointment.proposed_by === userId
                 ? "La otra persona aceptó. Falta tu confirmación final."
                 : "Tu confirmación quedó registrada. Esperando a quien propuso la visita."}</small>}
-              <small>Comprador: {appointment.buyer_confirmed_at ? "confirmó" : "pendiente"}</small>
-              <small>Vendedor: {appointment.seller_confirmed_at ? "confirmó" : "pendiente"}</small>
+              {!appointment.legacy_unverified && <><small>Comprador: {appointment.buyer_confirmed_at ? "confirmó" : "pendiente"}</small>
+              <small>Vendedor: {appointment.seller_confirmed_at ? "confirmó" : "pendiente"}</small></>}
             </div>
             <div className="appointmentActions">
               {appointmentActions(appointment, conversation, userId, now).map(action => (

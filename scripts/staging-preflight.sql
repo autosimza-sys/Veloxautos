@@ -161,8 +161,8 @@ expected_functions(object_name, fingerprint) as (values
   ('velox_private.can_start_conversation(uuid,uuid)','1fd24e4f56d03ce7bca8a986576db537'),
   ('velox_private.can_upload_inspection_object(text)','c29d867cfedd5c2a39fffef5607c5260'),
   ('velox_private.can_write_inspection_report(uuid)','11d875c345f1fb73fbc00078b3866118'),
-  ('velox_private.guard_appointment_duration()','176b1ba5b4fc934e36ceefe5ce38c112'),
-  ('velox_private.guard_appointment_integrity()','a49705312db38650c12c97f5b1e6db59'),
+  ('velox_private.guard_appointment_duration()','defe9e76fa9f2cf818c020811aba58ad'),
+  ('velox_private.guard_appointment_integrity()','b481454d71b888c97820a157d648a5ec'),
   ('velox_private.guard_conversation_moderation()','15b0299023ffee6b0536581613e98092'),
   ('velox_private.guard_inspection_assignment()','67b7e694149b09b4977a683e8a2aa780'),
   ('velox_private.guard_inspection_completion()','afb8a0a2d0f0fef0160f005d11705442'),
@@ -249,15 +249,21 @@ effective_column_privileges as (
 -- to_jsonb(row) lets optional *new* columns be absent on a legacy installation.
 -- Only aggregate counts or explicitly whitelisted metadata leave these queries.
 checks(check_name, prerequisites, sql) as (values
- ('visits_without_verifiable_consent', '[{"table":"public.appointments","columns":["status","proposed_by"]}]'::jsonb,
+ ('historical_unverified_visits', '[{"table":"public.appointments","columns":["scheduled_at"]}]'::jsonb,
+  $q$select count(*) as count from public.appointments a where coalesce(to_jsonb(a)->>'legacy_unverified','false')='true'$q$),
+ ('visits_without_verifiable_consent', '[{"table":"public.appointments","columns":["status","proposed_by","scheduled_at"]}]'::jsonb,
   $q$select count(*) as count from public.appointments a where
+    not (coalesce(to_jsonb(a)->>'legacy_unverified','false')='true'
+      and (to_jsonb(a)->>'scheduled_at')::timestamptz < timestamptz '2026-10-03 00:00:00+00') and (
     (to_jsonb(a)->>'status'='accepted' and not coalesce(
       ((to_jsonb(a)->>'proposed_by'=to_jsonb(a)->>'buyer_id') and to_jsonb(a)->>'buyer_confirmed_at' is null and to_jsonb(a)->>'seller_confirmed_at' is not null)
       or ((to_jsonb(a)->>'proposed_by'=to_jsonb(a)->>'seller_id') and to_jsonb(a)->>'seller_confirmed_at' is null and to_jsonb(a)->>'buyer_confirmed_at' is not null),false))
     or (to_jsonb(a)->>'status'='confirmed' and (to_jsonb(a)->>'buyer_id' is null or to_jsonb(a)->>'seller_id' is null
-      or to_jsonb(a)->>'buyer_confirmed_at' is null or to_jsonb(a)->>'seller_confirmed_at' is null))$q$),
- ('active_visits_without_explicit_duration', '[{"table":"public.appointments","columns":["status"]}]'::jsonb,
+      or to_jsonb(a)->>'buyer_confirmed_at' is null or to_jsonb(a)->>'seller_confirmed_at' is null)))$q$),
+ ('active_visits_without_explicit_duration', '[{"table":"public.appointments","columns":["status","scheduled_at"]}]'::jsonb,
   $q$select count(*) as count from public.appointments a where to_jsonb(a)->>'status' in ('proposed','accepted','confirmed')
+    and not (coalesce(to_jsonb(a)->>'legacy_unverified','false')='true'
+      and (to_jsonb(a)->>'scheduled_at')::timestamptz < timestamptz '2026-10-03 00:00:00+00')
     and case when coalesce(to_jsonb(a)->>'duration_minutes','') ~ '^[0-9]+$'
       then (to_jsonb(a)->>'duration_minutes')::numeric <= 0 else true end$q$),
  ('reports_without_traceable_completion', '[{"table":"public.inspection_reports","columns":["id","request_id","result"]},{"table":"public.inspection_requests","columns":["id","status"]},{"table":"public.inspection_media","columns":["report_id","kind"]}]'::jsonb,
@@ -434,7 +440,9 @@ report(section,object_name,status,details) as (
  where n.nspname in ('public','storage','velox_private') or d.defaclnamespace=0
  union all
  select 'legacy',check_name,case when missing_table or missing_column then 'NOT_INSTALLED'
-   when limited_access or count is null then 'REVIEW' when count>0 then 'BLOCKED' else 'PASS' end,
+   when limited_access or count is null then 'REVIEW'
+   when check_name='historical_unverified_visits' and count>0 then 'REVIEW'
+   when count>0 then 'BLOCKED' else 'PASS' end,
    jsonb_build_object('count',count,'missing_table',missing_table,'missing_required_column',missing_column,
      'limited_access',limited_access,'note','Counts require full visibility. Never infer consent/duration, repair rows or expose customer records.')
  from check_results
@@ -490,7 +498,7 @@ report(section,object_name,status,details) as (
  union all
  select 'columns','public.appointments.' || wanted.name,case when a.attname is null then 'NOT_INSTALLED' else 'PASS' end,
    jsonb_build_object('type',format_type(a.atttypid,a.atttypmod),'not_null',a.attnotnull,'default',pg_get_expr(d.adbin,d.adrelid))
- from (values ('buyer_id'),('seller_id'),('buyer_confirmed_at'),('seller_confirmed_at'),('duration_minutes')) wanted(name)
+ from (values ('buyer_id'),('seller_id'),('buyer_confirmed_at'),('seller_confirmed_at'),('duration_minutes'),('legacy_unverified')) wanted(name)
  left join relations r on r.object_name='public.appointments'
  left join pg_attribute a on a.attrelid=r.oid and a.attname=wanted.name and a.attnum>0 and not a.attisdropped
  left join pg_attrdef d on d.adrelid=a.attrelid and d.adnum=a.attnum

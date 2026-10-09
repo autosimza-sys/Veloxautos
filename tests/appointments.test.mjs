@@ -72,6 +72,19 @@ function mountHook(client, overrides = {}) {
   return renderHook(props => useAppointments(props), { initialProps: { conversation, userId: 'buyer', client, ...overrides } });
 }
 
+test('historical unverified visits retain their status with no consent claims or action buttons', async () => {
+  const client = fakeClient([visit({status:'confirmed',legacy_unverified:true,scheduled_at:'2026-07-14T03:59:00Z',duration_minutes:null})]);
+  const view = render(React.createElement(AgendaPanel,{conversation,userId:'buyer',client}));
+  await flush();
+  const article = within(view.container.querySelector('article.appointment'));
+  assert.ok(article.getByText(/Registro anterior: Confirmada \(sin verificar\)/));
+  assert.ok(article.getByText(/sólo de consulta/));
+  assert.ok(article.getByText('Duración no registrada'));
+  assert.equal(article.queryAllByRole('button').length,0);
+  assert.equal(article.queryByText(/Comprador:|Vendedor:/),null);
+  assert.equal(client.calls.rpcs.length,0);
+});
+
 test('loads scoped visits with an injected client and supports explicit refresh without Realtime', async () => {
   const client = fakeClient([visit()]);
   const { result } = mountHook(client);
