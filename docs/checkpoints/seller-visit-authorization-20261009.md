@@ -28,6 +28,8 @@ The isolated copy of actual application data restored 20 tables/50 rows exactly 
 
 Full verification, remote CI and exact deploy SHA are tracked in the PR and output phase report. The forward migration must be deployed with the matched frontend after complete restore/cutover checks. The existing 240-question rules layer remains in place; no paid AI calls are needed for configuration.
 
+The first complete local run had 569/570 passing: an existing inspection UI test waited a fixed 15ms for asynchronous file preparation. Replaced that timing assumption with waitFor the observed RPC call, preserving the in-flight/draft assertions. All five inspection-state tests then passed. This changes test synchronization only; the new authorization feature and inspection behavior are unchanged. Final remote CI must include this correction.
+
 ## Next phase
 
 Consume current seller authority atomically when a buyer accepts a offered slot, check listing/account status and cross-vehicle reservations, keep evidence and retries, then deliver the seller notification through the chosen channel. The UI explicitly discloses that automatic coordination/notification is not active yet.

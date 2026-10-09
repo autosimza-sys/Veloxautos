@@ -6,7 +6,7 @@ const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'http://loc
 globalThis.window=dom.window;globalThis.document=dom.window.document;globalThis.React=React;
 Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
-const {render,renderHook,act,fireEvent,cleanup}=await import('@testing-library/react');
+const {render,renderHook,act,fireEvent,cleanup,waitFor}=await import('@testing-library/react');
 const {useInspections}=await import('../features/inspections/use-inspections.js');
 const {default:InspectionSection}=await import('../features/inspections/InspectionSection.jsx');
 afterEach(cleanup);
@@ -50,8 +50,9 @@ test('pending submission prevents assignment switch; failed draft and files surv
  for(const name of ['motor','caja','estructura','frenos','electronica','interior'])fireEvent.change(view.getByLabelText(name,{exact:true}),{target:{value:'5'}});
  fireEvent.change(view.getByLabelText('Resultado'),{target:{value:'observed'}});
  fireEvent.change(view.getByLabelText('Foto del tablero'),{target:{files:[new File(['dash'],'keep-dashboard.jpg',{type:'image/jpeg'})]}});
- fireEvent.submit(view.container.querySelector('.mechanicReport'));await act(()=>new Promise(resolve=>setTimeout(resolve,15)));
- assert.equal(sends,1);assert.equal(view.getByRole('button',{name:/Test B Base/}).disabled,true);
+ fireEvent.submit(view.container.querySelector('.mechanicReport'));
+ // File preparation is asynchronous; wait for the observable send, not 15ms.
+ await waitFor(()=>assert.equal(sends,1));assert.equal(view.getByRole('button',{name:/Test B Base/}).disabled,true);
  await act(async()=>finish({error:{code:'',message:'offline'},status:0}));
  fireEvent.click(view.getByRole('button',{name:/Test A Base/}));assert.equal(view.getByLabelText('Kilometros verificados').value,'123');
  fireEvent.click(view.getByRole('button',{name:/Test B Base/}));fireEvent.click(view.getByRole('button',{name:/Test A Base/}));
