@@ -1,176 +1,110 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase-client";
+import { submitInspectionReport } from "./inspection-api";
 
-export function useInspections({ profile, session, vehicle }) {
-  const [requests, setRequests] = useState([]);
-  const [assignments, setAssignments] = useState([]);
-  const [mechanics, setMechanics] = useState([]);
-  const [reports, setReports] = useState({});
-  const [status, setStatus] = useState("");
-  const userId = session?.user?.id;
-  const role = profile?.role;
-
-  const refresh = useCallback(async () => {
-    if (!userId) return;
-
-    const { data, error } = await supabase
-      .from("inspection_requests")
-      .select("*")
-      .order("requested_at", { ascending: false });
-
-    if (error) {
-      setStatus("La revision mecanica se activara al aplicar la migracion pendiente.");
-      return;
-    }
-
-    setRequests(data || []);
-
-    if (data?.length) {
-      const requestIds = data.map((item) => item.id);
-      const { data: reportRows } = await supabase
-        .from("inspection_reports")
-        .select("*, inspection_media(*)")
-        .in("request_id", requestIds);
-
-      const resolvedReports = await Promise.all((reportRows || []).map(async (report) => ({
-        ...report,
-        inspection_media: await Promise.all((report.inspection_media || []).map(async (media) => {
-          const { data: signed } = await supabase.storage
-            .from("inspection-media")
-            .createSignedUrl(media.storage_path, 60 * 60);
-          return { ...media, signedUrl: signed?.signedUrl || "" };
-        })),
-      })));
-      setReports(Object.fromEntries(resolvedReports.map((report) => [report.request_id, report])));
-    }
-
-    if (role === "mechanic" || role === "admin") {
-      const { data: context } = await supabase.rpc("get_assigned_inspection_context");
-      setAssignments(context || []);
-    }
-
-    if (role === "admin") {
-      const { data: mechanicRows } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .eq("role", "mechanic")
-        .eq("is_blocked", false);
-      setMechanics(mechanicRows || []);
-    }
-  }, [role, userId]);
+export function useInspections({ profile, session, vehicle, client = supabase }) {
+  const userId = session?.user?.id || null;
+  const role = profile?.role || null;
+  const scope = `${userId}:${role}`;
+  const [result, setResult] = useState(null);
+  const [message, setMessage] = useState(null);
+  const [revision, setRevision] = useState(0);
+  const [busyScope, setBusyScope] = useState(null);
+  const busyRef = useRef(false);
+  const refresh = useCallback(() => setRevision(value => value + 1), []);
 
   useEffect(() => {
-    if (!userId) return;
-    const timeoutId = window.setTimeout(() => refresh(), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [refresh, userId]);
-
-  async function requestInspection() {
-    const { error } = await supabase.from("inspection_requests").insert({
-      vehicle_id: vehicle.id,
-      requested_by: userId,
-    });
-
-    if (error) setStatus(error.message);
-    else {
-      setStatus("Revision solicitada. VELOX asignara un mecanico.");
-      await refresh();
-    }
-  }
-
-  async function assignMechanic(requestId, mechanicId) {
-    const { error } = await supabase
-      .from("inspection_requests")
-      .update({ assigned_mechanic: mechanicId, status: "assigned" })
-      .eq("id", requestId);
-
-    if (error) setStatus(error.message);
-    else {
-      setStatus("Mecanico asignado.");
-      await refresh();
-    }
-  }
-
-  async function submitReport({ requestId, form, dashboardFile, detailFiles, videoFile }) {
-    const photos = [dashboardFile, ...detailFiles].filter(Boolean);
-    if (photos.some((file) => file.size > 3 * 1024 * 1024)) {
-      setStatus("Cada foto puede pesar como maximo 3 MB.");
-      return false;
-    }
-    if (videoFile && videoFile.size > 25 * 1024 * 1024) {
-      setStatus("El video puede pesar como maximo 25 MB.");
-      return false;
-    }
-
-    const { data: report, error: reportError } = await supabase
-      .from("inspection_reports")
-      .insert({
-        request_id: requestId,
-        mechanic_id: userId,
-        inspection_date: form.inspectionDate,
-        odometer: Number(form.odometer),
-        scores: form.scores,
-        observations: form.observations,
-        result: form.result,
-      })
-      .select()
-      .single();
-
-    if (reportError) {
-      setStatus(reportError.message);
-      return false;
-    }
-
-    const files = [
-      ...(dashboardFile ? [{ file: dashboardFile, kind: "dashboard" }] : []),
-      ...detailFiles.map((file) => ({ file, kind: "detail" })),
-      ...(videoFile ? [{ file: videoFile, kind: "video" }] : []),
-    ];
-
-    for (let index = 0; index < files.length; index += 1) {
-      const item = files[index];
-      const extension = item.file.name.split(".").pop() || "bin";
-      const path = `${userId}/${requestId}/${Date.now()}-${index}.${extension}`;
-      const { error: uploadError } = await supabase.storage
-        .from("inspection-media")
-        .upload(path, item.file, { contentType: item.file.type, upsert: false });
-
-      if (uploadError) {
-        setStatus(`Informe guardado, pero fallo un archivo: ${uploadError.message}`);
-        continue;
+    if (!userId || !client) return;
+    let active = true;
+    async function load() {
+      try {
+        const { data, error } = await client.from("inspection_requests").select("*").order("requested_at", { ascending: false });
+        if (error) throw error;
+        const requests = data || [];
+        let reportRows = [];
+        if (requests.length) {
+          const response = await client.from("inspection_reports").select("*, inspection_media(*)").in("request_id", requests.map(item => item.id));
+          if (response.error) throw response.error;
+          reportRows = response.data || [];
+        }
+        const media = reportRows.flatMap(report => report.inspection_media || []);
+        let signed = new Map();
+        if (media.length) {
+          const response = await client.storage.from("inspection-media").createSignedUrls(media.map(item => item.storage_path), 3600);
+          if (response.error) throw response.error;
+          signed = new Map((response.data || []).map(item => [item.path, item.signedUrl]));
+        }
+        const reports = Object.fromEntries(reportRows.map(report => [report.request_id, {
+          ...report, inspection_media: (report.inspection_media || []).map(item => ({ ...item, signedUrl: signed.get(item.storage_path) || "" })),
+        }]));
+        let assignments = [], mechanics = [];
+        if (["mechanic", "admin"].includes(role)) {
+          const response = await client.rpc("get_assigned_inspection_context");
+          if (response.error) throw response.error;
+          assignments = response.data || [];
+        }
+        if (role === "admin") {
+          const response = await client.from("profiles").select("id, display_name").eq("role", "mechanic").eq("is_blocked", false);
+          if (response.error) throw response.error;
+          mechanics = response.data || [];
+        }
+        if (active) setResult({ scope, requests, reports, assignments, mechanics, error: "" });
+      } catch {
+        if (active) setResult({ scope, requests: [], reports: {}, assignments: [], mechanics: [], error: "No pudimos cargar las revisiones. Revisá la conexión e intentá de nuevo." });
       }
-
-      await supabase.from("inspection_media").insert({
-        report_id: report.id,
-        kind: item.kind,
-        storage_path: path,
-      });
     }
+    load();
+    return () => { active = false; };
+  }, [client, userId, role, scope, revision]);
 
-    await supabase
-      .from("inspection_requests")
-      .update({
-        status: form.result === "approved" ? "completed" : "observed",
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", requestId);
-
-    setStatus("Informe mecanico guardado.");
-    await refresh();
-    return true;
+  async function perform(action, success) {
+    if (!userId || !client || busyRef.current) return false;
+    busyRef.current = true;
+    setBusyScope(scope);
+    try {
+      await action();
+      setMessage({ scope, text: success });
+      refresh();
+      return true;
+    } catch (error) {
+      setMessage({ scope, text: error.message || "No pudimos completar la operación. Revisá la conexión." });
+      return false;
+    } finally {
+      busyRef.current = false;
+      setBusyScope(null);
+    }
   }
 
+  function requestInspection() {
+    if (!vehicle?.id || !current || current.error) return Promise.resolve(false);
+    return perform(async () => {
+      const { data, error } = await client.rpc("request_inspection", { target_vehicle: vehicle.id });
+      if (error) throw error;
+      if (!data?.id) throw new Error("No pudimos confirmar la solicitud. Actualizá las revisiones antes de reintentar.");
+      setResult(previous => previous?.scope === scope ? {
+        ...previous, requests: [...previous.requests.filter(request => request.id !== data.id), data],
+      } : previous);
+    }, "Revisión solicitada. VELOX asignará un mecánico.");
+  }
+  function assignMechanic(requestId, mechanicId) {
+    if (!mechanicId) return Promise.resolve(false);
+    return perform(async () => {
+      const { data, error } = await client.from("inspection_requests").update({ assigned_mechanic: mechanicId, status: "assigned" }).eq("id", requestId).select("id");
+      if (error) throw error;
+      if (!data?.length) throw new Error("No se pudo confirmar la asignación. Actualizá la lista.");
+    }, "Mecánico asignado.");
+  }
+  function submitReport(args) {
+    return perform(() => submitInspectionReport({ ...args, userId, client }), "Informe mecánico y archivos guardados.");
+  }
+  const current = userId && result?.scope === scope ? result : null;
   return {
-    assignments,
-    assignMechanic,
-    mechanics,
-    refresh,
-    requestInspection,
-    requests,
-    reports,
-    status,
-    submitReport,
+    requests: current?.requests || [], assignments: current?.assignments || [], mechanics: current?.mechanics || [], reports: current?.reports || {},
+    status: current?.error || (message?.scope === scope ? message.text : ""),
+    loadError: current?.error || "",
+    busy: busyScope === scope, isLoading: Boolean(userId && !current),
+    refresh, requestInspection, assignMechanic, submitReport,
   };
 }

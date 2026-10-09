@@ -1,0 +1,188 @@
+Local isolated verification. 2026-10-03 UTC.
+Command: npm run verify
+Network disabled in Node tests. No production services.
+
+
+> velox-next@0.1.0 verify
+> npm run lint && npm test && npm run build
+
+
+> velox-next@0.1.0 lint
+> eslint .
+
+
+> velox-next@0.1.0 test
+> node --import ./tests/no-live-services.mjs --import tsx --test tests/*.test.mjs tests/backend/*.test.mjs
+
+✔ recognizes mileage: ¿Cuántos kilómetros tiene? (17.585405ms)
+✔ recognizes mileage: ¿CUÁNTOS KILÓMETROS TIENE? (0.369376ms)
+✔ recognizes mileage: ¿Cuántos kilómetros tiene? (0.129501ms)
+✔ recognizes mileage: ¿Cuántos kilometros tiene? (0.12876ms)
+✔ recognizes mileage: km? (0.297269ms)
+✔ recognizes mileage: ¿Cuánto recorrió? (0.158745ms)
+✔ does not confuse 'sigue' with availability (0.423977ms)
+✔ availability is unknown when the publication status is missing (0.212074ms)
+✔ an active publication does not guarantee current availability (0.309588ms)
+✔ availability respects sold status (0.349417ms)
+✔ availability respects paused status (0.157403ms)
+✔ availability respects draft status (0.140277ms)
+✔ availability respects deleted status (0.118375ms)
+✔ availability respects removed status (0.134269ms)
+✔ acceptsTrade distinguishes true, false and missing data (0.268688ms)
+✔ acceptsFinancing distinguishes true, false and missing data (0.262448ms)
+✔ recognizes canje consistently (0.133537ms)
+✔ missing price does not invent an authentication restriction (0.211413ms)
+✔ zero kilometers and zero price are values rather than absent data (0.181889ms)
+✔ invalid numeric values are not presented as vehicle facts (0.214767ms)
+✔ formats numeric strings returned by a data source (0.15576ms)
+✔ missing condition data does not invent a completed self-inspection (0.205373ms)
+✔ condition answer uses a supplied checklist when there is no description (0.219154ms)
+✔ accented location question uses known location data (1.909923ms)
+✔ a time question mentioning 'ver' still answers with the hours (0.088141ms)
+✔ availability of financing is not confused with publication availability (0.070745ms)
+✔ specific vehicle questions take precedence over generic 'ver' wording (0.09467ms)
+✔ malformed or empty checklist entries do not become declared facts (0.220636ms)
+✔ context labels distinguish a missing flag from an explicit refusal (0.123252ms)
+✔ client and service export the identical pure rules implementation (0.077715ms)
+✔ the client component imports only the pure rules module (44.408375ms)
+✔ missing location and hours remain unknown (0.383897ms)
+✔ missing vehicle and malformed questions do not crash (0.198583ms)
+✔ service entrypoint uses the same rules without an API key (6.844428ms)
+✔ optional API prompt preserves unknown flags and status without making a network request (1.06904ms)
+✔ optional API falls back to the corrected rules on failures (0.466329ms)
+✔ optional API does not send an empty question or missing vehicle (0.208438ms)
+✔ modal focuses its close button, traps focus, restores focus and scroll after Escape (119.365631ms)
+✔ Back closes modal, Forward restores it, repeated close does not leave dead overlay (303.350494ms)
+✔ clicking content keeps modal open and clicking backdrop closes it (81.611762ms)
+✔ auth events are synchronous and slow profile cannot restore a logged-out user (50.179878ms)
+✔ rapid repeated submit performs one request and does not auto-login unconfirmed signup (28.673936ms)
+✔ network errors become actionable status and permit retry (13.593074ms)
+✔ unconfirmed registration does not trigger password login or persist password in form (12.71419ms)
+✔ atomic publication creates the vehicle, four media links and one debit (2303.201736ms)
+✔ identical retry returns the same vehicle without another credit or media insert (8.524471ms)
+✔ same request ID with a different payload is rejected without another debit (9.091659ms)
+✔ same request ID with different media is rejected (6.887482ms)
+✔ failure inserting media rolls back vehicle, balance, ledger and request record (8.356273ms)
+✔ less than four photos, duplicate objects and foreign objects are rejected (8.537841ms)
+✔ missing objects, invalid media types and duplicate sort indexes are rejected (8.090009ms)
+✔ oversized objects and incompatible stored MIME types are rejected (8.26689ms)
+✔ one optional video is accepted, two videos are rejected (11.931938ms)
+✔ invalid publication fields are rejected before any debit (12.448432ms)
+✔ deleted publication retry is rejected rather than creating or charging again (8.393047ms)
+✔ request registry is private, immutable to clients and unavailable to anon (9.201872ms)
+✔ an unprivileged user cannot publish even with owned object names (4.144136ms)
+✔ eight photos and one video is the accepted upper bound (7.315064ms)
+✔ nine photos are rejected even though nine total objects can be allowed (4.231475ms)
+✔ retry after credit expiration returns the existing publication without a new debit (7.593555ms)
+✔ different sellers can use the same request UUID without sharing records (8.948878ms)
+✔ atomic RPC still works after the planned legacy EXECUTE revocation (8.775843ms)
+✔ atomic migration can be reapplied without resetting idempotency records (1301.681602ms)
+✔ anonymous catalog masks price/km and does not expose profile phones (2226.628398ms)
+✔ anonymous visitor can read linked active vehicle media, never paused media (6.598204ms)
+✔ buyer sees registered catalog values but cannot directly select another owner's row (2.861851ms)
+✔ buyer can start a conversation about someone else's active vehicle (3.302692ms)
+✔ buyer cannot create a conversation with a forged seller (4.410881ms)
+✔ buyer cannot create a conversation about a paused vehicle (2.63152ms)
+✔ buyer can request inspection with no assignment on another owner's active vehicle (3.173621ms)
+✔ seller cannot self-assign an inspection or mint a professional report (2.308833ms)
+✔ assigned mechanic cannot retarget a request to another vehicle (2.526174ms)
+✔ assigned mechanic cannot change who requested inspection (2.723546ms)
+✔ assigned mechanic cannot reassign their inspection (4.522736ms)
+✔ admin can assign to an active mechanic but cannot assign a seller (4.907234ms)
+✔ only requester and assigned mechanic can read a private report and its stored files (16.197574ms)
+✔ mechanic context exposes the assigned owner's phone only to active mechanic/admin (6.008922ms)
+✔ revoking mechanic role removes legacy assignment access and phone disclosure (4.697274ms)
+✔ mechanic can update their report but cannot move it to another request (4.170975ms)
+✔ inspection upload requires an active assigned mechanic and the request path (11.576643ms)
+✔ a seller cannot attach another seller's storage path to their own vehicle (2.9971ms)
+✔ a chat member cannot mark a manual message as an automated response (3.0921ms)
+✔ a blocked account cannot use the definer message RPC (4.779064ms)
+✔ assistant never claims a paused vehicle is available (6.253685ms)
+✔ assistant does not treat 'sigue haciendo ruidos' as an availability question (2.870082ms)
+✔ normal buyer message and automated answer remain attributed separately (5.652916ms)
+✔ a chat member cannot undo another member's block or clear a report (4.72829ms)
+✔ a blocked account cannot edit conversation moderation flags (3.166591ms)
+✔ a seller can clean up their own unlinked uploads after failed publication (4.825272ms)
+✔ a nonmechanic cannot insert a report for an existing assignment (2.375902ms)
+✔ profile role and blocked status cannot be changed by the account owner (3.063299ms)
+✔ signup metadata cannot grant admin or mechanic role (3.079783ms)
+✔ anonymous clients cannot execute private inspection context or message RPCs (3.460015ms)
+✔ failed vehicle creation does not consume a credit (8.239419ms)
+✔ last credit is consumed once and another publication is rejected (5.515824ms)
+✔ expired credits reject publishing without changing the ledger (4.353195ms)
+✔ repair migration can be reapplied without deleting vehicle or inspection data (1310.469137ms)
+✔ missing Supabase reports a controlled error (1.785339ms)
+✔ empty and failed catalogs never return demo stock (37.110508ms)
+✔ logout clears price-bearing cache immediately and stale authenticated response is ignored (12.695888ms)
+✔ missing photos use honest placeholder and unknown fields stay unknown (1.167395ms)
+✔ catalog distinguishes empty results from outage and offers retry (42.195976ms)
+✔ catalog signs all 80 photos in one storage request and preserves order (1.319771ms)
+✔ same publication retry keeps request ID, committed publication stays successful if credit refresh fails (27.629833ms)
+✔ expired credits are unavailable despite unused allocation (17.756518ms)
+✔ sign-out clears old balance immediately (7.811848ms)
+✔ backend failure is not misreported as a pending migration (3.824043ms)
+✔ publication writes metadata and credit through one RPC and deterministic content paths (54.367138ms)
+✔ lost RPC response preserves files; retry uses identical request, payload and paths (16.282349ms)
+✔ known upload duplicates are safe retry and are never overwritten (2.718799ms)
+✔ publication rejects incomplete input before any uploads (0.350458ms)
+✔ photo URL failure after successful commit does not invite duplicate publication (2.256155ms)
+✔ Supabase 400 Duplicate is retriable but unrelated 400 errors are rejected (2.480217ms)
+✔ Supabase transport errors resolved as status zero offer safe retry guidance (1.038525ms)
+✔ reselecting identical photos in another order preserves transactional media payload (4.755881ms)
+✔ new File instances and reordered form keys recover the same pending request (14.709895ms)
+✔ changed file bytes or another owner receive a different intention id (2.457863ms)
+✔ different selection order for identical photo slots recovers the same request (1.523682ms)
+✔ an empty publication starts at zero, without default mechanical claims (1.694415ms)
+✔ generated descriptions include only explicitly provided facts (11.365221ms)
+✔ blank or unrecognized checklist values do not inflate quality (0.222369ms)
+✔ numeric validation requires compatible integers and a plausible year (0.440651ms)
+✔ photo validation requires all four unique guided photos (0.40603ms)
+✔ media checks reject wrong MIME, empty content and oversized files (0.259914ms)
+✔ seven-step flow submits once, blocks repeated clicks and resets after success (405.468826ms)
+✔ upload rejects non-images without creating previews (64.010592ms)
+✔ previews are revoked on replacement, removal and unmount exactly once (69.589099ms)
+✔ a failed publication keeps the draft and permits an explicit retry (154.343827ms)
+✔ repeated Continue clicks do not skip a step, and Back retains entered data (30.814346ms)
+✔ false publish results preserve the draft and release the busy lock (120.284258ms)
+✔ a complete publication reaches 100 without assuming a good mechanical condition (0.41239ms)
+✔ catalog completeness scores only fields actually received (0.200437ms)
+✔ going back to correct a declaration refreshes an untouched suggested description (129.216533ms)
+✔ losing publication permission before confirming cannot submit (100.234661ms)
+✔ a seller without credits sees the supplied access explanation rather than an invalid role claim (7.532345ms)
+ℹ tests 135
+ℹ suites 0
+ℹ pass 135
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4195.609561
+
+> velox-next@0.1.0 build
+> next build
+
+▲ Next.js 16.3.8 (Turbopack)
+✓ Running next.config.mjs took 10ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 188ms
+  Running TypeScript ...
+  Finished TypeScript in 1ms ...
+  Collecting page data using 5 workers ...
+  Generating static pages using 5 workers (0/4) ...
+  Generating static pages using 5 workers (1/4) 
+  Generating static pages using 5 workers (2/4) 
+  Generating static pages using 5 workers (3/4) 
+✓ Generating static pages using 5 workers (4/4) in 368ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+└ ○ /velox-admin
+
+
+○  (Static)  prerendered as static content
+
+
+Browser E2E: BLOCKED by environment, not passed.

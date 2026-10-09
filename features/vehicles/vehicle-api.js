@@ -1,121 +1,89 @@
 import { supabase } from "../../lib/supabase-client";
 import { roleLabel } from "../../lib/roles";
+import { fileDigest, orderedPublicationPhotos } from "../publication/publication-request";
 import {
   getVehicleQuality,
   getVehicleRecommendations,
+  validatePublicationStep,
+  validatePublicationMedia,
 } from "../publication/publication-quality";
 
-export async function fetchVehicleCatalog() {
-  const { data, error } = await supabase.rpc("get_vehicle_catalog");
+export async function fetchVehicleCatalog(client = supabase) {
+  if (!client) throw new Error("La conexión al catálogo no está configurada.");
+  const { data, error } = await client.rpc("get_vehicle_catalog");
   if (error) throw error;
 
-  return Promise.all((data || []).map(async (vehicle) => {
-    const media = await resolveVehicleMedia(vehicle.media || []);
+  const allMedia = (data || []).flatMap(vehicle => vehicle.media || []);
+  const resolved = await resolveVehicleMedia(allMedia, client);
+  let offset = 0;
+  return (data || []).map(vehicle => {
+    const count = (vehicle.media || []).length;
+    const media = resolved.slice(offset, offset + count);
+    offset += count;
     return mapVehicleFromDb({
       ...vehicle,
-      profiles: {
-        display_name: vehicle.seller_name,
-        role: vehicle.seller_type,
-      },
+      status: "active", // get_vehicle_catalog returns only active publications.
+      profiles: { display_name: vehicle.seller_name, role: vehicle.seller_type },
       vehicle_media: media,
     });
-  }));
+  });
 }
 
 export async function createVehiclePublication({
-  form,
-  photoFiles = [],
-  videoFile,
-  profile,
-  user,
+  form, photoFiles = [], videoFile, profile, user, requestId, client = supabase,
 }) {
-  if (photoFiles.length < 4 || photoFiles.length > 8) {
-    throw new Error("La publicacion necesita entre 4 y 8 fotos.");
+  if (!client || !user?.id) throw new Error("Falta iniciar sesión o configurar la conexión.");
+  if (!validatePublicationStep(6, form, photoFiles)) {
+    throw new Error("Revisá los datos y las fotos de la publicación antes de continuar.");
   }
-
+  if (videoFile && validatePublicationMedia(videoFile, "video")) {
+    throw new Error(validatePublicationMedia(videoFile, "video"));
+  }
+  if (!requestId || !/^[0-9a-f-]{36}$/i.test(requestId)) {
+    throw new Error("Falta el identificador de la publicación. Volvé a intentarlo.");
+  }
   const uploadedMedia = [];
-
+  const files = [
+    ...orderedPublicationPhotos(photoFiles).map(photo => ({ file: photo.file, type: "photo" })),
+    ...(videoFile ? [{ file: videoFile, type: "video" }] : []),
+  ];
+  for (let index = 0; index < files.length; index += 1) {
+    const { file, type } = files[index];
+    const path = await buildStoragePath(user.id, requestId, file, index);
+    await uploadMedia(client, path, file);
+    uploadedMedia.push({ media_type: type, storage_path: path, sort_order: index });
+  }
+  // A network timeout may arrive after the transaction commits. Keep staged
+  // objects and the same request id for retry; never delete a possibly-live car.
+  let response;
   try {
-    for (let index = 0; index < photoFiles.length; index += 1) {
-      const photo = photoFiles[index];
-      const storagePath = buildStoragePath(user.id, photo.file, `${index}-${photo.kind}`);
-      await uploadMedia(storagePath, photo.file);
-      uploadedMedia.push({
-        media_type: "photo",
-        storage_path: storagePath,
-        sort_order: index,
-      });
-    }
-
-    if (videoFile) {
-      const storagePath = buildStoragePath(user.id, videoFile, "video");
-      await uploadMedia(storagePath, videoFile);
-      uploadedMedia.push({
-        media_type: "video",
-        storage_path: storagePath,
-        sort_order: photoFiles.length,
-      });
-    }
-  } catch (error) {
-    await cleanupUploadedMedia(uploadedMedia);
-    throw error;
-  }
-
-  const { data, error } = await supabase.rpc("create_vehicle_with_credit", {
-    payload: {
-      brand: form.brand,
-      model: form.model,
-      version: form.version,
-      year: form.year,
-      kilometers: form.kilometers,
-      price: form.price,
-      zone: form.zone,
-      partial_plate: form.partialPlate,
-      description: form.description,
-      checklist: form.checklist,
-      score: calculatePublicationScore(form),
-      accepts_trade: form.acceptsTrade,
-      accepts_financing: form.acceptsFinancing,
-      view_location: form.viewLocation,
-      available_hours: form.availableHours,
-    },
-  });
-
-  if (error) {
-    await cleanupUploadedMedia(uploadedMedia);
-    throw error;
-  }
-
-  const mediaRows = uploadedMedia.map((media) => ({
-    ...media,
-    vehicle_id: data.id,
-  }));
-
-  if (mediaRows.length) {
-    const { data: insertedMedia, error: mediaError } = await supabase
-      .from("vehicle_media")
-      .insert(mediaRows)
-      .select();
-
-    if (mediaError) {
-      await supabase.from("vehicles").delete().eq("id", data.id);
-      await cleanupUploadedMedia(uploadedMedia);
-      throw new Error(`No se pudieron guardar las fotos: ${mediaError.message}`);
-    }
-
-    const resolvedMedia = await resolveVehicleMedia(insertedMedia || []);
-    return mapVehicleFromDb({
-      ...data,
-      profiles: profile,
-      vehicle_media: resolvedMedia,
+    response = await client.rpc("publish_vehicle_with_credit", {
+      publication_request_id: requestId,
+      media_payload: uploadedMedia,
+      payload: {
+        brand: form.brand, model: form.model, version: form.version,
+        year: form.year, kilometers: form.kilometers, price: form.price, zone: form.zone,
+        partial_plate: form.partialPlate, description: form.description,
+        checklist: form.checklist, score: calculatePublicationScore(form),
+        accepts_trade: form.acceptsTrade, accepts_financing: form.acceptsFinancing,
+        view_location: form.viewLocation, available_hours: form.availableHours,
+      },
     });
+  } catch {
+    throw new Error("No pudimos confirmar la publicación. Revisá la conexión y reintentá sin cambiar los datos; no se cobrará otro crédito.");
   }
-
-  return mapVehicleFromDb({
-    ...data,
-    profiles: profile,
-    vehicle_media: [],
-  });
+  if (response.error) {
+    if (response.status === 0 || response.status >= 500 || !response.error.code) {
+      throw new Error("No pudimos confirmar la publicación. Revisá la conexión y reintentá sin cambiar los datos; no se cobrará otro crédito.");
+    }
+    if (response.error.code === "PGRST202") {
+      throw new Error("La publicación segura todavía no está habilitada. Contactá al administrador.");
+    }
+    throw response.error;
+  }
+  if (!response.data?.id) throw new Error("No pudimos confirmar la publicación. Reintentá sin cambiar los datos.");
+  const resolvedMedia = await resolveVehicleMedia(uploadedMedia, client);
+  return mapVehicleFromDb({ ...response.data, profiles: profile, vehicle_media: resolvedMedia });
 }
 
 export function mapVehicleFromDb(vehicle) {
@@ -138,13 +106,14 @@ export function mapVehicleFromDb(vehicle) {
     partialPlate: vehicle.partial_plate,
     viewLocation: vehicle.view_location,
     availableHours: vehicle.available_hours,
-    acceptsTrade: Boolean(vehicle.accepts_trade),
-    acceptsFinancing: Boolean(vehicle.accepts_financing),
+    acceptsTrade: vehicle.accepts_trade,
+    acceptsFinancing: vehicle.accepts_financing,
+    status: vehicle.status,
     seller: sellerName,
     sellerType: roleLabel(vehicle.profiles?.role),
     ownerId: vehicle.owner_id,
     score: Number(vehicle.score || 1),
-    image: firstImage || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80",
+    image: firstImage || "/vehicle-placeholder.svg",
     media: vehicle.vehicle_media || [],
     description: vehicle.description || "Publicacion VELOX.",
     checklist: vehicle.checklist || {},
@@ -157,41 +126,40 @@ export function mapVehicleFromDb(vehicle) {
   };
 }
 
-function buildStoragePath(userId, file, label) {
-  const extension = file.name.split(".").pop()?.toLowerCase() || "bin";
-  const safeLabel = label.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
-  return `${userId}/${Date.now()}-${safeLabel}.${extension}`;
+async function buildStoragePath(userId, requestId, file, index) {
+  const extensions = {
+    "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp",
+    "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov",
+  };
+  const hash = await fileDigest(file);
+  return `${userId}/${requestId}/${index}-${hash}.${extensions[file.type]}`;
 }
 
-async function uploadMedia(storagePath, file) {
-  const { error } = await supabase.storage
-    .from("vehicle-media")
-    .upload(storagePath, file, {
-      cacheControl: "3600",
-      contentType: file.type,
-      upsert: false,
-    });
-
-  if (error) throw new Error(`No se pudo subir ${file.name}: ${error.message}`);
+async function uploadMedia(client, storagePath, file) {
+  const { error } = await client.storage.from("vehicle-media").upload(storagePath, file, {
+    cacheControl: "3600", contentType: file.type, upsert: false,
+  });
+  // Deterministic, content-addressed paths make retry of an existing upload safe.
+  const duplicate = String(error?.statusCode) === "409"
+    || (String(error?.statusCode) === "400" && (error.error === "Duplicate" || error.code === "Duplicate"
+      || /^(?:The resource already exists|Asset Already Exists)\.?$/i.test(error.message || "")));
+  if (error && !duplicate) {
+    throw new Error(`No se pudo subir ${file.name}. Revisá la conexión y reintentá.`);
+  }
 }
 
-async function cleanupUploadedMedia(media) {
-  const paths = media.map((item) => item.storage_path).filter(Boolean);
-  if (paths.length) await supabase.storage.from("vehicle-media").remove(paths);
-}
-
-async function resolveVehicleMedia(media) {
-  return Promise.all(media.map(async (item) => {
-    if (!item.storage_path || item.storage_path.startsWith("http")) return item;
-
-    const { data, error } = await supabase.storage
-      .from("vehicle-media")
-      .createSignedUrl(item.storage_path, 60 * 60);
-
-    return {
-      ...item,
-      storage_path: error ? "" : data.signedUrl,
-    };
+async function resolveVehicleMedia(media, client = supabase) {
+  const paths = [...new Set(media.map(item => item.storage_path).filter(path => path && !path.startsWith("http")))];
+  let signedByPath = new Map();
+  if (paths.length) {
+    try {
+      const { data, error } = await client.storage.from("vehicle-media").createSignedUrls(paths, 60 * 60);
+      if (!error) signedByPath = new Map((data || []).map(item => [item.path, item.signedUrl]));
+    } catch { /* Catalog and confirmed publication stay usable without media URLs. */ }
+  }
+  return media.map(item => ({
+    ...item,
+    storage_path: item.storage_path?.startsWith("https://") ? item.storage_path : signedByPath.get(item.storage_path) || "",
   }));
 }
 

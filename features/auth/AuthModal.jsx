@@ -1,21 +1,30 @@
 "use client";
 
+import { useRef } from "react";
+import { useModalFocus } from "./use-modal-focus";
+
 export default function AuthModal({
   authForm,
+  authBusy = false,
   authMode,
   authStatus,
+  intent = "publish",
   onClose,
   onSubmit,
   profile,
   setAuthForm,
   setAuthMode,
 }) {
+  const dialogRef = useRef(null);
+  useModalFocus(dialogRef, onClose);
   // Si el usuario acaba de autenticarse, mostrar estado de éxito
   const isSuccess = profile || (authStatus && authStatus.includes("podés publicar"));
 
   return (
     <div
       className="chatModal"
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Crear cuenta o ingresar"
@@ -24,7 +33,7 @@ export default function AuthModal({
       <div className="authModal">
         <header className="authModalHeader">
           <div>
-            <p className="eyebrow">Para publicar en VELOX</p>
+            <p className="eyebrow">{intent === "chat" ? "Para consultar al vendedor" : "Para publicar en VELOX"}</p>
             <h3>{authMode === "login" ? "Ingresá a tu cuenta" : "Creá tu cuenta gratis"}</h3>
           </div>
           <button className="close" type="button" onClick={onClose} aria-label="Cerrar">✕</button>
@@ -35,7 +44,7 @@ export default function AuthModal({
             <div className="signedBox">
               <b>✓ Sesión activa</b>
               <span>{profile?.display_name || authForm.email}</span>
-              <span>Continuando a publicar tu vehículo...</span>
+              <span>Continuando...</span>
             </div>
           </div>
         ) : (
@@ -121,8 +130,8 @@ export default function AuthModal({
               />
             </label>
 
-            <button className="primary" type="submit">
-              {authMode === "login" ? "Ingresar" : "Crear cuenta y publicar"}
+            <button className="primary" type="submit" disabled={authBusy}>
+              {authMode === "login" ? "Ingresar" : intent === "chat" ? "Crear cuenta y consultar" : "Crear cuenta y publicar"}
             </button>
 
             {authStatus && (

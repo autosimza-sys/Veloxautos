@@ -1,5 +1,7 @@
 # VELOX
 
+> Revisión técnica local (4 de octubre de 2026): ver [checkpoint y gates de salida](docs/checkpoints/release-candidate.md) y [reconciliación de permisos](docs/checkpoints/policy-drift.md). Los estados de implementación y migraciones que siguen son antecedentes históricos, no verificación del despliegue actual. Ejecutar el preflight completo antes de cualquier migración; no publicar antes de completar staging y el corte del RPC legacy.
+
 VELOX es una plataforma asistida para vender vehiculos.
 
 Propuesta de valor:
@@ -75,7 +77,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 ## Migraciones Supabase
 
-Aplicadas correctamente en Supabase el 23 de junio de 2026:
+Migraciones históricas registradas por el proyecto el 23 de junio de 2026. La ausencia de historial o la existencia de objetos similares no autoriza a reejecutarlas:
 
 ```txt
 202606230001_security_hardening.sql
@@ -89,7 +91,7 @@ Aplicadas correctamente en Supabase el 23 de junio de 2026:
 202606230009_mechanical_inspections.sql
 ```
 
-La auditoria posterior confirmo tablas, funciones, rol `mechanic` y bucket privado de inspecciones.
+La auditoría actual exige comparar definiciones, políticas y grants. No reejecutar la configuración inicial para resolver diferencias: `202606230001_security_hardening.sql` contiene una degradación masiva de administradores y otras migraciones históricas no son idempotentes. Los cambios nuevos, el estado legacy y la secuencia de release están descritos en el checkpoint.
 
 ## Creditos
 

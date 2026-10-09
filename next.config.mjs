@@ -5,8 +5,6 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export",
-  eslint: { ignoreDuringBuilds: true },
   turbopack: {
     root: projectRoot,
   },

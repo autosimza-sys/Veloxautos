@@ -1,0 +1,23 @@
+Verification record: 2026-10-04 UTC
+Scope: final read-only staging preflight after trigger-enforcement and MIME-null corrections.
+
+Commands executed:
+node --import ./tests/no-live-services.mjs --test tests/backend/staging-preflight.test.mjs
+Result: exit 0; 12 tests, 12 pass, 0 fail, 0 skipped; duration 17192.690041 ms.
+
+npm run lint && git diff --check -- scripts/staging-preflight.sql tests/backend/staging-preflight.test.mjs
+Result: exit 0; ESLint without errors and scoped diff without whitespace errors.
+Only warning: npm reported unknown environment config "http-proxy".
+
+This file records verified command results, not a reconstructed raw stdout transcript.
+The complete application regression is preserved separately in verification-policy-drift.txt:
+lint, 469/469 tests and Next.js build passed before these final audit-only refinements.
+No application, frontend, migration or runtime dependency changes followed that build.
+
+Review status:
+- Missing/disabled/replica-only/rewired critical triggers cannot receive PASS.
+- Eight critical triggers are compared by relation, name, bound function, enabled state and definition.
+- MIME arrays containing NULL receive BLOCKED.
+- Independent static review confirmed both reported gaps closed.
+
+Not verified here: live Supabase services, HTTP/CDN behavior, browser/visual E2E, independent PostgreSQL connection concurrency or production readiness.

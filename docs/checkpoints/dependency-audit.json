@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-03",
+  "node": "24.19.0",
+  "baselineProd": {
+    "critical": 1,
+    "high": 3,
+    "moderate": 1,
+    "total": 5
+  },
+  "finalProd": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "finalAll": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 5,
+    "critical": 0,
+    "total": 5
+  },
+  "remaining": "Development-only transitive braces/fast-glob/micromatch via eslint-config-next. Compatible upstream fix unavailable; no downgrade to Next14 tooling performed."
+}

@@ -8,7 +8,6 @@ import { qualityLabel } from "../publication/publication-quality";
 export default function VehicleDetail({
   canChat,
   canSeePrice,
-  isSeller,
   onOpenChat,
   vehicle,
 }) {
@@ -17,9 +16,9 @@ export default function VehicleDetail({
   const recommendations = vehicle.recommendations || [];
 
   const photos = (vehicle.media || [])
-    .filter((m) => m.media_type === "photo")
+    .filter((m) => m.media_type === "photo" && m.storage_path)
     .sort((a, b) => a.sort_order - b.sort_order);
-  const videos = (vehicle.media || []).filter((m) => m.media_type === "video");
+  const videos = (vehicle.media || []).filter((m) => m.media_type === "video" && m.storage_path);
   const allMedia = [...photos, ...videos];
 
   const displayMedia = allMedia.length > 0
@@ -89,7 +88,7 @@ export default function VehicleDetail({
             <Info label="Ano" value={vehicle.year} />
             <Info
               label="Km"
-              value={vehicle.km == null ? "Visible al registrarse" : `${vehicle.km.toLocaleString("es-AR")} km`}
+              value={!canSeePrice || vehicle.km == null ? "Visible al registrarse" : `${vehicle.km.toLocaleString("es-AR")} km`}
             />
             <Info label="Zona" value={vehicle.zone} />
             <Info
@@ -107,10 +106,10 @@ export default function VehicleDetail({
             </div>
           )}
           <div className="actions">
-            <button className="primary" disabled={!canChat} onClick={onOpenChat}>
+            <button className="primary" onClick={onOpenChat}>
               {canChat ? "Abrir chat interno" : "Registrate para chatear"}
             </button>
-            {isSeller && <button className="secondary">Editar publicacion</button>}
+            <a href="/preguntas">Ver preguntas frecuentes</a>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./faq.css";
 
 export const metadata = {
   title: "VELOX | Te ayudamos a vender tu vehiculo",
