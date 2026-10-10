@@ -143,9 +143,9 @@ export default function HomePage() {
         setAuthMode={auth.setAuthMode}
       />
 
-      {auth.session && <ChatInbox key={auth.session.user.id} session={auth.session} />}
+      {auth.session && <ChatInbox key={`inbox:${auth.session.user.id}`} session={auth.session} />}
       {auth.session && isSellerRole(auth.profile?.role) && <OwnerListings
-        key={auth.session.user.id}
+        key={`listings:${auth.session.user.id}`}
         session={auth.session}
         profile={auth.profile}
         onChanged={catalog.refresh}
