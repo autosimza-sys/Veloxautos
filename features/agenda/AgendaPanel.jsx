@@ -5,6 +5,7 @@ import { appointmentActions, appointmentEnd, MAX_APPOINTMENT_DURATION_MINUTES } 
 import { statusLabel, useAppointments } from "./use-appointments";
 import VisitPlanner from './VisitPlanner';
 import AuthorizedVisitBooking from './AuthorizedVisitBooking';
+import {supabase} from '../../lib/supabase-client';
 
 const actionLabels = { accepted: "Aceptar", rejected: "Rechazar", confirmed: "Confirmar visita", cancelled: "Cancelar visita" };
 
@@ -13,7 +14,7 @@ export default function AgendaPanel(props) {
   return <AgendaContent key={JSON.stringify([props.conversation?.id, props.userId])} {...props} />;
 }
 
-function AgendaContent({ conversation, userId, client }) {
+function AgendaContent({ conversation, userId, client = supabase }) {
   const agenda = useAppointments({ conversation, userId, client });
   const [open, setOpen] = useState(false);
   const [assistantOpen,setAssistantOpen]=useState(false);

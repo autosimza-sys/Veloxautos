@@ -88,6 +88,7 @@ export default function HomePage() {
           <a href="#catalogo">Buscar</a>
           <a href="#cuenta">Cuenta</a>
           <Link href="/preguntas">Preguntas frecuentes</Link>
+          <Link href="/demo">Probar demo</Link>
           {auth.session && <a href="#conversaciones">Mensajes</a>}
           {isSellerRole(auth.profile?.role) && <a href="#mis-publicaciones">Mis publicaciones</a>}
         </nav>

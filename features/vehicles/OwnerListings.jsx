@@ -4,6 +4,7 @@ import { useState } from "react";
 import { canManageOwnListings, ownerListingForm, useOwnerListings } from "./use-owner-listings";
 import SellerFaqPanel from '../faq/SellerFaqPanel';
 import SellerVisitAuthorization from '../agenda/SellerVisitAuthorization';
+import {supabase} from '../../lib/supabase-client';
 
 const STATUS_LABELS = { active: "Activa", paused: "Pausada", deleted: "Retirada", draft: "Borrador" };
 const FIELDS = [
@@ -18,7 +19,7 @@ export default function OwnerListings(props) {
   if (!canManageOwnListings(props.session, props.profile)) return null;
   // Remount private forms on any account/token change so unsaved data can never
   // carry over into the next account, even before an asynchronous load finishes.
-  return <OwnerListingsContent key={`${props.session.user.id}:${props.session.access_token || ""}`} {...props} />;
+  return <OwnerListingsContent key={`${props.session.user.id}:${props.session.access_token || ""}`} {...props} client={props.client === undefined ? supabase : props.client} />;
 }
 
 function OwnerListingsContent(props) {

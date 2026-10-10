@@ -1,7 +1,6 @@
 "use client";
 
 import {useEffect,useRef,useState} from 'react';
-import {supabase} from '../../lib/supabase-client';
 import {appointmentRequest} from './appointment-request';
 import {formatAuthorizationTime} from './visit-authorization-model';
 
@@ -9,7 +8,7 @@ export default function AuthorizedVisitBooking(props){
  if(!props.userId||props.userId!==props.conversation?.buyer_id||props.conversation?.is_blocked)return null;
  return <Booking key={`${props.userId}:${props.conversation.id}`} {...props}/>;
 }
-function Booking({conversation,userId,client=supabase,onBooked}){
+function Booking({conversation,userId,client,onBooked}){
  const [open,setOpen]=useState(false),[slots,setSlots]=useState([]),[selected,setSelected]=useState(null);
  const [consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
  const [loaded,setLoaded]=useState(false),[receipt,setReceipt]=useState(null);

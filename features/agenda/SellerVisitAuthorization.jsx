@@ -1,12 +1,11 @@
 "use client";
 import {useEffect,useRef,useState} from 'react';
-import {supabase} from '../../lib/supabase-client';
 import {authorizationState,formatAuthorizationTime,validateVisitWindow} from './visit-authorization-model';
 
 export default function SellerVisitAuthorization(props) {
  return <AuthorizationPanel key={props.vehicleId} {...props} />;
 }
-function AuthorizationPanel({vehicleId,client=supabase,listingActive=true}) {
+function AuthorizationPanel({vehicleId,client,listingActive=true}) {
  const [open,setOpen]=useState(false);
  return <div className="sellerFaq"><button type="button" className="secondary" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>Horarios del asistente</button>
   {open&&<AuthorizationEditor vehicleId={vehicleId} client={client} listingActive={listingActive} />}

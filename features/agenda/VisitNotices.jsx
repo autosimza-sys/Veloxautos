@@ -1,13 +1,12 @@
 "use client";
 
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {supabase} from '../../lib/supabase-client';
 import {formatAuthorizationTime} from './visit-authorization-model';
 
 export default function VisitNotices(props){
  return props.userId?<NoticeList key={props.userId} {...props}/>:null;
 }
-function NoticeList({userId,client=supabase}){
+function NoticeList({userId,client}){
  const [view,setView]=useState({rows:[],client:null}),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const scope=useRef(null);
  const refresh=useCallback(async()=>{
