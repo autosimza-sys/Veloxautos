@@ -191,32 +191,13 @@ function useMockApiKey(t) {
   });
 }
 
-test("optional API prompt preserves unknown flags and status without making a network request", async (t) => {
+test("compatibility helpers never bypass paid-route limits, even with an API key", async (t) => {
   useMockApiKey(t);
-  let request;
-  t.mock.method(globalThis, "fetch", async (_url, options) => {
-    request = JSON.parse(options.body);
-    return { ok: true, json: async () => ({ content: [{ text: "Respuesta de prueba" }] }) };
-  });
-  assert.equal(await generateClaudeAnswer("¿Acepta permuta?", { acceptsFinancing: false, km: 0 }), "Respuesta de prueba");
-  assert.match(request.system, /Acepta permuta: No informado/);
-  assert.match(request.system, /Acepta financiación: No\n/);
-  assert.match(request.system, /Estado de publicación: No informado/);
-  assert.match(request.system, /Kilómetros: 0 km/);
-  assert.doesNotMatch(request.system, /undefined|null/);
-});
-
-test("optional API falls back to the corrected rules on failures", async (t) => {
-  useMockApiKey(t);
-  t.mock.method(console, "error", () => {});
-  t.mock.method(globalThis, "fetch", async () => ({ ok: false, status: 503 }));
-  assert.equal(await generateClaudeAnswer("¿Cuántos kilómetros tiene?", vehicle), clientRules("¿Cuántos kilómetros tiene?", vehicle));
-});
-
-test("optional API does not send an empty question or missing vehicle", async (t) => {
-  useMockApiKey(t);
-  const fetch = t.mock.method(globalThis, "fetch", async () => assert.fail("No API request expected"));
-  assert.equal(await generateClaudeAnswer("hola", null), clientRules("hola", null));
-  assert.equal(await generateClaudeAnswer("  ", vehicle), clientRules("  ", vehicle));
-  assert.equal(fetch.mock.callCount(), 0);
+  const mocked = t.mock.method(globalThis, "fetch", async () => assert.fail("No provider call expected"));
+  for (const generate of [generateClaudeAnswer, getAssistantAnswer]) {
+    assert.equal(await generate("¿Cuántos kilómetros tiene?", vehicle), clientRules("¿Cuántos kilómetros tiene?", vehicle));
+    assert.equal(await generate("Pregunta imprevista", {}), clientRules("Pregunta imprevista", {}));
+    assert.equal(await generate("hola", null), clientRules("hola", null));
+  }
+  assert.equal(mocked.mock.callCount(), 0);
 });
