@@ -4,6 +4,7 @@ import React from 'react';
 import {JSDOM} from 'jsdom';
 const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost'});
 globalThis.window=dom.window;globalThis.document=dom.window.document;globalThis.React=React;
+globalThis.self=dom.window;
 Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 dom.window.HTMLElement.prototype.scrollIntoView=()=>{};
