@@ -43,7 +43,8 @@ function NoticeList({userId,client=supabase}){
   <p>Los avisos quedan acá. Se actualizan mientras usás Velox.</p>
   <button className="secondary" type="button" disabled={busy||!client} onClick={refresh}>Actualizar avisos</button>
   {error&&<p role="alert">{error}</p>}
-  {!error&&!rows.length&&<p>Todavía no tenés avisos de visitas.</p>}
+  {!error&&view.client!==client&&<p role="status">Cargando avisos…</p>}
+  {!error&&view.client===client&&!rows.length&&<p>Todavía no tenés avisos de visitas.</p>}
   {rows.map(n=><article key={n.id} className="visitAuthorizationRecord">
    <strong>{n.status==='cancelled'?'Visita cancelada':'Visita confirmada'}{!n.read_at?' · Nuevo':''}</strong>
    <h4>{n.vehicle_title}</h4><p>Comprador: {n.buyer_name}</p>

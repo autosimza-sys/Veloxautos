@@ -18,6 +18,22 @@ async function report(db) {
   return result;
 }
 
+test('phase-2 function fingerprints match LF source used by Git and Linux CI', async () => {
+  const db=await makeDatabase();
+  try {
+    const source=(await readFile(path.join(root,'supabase/migrations/202610090006_authorized_booking.sql'),'utf8')).replaceAll('\r\n','\n');
+    const definitions=source.match(/create(?: or replace)? function[\s\S]*?\$\$;/g);
+    assert.equal(definitions.length,8);
+    for(const definition of definitions)await db.exec(definition.replace(/^create function/,'create or replace function'));
+    const rows=await report(db);
+    for(const definition of definitions){
+      const name=definition.match(/function ([^(]+)/)[1];
+      const fn=rows.find(r=>r.section==='functions'&&r.object_name.startsWith(name+'('));
+      assert.equal(fn?.status,'PASS',name);
+    }
+  } finally { await db.close(); }
+});
+
 function row(rows, section, name) {
   const match = rows.find((entry) => entry.section === section && entry.object_name === name);
   assert.ok(match, `${section}: ${name} must be reported`);

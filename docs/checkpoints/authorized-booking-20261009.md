@@ -18,13 +18,15 @@ Scope: [capability contract](../stages/10-authorized-booking.md). Federico selec
 | GREEN `33a5d7c` | Same focused targets: 21/21 passing. Two fixture mistakes (ledger column and composite result decoding) and an observable async wait were corrected without weakening guarantees. |
 | Additional RED `f311261` | Visit FAQ test actually failed against obsolete manual-only instructions. Additional passing tests cover cross-role busy buyer, stale UI responses, private notice errors and account changes. |
 | FAQ GREEN | Booking, notice UI and FAQ integration targets: 43/43 passing. |
-| UI coverage | 13 UI tests; 100% lines/functions, 90.60% branches across AuthorizedVisitBooking and VisitNotices. This is not whole-app or SQL coverage. |
+| UI coverage | 13 UI tests; 100% lines/functions, 90.83% branches across AuthorizedVisitBooking and VisitNotices. This is not whole-app or SQL coverage. |
 
 Commands actually run: native Node runner through `tsx` with `tests/no-live-services.mjs`; focused backend/UI targets; native `--experimental-test-coverage`; `npm run verify`; isolated snapshot migration rehearsal. Final CI identity and total results are recorded in the delivery report.
 
 Chrome verification used real React components and the application SQL in isolated PGlite with synthetic users. The buyer selected/accepted a slot; seller notice survived reload and could be marked read. No external identity provider was involved. PGlite integration tests exercise the real exclusion constraint but do not simulate distributed multi-connection production load.
 
 Snapshot rehearsal: 20 application tables / 50 rows restored exactly; 16 forward migrations applied; original historical visit fields retained, no invented consent and no historical reservation. Platform Auth/Storage are simulated, so this is not a full managed Supabase restore.
+
+The first Linux CI run found a Windows CRLF/LF difference in the new SQL function fingerprints (599/600 tests passed). RED `19f471d` reproduces this locally by loading the LF function definitions from migration source. SQL files now use LF through `.gitattributes`, and the eight reviewed function fingerprints were regenerated from canonical source using the audit search_path and canonical regprocedure signatures. The preflight still checks exact definitions; no safety check was relaxed. The final CI rerun is the release evidence.
 
 ## Release limits
 
