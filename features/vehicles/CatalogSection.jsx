@@ -20,6 +20,8 @@ const KM_RANGES = [
 export default function CatalogSection({
   canSeePrice,
   catalogStatus,
+  isLoading,
+  onRetry,
   onSelect,
   selectedVehicle,
   vehicles,
@@ -61,7 +63,8 @@ export default function CatalogSection({
       if (filterYear && String(v.year) !== filterYear) return false;
 
       // Price range
-      if (filterPrice !== "") {
+      if (canSeePrice && filterPrice !== "") {
+        if (v.price == null) return false;
         const range = PRICE_RANGES[Number(filterPrice)];
         if (range) {
           if (range.min != null && v.price < range.min) return false;
@@ -70,7 +73,8 @@ export default function CatalogSection({
       }
 
       // Km range
-      if (filterKm !== "") {
+      if (canSeePrice && filterKm !== "") {
+        if (v.km == null) return false;
         const range = KM_RANGES[Number(filterKm)];
         if (range) {
           if (range.min != null && v.km < range.min) return false;
@@ -80,9 +84,9 @@ export default function CatalogSection({
 
       return true;
     });
-  }, [vehicles, search, filterBrand, filterYear, filterPrice, filterKm]);
+  }, [vehicles, search, filterBrand, filterYear, filterPrice, filterKm, canSeePrice]);
 
-  const hasFilters = search || filterBrand || filterYear || filterPrice !== "" || filterKm !== "";
+  const hasFilters = search || filterBrand || filterYear || (canSeePrice && (filterPrice !== "" || filterKm !== ""));
 
   function clearFilters() {
     setSearch("");
@@ -117,6 +121,7 @@ export default function CatalogSection({
         <input
           className="catalogSearchInput"
           placeholder="Buscar por marca, modelo, zona..."
+          aria-label="Buscar vehículos"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -154,10 +159,11 @@ export default function CatalogSection({
             <label className="filterLabel">
               Precio
               <select
+                disabled={!canSeePrice}
                 value={filterPrice}
                 onChange={(e) => setFilterPrice(e.target.value)}
               >
-                <option value="">Cualquier precio</option>
+                <option value="">{canSeePrice ? "Cualquier precio" : "Ingresá para filtrar por precio"}</option>
                 {PRICE_RANGES.map((r, i) => (
                   <option key={i} value={i}>{r.label}</option>
                 ))}
@@ -167,10 +173,11 @@ export default function CatalogSection({
             <label className="filterLabel">
               Kilómetros
               <select
+                disabled={!canSeePrice}
                 value={filterKm}
                 onChange={(e) => setFilterKm(e.target.value)}
               >
-                <option value="">Sin límite</option>
+                <option value="">{canSeePrice ? "Sin límite" : "Ingresá para filtrar por km"}</option>
                 {KM_RANGES.map((r, i) => (
                   <option key={i} value={i}>{r.label}</option>
                 ))}
@@ -212,7 +219,7 @@ export default function CatalogSection({
                   <h3>{vehicle.brand} {vehicle.model}</h3>
                   <p>{vehicle.version} · {vehicle.year} · {vehicle.zone}</p>
                   <div className="cardMeta">
-                    {vehicle.km != null && (
+                    {canSeePrice && vehicle.km != null && (
                       <span className="cardTag">{vehicle.km.toLocaleString("es-AR")} km</span>
                     )}
                     {vehicle.acceptsTrade && (
@@ -225,6 +232,15 @@ export default function CatalogSection({
             );
           })}
         </div>
+      ) : isLoading ? (
+        <p role="status">Cargando catálogo...</p>
+      ) : catalogStatus ? (
+        <div className="emptyState" role="status">
+          <p>{catalogStatus}</p>
+          <button className="secondary" type="button" onClick={onRetry}>Reintentar</button>
+        </div>
+      ) : vehicles.length === 0 ? (
+        <div className="emptyState"><p>Todavía no hay vehículos publicados.</p></div>
       ) : (
         <div className="emptyState">
           <p>No encontramos vehículos con esos filtros.</p>
@@ -232,7 +248,6 @@ export default function CatalogSection({
         </div>
       )}
 
-      {catalogStatus && <p className="authStatus" style={{ marginTop: 16 }}>{catalogStatus}</p>}
     </section>
   );
 }

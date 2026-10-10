@@ -1,0 +1,21 @@
+.demoHeader{max-width:1160px;margin:auto;padding:24px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.demoHeader>a:last-child{margin-left:auto;color:#aec5ef;font-size:14px}
+.demoBadge{font-size:10px;letter-spacing:1.7px;font-weight:800;color:#fbbf24;border:1px solid #634820;border-radius:6px;padding:5px 9px}
+.demoPage{max-width:1120px;margin:auto;padding:42px 24px 24px;overflow-wrap:anywhere}
+.demoIntro{max-width:780px;margin-bottom:24px}.demoIntro h1{font-size:clamp(32px,5vw,54px);margin:6px 0 18px}.demoIntro>p:last-child{font-size:18px;color:#b7c7e0}
+.demoDisclosure{padding:18px 22px;border:1px solid #594723;background:#1b1720;border-radius:12px;font-size:14px;color:#d0d9e9;margin:20px 0}
+.demoDisclosure strong{color:#fde6b1}.demoDisclosure p{margin-top:6px}
+.demoWelcome,.demoCard{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:26px;margin:18px 0}
+.demoWelcome h2,.demoCard h2{font-size:clamp(24px,3.3vw,34px);margin-bottom:16px}.demoWelcome ol{padding-left:22px;margin:22px 0;display:grid;gap:12px;color:#c7d3e8}
+.demoSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:32px}
+.demoSteps button{background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:left;color:#adbedb;padding:16px;font-weight:600}
+.demoSteps button span{display:block;color:var(--gold);font-size:11px;letter-spacing:2px;margin-bottom:7px}
+.demoSteps button[aria-pressed=true]{background:#152645;border-color:#477ed8;color:white}.demoSteps button:disabled{opacity:.5;cursor:not-allowed}
+.demoToolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0;color:#a2b6d6;font-size:13px;flex-wrap:wrap}
+.demoActions{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.demoRole{display:grid;gap:7px;max-width:260px;margin:20px 0}.demoRole select{color:var(--text);background:var(--surface2);padding:10px;border:1px solid var(--border-2);border-radius:8px}
+.demoHint{font-size:13px;color:#9eb2d1}.demoCard>[role=status]{margin-top:12px;color:#94e7c8}
+.demoVehicle{display:grid;grid-template-columns:minmax(160px,30%) minmax(0,1fr);gap:24px}.demoVehicle>img{width:100%;border-radius:12px;background:#111b2d;align-self:start}.demoVehicle h3{font-size:28px;margin-bottom:12px}.demoVehicle p{margin:10px 0}.demoVehicle strong{color:#c6dcff}.demoVehicle details{margin-top:18px}.demoVehicle summary{cursor:pointer;font-weight:600}.demoVehicle dl>div{display:flex;gap:18px;justify-content:space-between;border-bottom:1px solid var(--border);padding:8px 0}.demoVehicle dd{color:#bacbe3;text-align:right}
+.demoJourney .salesAssistantSection{width:100%;margin:24px 0}.demoJourney .assistantWorkspace{width:100%;margin:20px 0}.demoJourney .visitNotices{margin-top:24px}.demoJourney .visitAuthorization{margin-top:20px}
+.demoForm .demoDisclosure{margin-bottom:0}.demoFooter{margin-top:40px;padding:22px 0;border-top:1px solid var(--border);color:#9eb2d1;font-size:13px}
+.demoPage button:focus-visible,.demoHeader a:focus-visible,.demoPage summary:focus-visible{outline:3px solid #7cb3ff;outline-offset:4px}
+@media(max-width:620px){.demoPage{padding:28px 16px}.demoHeader{padding:18px 16px;gap:12px}.demoHeader>a:last-child{width:100%;margin:0}.demoSteps{gap:6px}.demoSteps button{padding:12px 8px;font-size:12px}.demoCard,.demoWelcome{padding:20px 16px}.demoVehicle{grid-template-columns:1fr}.demoVehicle>img{max-height:170px;object-fit:contain}.demoActions>button{width:100%}.demoToolbar .secondary{padding:9px 12px}.demoDisclosure{padding:15px}.demoJourney .salesChatComposer{flex-wrap:wrap}.demoJourney .salesChatComposer input{min-width:0}.demoJourney .visitSlots button{text-align:left;white-space:normal}}

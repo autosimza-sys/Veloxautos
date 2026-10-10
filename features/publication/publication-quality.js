@@ -1,3 +1,5 @@
+import { checklistOptions } from "../../lib/velox-data.js";
+
 export const PHOTO_GUIDE = [
   { id: "front", label: "Frontal", required: true, tip: "De frente, con el vehiculo completo dentro del cuadro." },
   { id: "right", label: "Lateral derecho", required: true, tip: "Mostra todo el lateral, sin cortar ruedas." },
@@ -14,7 +16,7 @@ export function createPublicationForm() {
     brand: "",
     model: "",
     version: "",
-    year: new Date().getFullYear(),
+    year: "",
     kilometers: "",
     price: "",
     zone: "",
@@ -24,32 +26,79 @@ export function createPublicationForm() {
     acceptsFinancing: false,
     viewLocation: "",
     availableHours: "",
-    checklist: {
-      motor: "bueno",
-      caja: "buena",
-      trenDelantero: "sin ruidos",
-      amortiguadores: "normales",
-      cubiertas: "media vida",
-      frenos: "normales",
-      aire: "funciona perfecto",
-      interiores: "buenos",
-      vidrios: "originales",
-      pintura: "original",
-      choques: "nunca chocado",
-    },
+    checklist: Object.fromEntries(Object.keys(checklistOptions).map(key => [key, ""])),
   };
 }
 
-export function buildDescription(form) {
-  const vehicle = [form.brand, form.model, form.version].filter(Boolean).join(" ");
-  const features = [
-    `${Number(form.kilometers || 0).toLocaleString("es-AR")} km`,
-    `motor ${form.checklist.motor}`,
-    `caja ${form.checklist.caja}`,
-    `interior ${form.checklist.interiores}`,
-  ];
+export const PHOTO_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
+export const UNREVIEWED = "no revisado";
+const MAX_DATABASE_INTEGER = 2147483647;
+const CURRENT_YEAR = new Date().getFullYear();
 
-  return `${vehicle} ${form.year}. ${features.join(", ")}. Se puede ver en ${form.zone || "zona a coordinar"}. Informacion declarada por el propietario.`;
+function hasText(value) {
+  return typeof value === "string" && Boolean(value.trim());
+}
+
+function isIntegerInRange(value, min, max = MAX_DATABASE_INTEGER) {
+  if (typeof value !== "number" && typeof value !== "string") return false;
+  if (typeof value === "string" && !/^\d+$/.test(value.trim())) return false;
+  return Number.isSafeInteger(Number(value)) && Number(value) >= min && Number(value) <= max;
+}
+
+function declaredChecklistCount(checklist = {}) {
+  return Object.entries(checklistOptions).filter(([key, options]) =>
+    options.includes(checklist?.[key]) || checklist?.[key] === UNREVIEWED,
+  ).length;
+}
+
+export function validatePublicationMedia(file, kind) {
+  const photo = kind === "photo";
+  const types = photo ? PHOTO_MIME_TYPES : VIDEO_MIME_TYPES;
+  if (!file || !types.includes(file.type)) {
+    return photo
+      ? "Formato de foto no permitido. Usa JPEG, PNG o WebP."
+      : "Formato de video no permitido. Usa MP4, WebM o QuickTime.";
+  }
+  if (!Number.isFinite(file.size) || file.size <= 0) return "El archivo esta vacio o no se puede leer.";
+  const maxMb = photo ? 3 : 25;
+  return file.size > maxMb * 1024 * 1024
+    ? `${photo ? "Cada foto" : "El video"} puede pesar como maximo ${maxMb} MB.`
+    : "";
+}
+
+export function validatePublicationStep(step, form, photos = []) {
+  if (step === 0) return [form.brand, form.model, form.version].every(hasText)
+    && isIntegerInRange(form.year, 1886, CURRENT_YEAR + 1);
+  if (step === 1) return isIntegerInRange(form.kilometers, 0);
+  if (step === 2) return isIntegerInRange(form.price, 1) && hasText(form.zone);
+  if (step === 3) {
+    const kinds = new Set(photos.map(photo => photo.kind));
+    return photos.length >= 4 && photos.length <= PHOTO_GUIDE.length
+      && kinds.size === photos.length
+      && photos.every(photo => PHOTO_GUIDE.some(guide => guide.id === photo.kind) && !validatePublicationMedia(photo.file, "photo"))
+      && PHOTO_GUIDE.filter(guide => guide.required).every(guide => kinds.has(guide.id));
+  }
+  if (step === 4) return declaredChecklistCount(form.checklist) === Object.keys(checklistOptions).length;
+  if (step === 6) return [0, 1, 2, 3, 4].every(index => validatePublicationStep(index, form, photos));
+  return step === 5;
+}
+
+export function buildDescription(form) {
+  const vehicle = [form.brand, form.model, form.version].filter(hasText).map(value => value.trim()).join(" ");
+  const identification = [vehicle, isIntegerInRange(form.year, 1886, CURRENT_YEAR + 1) ? form.year : ""].filter(Boolean).join(" ");
+  const features = [];
+  if (isIntegerInRange(form.kilometers, 0)) features.push(`${Number(form.kilometers).toLocaleString("es-AR")} km`);
+  for (const [key, label] of [["motor", "motor"], ["caja", "caja"], ["interiores", "interior"]]) {
+    const value = form.checklist?.[key];
+    if (checklistOptions[key].includes(value) || value === UNREVIEWED) features.push(`${label} ${value}`);
+  }
+  return [
+    identification,
+    features.join(", "),
+    hasText(form.zone) ? `Se puede ver en ${form.zone.trim()}` : "",
+    "Informacion declarada por el propietario",
+  ].filter(Boolean).join(". ") + ".";
 }
 
 export function getPublicationRecommendations({ form, photos, videoFile }) {
@@ -66,7 +115,7 @@ export function getPublicationRecommendations({ form, photos, videoFile }) {
     }
   });
 
-  if (!form.description || form.description.length < 90) {
+  if (!hasText(form.description) || form.description.trim().length < 90) {
     recommendations.push({
       id: "description",
       level: "high",
@@ -74,7 +123,7 @@ export function getPublicationRecommendations({ form, photos, videoFile }) {
     });
   }
 
-  if (!form.partialPlate) {
+  if (!hasText(form.partialPlate)) {
     recommendations.push({
       id: "plate",
       level: "low",
@@ -82,7 +131,7 @@ export function getPublicationRecommendations({ form, photos, videoFile }) {
     });
   }
 
-  if (!form.viewLocation || !form.availableHours) {
+  if (!hasText(form.viewLocation) || !hasText(form.availableHours)) {
     recommendations.push({
       id: "availability",
       level: "medium",
@@ -101,15 +150,22 @@ export function getPublicationRecommendations({ form, photos, videoFile }) {
   return recommendations;
 }
 
-export function getPublicationQuality({ form, photos, videoFile }) {
-  let points = 20;
+export function getPublicationQuality({ form, photos = [], videoFile }) {
+  let points = 0;
+  if (hasText(form.brand)) points += 3;
+  if (hasText(form.model)) points += 3;
+  if (hasText(form.version)) points += 2;
+  if (isIntegerInRange(form.year, 1886, CURRENT_YEAR + 1)) points += 3;
+  if (isIntegerInRange(form.kilometers, 0)) points += 3;
+  if (isIntegerInRange(form.price, 1)) points += 3;
+  if (hasText(form.zone)) points += 3;
   points += Math.min(32, photos.length * 4);
   if (videoFile) points += 8;
-  if (form.description.length >= 90) points += 12;
-  if (form.partialPlate) points += 5;
-  if (form.viewLocation) points += 5;
-  if (form.availableHours) points += 5;
-  if (Object.keys(form.checklist).length >= 10) points += 13;
+  if (hasText(form.description) && form.description.trim().length >= 90) points += 12;
+  if (hasText(form.partialPlate)) points += 5;
+  if (hasText(form.viewLocation)) points += 5;
+  if (hasText(form.availableHours)) points += 5;
+  points += Math.floor(13 * declaredChecklistCount(form.checklist) / Object.keys(checklistOptions).length);
   return Math.min(100, points);
 }
 
@@ -117,6 +173,8 @@ export function getVehicleQuality(vehicle) {
   const photos = (vehicle.media || []).filter((item) => item.media_type === "photo");
   const videoFile = (vehicle.media || []).some((item) => item.media_type === "video");
   const form = {
+    brand: vehicle.brand, model: vehicle.model, version: vehicle.version, year: vehicle.year,
+    kilometers: vehicle.km, price: vehicle.price, zone: vehicle.zone,
     description: vehicle.description || "",
     partialPlate: vehicle.partialPlate || "",
     viewLocation: vehicle.viewLocation || "",
@@ -136,7 +194,7 @@ export function getVehicleRecommendations(vehicle) {
   if (!(vehicle.media || []).some((item) => item.media_type === "video")) recommendations.push("Agrega un video corto del exterior e interior.");
   if (!vehicle.description || vehicle.description.length < 90) recommendations.push("Amplia la descripcion con mantenimiento, uso y detalles conocidos.");
   if (!vehicle.viewLocation || !vehicle.availableHours) recommendations.push("Define lugar y horarios para coordinar visitas.");
-  if (Object.keys(vehicle.checklist || {}).length < 10) recommendations.push("Completa la autorevision declarada por el propietario.");
+  if (declaredChecklistCount(vehicle.checklist) < Object.keys(checklistOptions).length) recommendations.push("Completa la autorevision declarada por el propietario.");
 
   return recommendations;
 }

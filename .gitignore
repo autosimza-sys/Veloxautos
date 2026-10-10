@@ -1,8 +1,12 @@
 .env
 .env.local
+supabase/.temp/
+supabase/.branches/
 .env.*.local
 .next/
 out/
 node_modules/
 *.log
 .vercel/
+test-results/
+playwright-report/

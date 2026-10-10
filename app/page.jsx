@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import Info from "../components/Info";
 import AuthModal from "../features/auth/AuthModal";
 import AuthSection from "../features/auth/AuthSection";
 import { useAuth } from "../features/auth/use-auth";
+import { useAuthDialog } from "../features/auth/use-auth-dialog";
 import ChatPreview from "../features/chat/ChatPreview";
 import CreditsSection from "../features/credits/CreditsSection";
 import { useCredits } from "../features/credits/use-credits";
 import HomeHero from "../features/home/HomeHero";
-import InspectionSection from "../features/inspections/InspectionSection";
 import PublicationAssistant from "../features/publication/PublicationAssistant";
 import QualitySection from "../features/quality/QualitySection";
 import SalesAssistantSection from "../features/sales-assistant/SalesAssistantSection";
@@ -19,11 +19,20 @@ import VehicleDetail from "../features/vehicles/VehicleDetail";
 import { useVehicleCatalog } from "../features/vehicles/use-vehicle-catalog";
 import { isSellerRole } from "../lib/roles";
 
+const ChatInbox = dynamic(() => import("../features/chat/ChatInbox"), {
+  loading: () => <p role="status">Cargando conversaciones...</p>,
+});
+const InspectionSection = dynamic(() => import("../features/inspections/InspectionSection"), {
+  loading: () => <p role="status">Cargando revisiones...</p>,
+});
+const OwnerListings = dynamic(() => import("../features/vehicles/OwnerListings"), {
+  loading: () => <p role="status">Cargando tus publicaciones...</p>,
+});
+
 export default function HomePage() {
   const [chatOpen, setChatOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [publishIntent, setPublishIntent] = useState(false);
   const assistantRef = useRef(null);
+  const { intent: authIntent, open: openAuth, close: closeAuth } = useAuthDialog();
 
   const auth = useAuth();
   const credits = useCredits(auth.session);
@@ -36,27 +45,29 @@ export default function HomePage() {
   const canSeePrice = Boolean(auth.session);
   const canChat = Boolean(auth.session);
   const canPublish = isSellerRole(auth.profile?.role)
-    && (credits.balance === null || credits.balance.remaining > 0);
+    && !auth.profile?.is_blocked && Boolean(credits.balance?.remaining > 0);
+  const publishAccessMessage = auth.profile?.is_blocked ? "Tu cuenta está bloqueada. Contactá a soporte."
+    : !isSellerRole(auth.profile?.role) ? "Tu cuenta no tiene permiso para publicar vehículos."
+    : credits.isLoading ? "Consultando tus créditos de publicación..."
+    : credits.status || (credits.balance?.expired ? "Tus créditos vencieron. Contactá a soporte para renovarlos."
+      : "No tenés créditos disponibles para publicar. Contactá a soporte.");
 
-  // Cuando el usuario se autentica con intención de publicar → cerrar modal y scrollear
   useEffect(() => {
-    if (auth.session && publishIntent) {
-      setPublishIntent(false);
-      // Pequeño delay para que el perfil se cargue y el DOM se actualice
-      setTimeout(() => {
-        setAuthModalOpen(false);
-        assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 350);
-    }
-  }, [auth.session, publishIntent]);
+    if (!auth.session || !auth.profile || !authIntent) return;
+    const timer = window.setTimeout(() => {
+      closeAuth();
+      if (authIntent === "chat") setChatOpen(true);
+      else assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [auth.session, auth.profile, authIntent, closeAuth]);
 
   function handlePublishClick() {
     if (auth.session) {
       assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       auth.setAuthMode("register");
-      setPublishIntent(true);
-      setAuthModalOpen(true);
+      openAuth("publish");
     }
   }
 
@@ -76,6 +87,10 @@ export default function HomePage() {
           <a href="#como-funciona">Como funciona</a>
           <a href="#catalogo">Buscar</a>
           <a href="#cuenta">Cuenta</a>
+          <Link href="/preguntas">Preguntas frecuentes</Link>
+          <Link href="/demo">Probar demo</Link>
+          {auth.session && <a href="#conversaciones">Mensajes</a>}
+          {isSellerRole(auth.profile?.role) && <a href="#mis-publicaciones">Mis publicaciones</a>}
         </nav>
 
         {auth.profile ? (
@@ -99,20 +114,26 @@ export default function HomePage() {
       <CatalogSection
         canSeePrice={canSeePrice}
         catalogStatus={catalog.catalogStatus}
+        isLoading={catalog.isLoading}
+        onRetry={catalog.refresh}
         onSelect={catalog.setSelectedVehicle}
         selectedVehicle={catalog.selectedVehicle}
         vehicles={catalog.catalogVehicles}
       />
 
-      <VehicleDetail
+      {catalog.selectedVehicle && <VehicleDetail
+        key={catalog.selectedVehicle.id}
         canChat={canChat}
         canSeePrice={canSeePrice}
-        isSeller={canPublish}
-        onOpenChat={() => setChatOpen(true)}
+        onOpenChat={() => {
+          if (auth.session) setChatOpen(true);
+          else { auth.setAuthMode("register"); openAuth("chat"); }
+        }}
         vehicle={catalog.selectedVehicle}
-      />
+      />}
 
       <AuthSection
+        authBusy={auth.authBusy}
         authForm={auth.authForm}
         authMode={auth.authMode}
         authStatus={auth.authStatus}
@@ -122,6 +143,14 @@ export default function HomePage() {
         setAuthMode={auth.setAuthMode}
       />
 
+      {auth.session && <ChatInbox key={auth.session.user.id} session={auth.session} />}
+      {auth.session && isSellerRole(auth.profile?.role) && <OwnerListings
+        key={auth.session.user.id}
+        session={auth.session}
+        profile={auth.profile}
+        onChanged={catalog.refresh}
+      />}
+
       <div ref={assistantRef} style={{ scrollMarginTop: "92px" }}>
         <PublicationAssistant
           canPublish={canPublish}
@@ -129,16 +158,21 @@ export default function HomePage() {
           onPublish={catalog.publishVehicle}
           profile={auth.profile}
           publishStatus={catalog.publishStatus}
+          publishAccessMessage={publishAccessMessage}
         />
       </div>
 
+      {catalog.selectedVehicle && <>
       <QualitySection vehicle={catalog.selectedVehicle} />
-      <SalesAssistantSection vehicle={catalog.selectedVehicle} />
+      <SalesAssistantSection key={catalog.selectedVehicle.id} vehicle={catalog.selectedVehicle} />
+      </>}
+      {(catalog.selectedVehicle || ["mechanic", "admin"].includes(auth.profile?.role)) &&
       <InspectionSection
+        key={`${auth.session?.user?.id}:${auth.profile?.role}:${catalog.selectedVehicle?.id}`}
         profile={auth.profile}
         session={auth.session}
         vehicle={catalog.selectedVehicle}
-      />
+      />}
 
       <CreditsSection
         balance={credits.balance}
@@ -146,20 +180,7 @@ export default function HomePage() {
         status={credits.status}
       />
 
-      <section className="section adminPreview" id="admin">
-        <div>
-          <p className="eyebrow">Panel admin</p>
-          <h2>Administracion segura en preparacion</h2>
-        </div>
-        <div className="adminStats">
-          <Info label="Usuarios" value="Datos reales proximamente" />
-          <Info label="Publicaciones" value={catalog.catalogVehicles.length} />
-          <Info label="Pagos pendientes" value="Modulo pendiente" />
-          <Info label="Denuncias" value="Modulo pendiente" />
-        </div>
-      </section>
-
-      {chatOpen && (
+      {chatOpen && auth.session && catalog.selectedVehicle && (
         <ChatPreview
           onClose={() => setChatOpen(false)}
           session={auth.session}
@@ -167,9 +188,20 @@ export default function HomePage() {
         />
       )}
 
-      {authModalOpen && (
+      {authIntent && (
         <AuthModal
+          authBusy={auth.authBusy}
           authForm={auth.authForm}
           authMode={auth.authMode}
           authStatus={auth.authStatus}
-          onClose={() => { setAut
+          intent={authIntent}
+          onClose={closeAuth}
+          onSubmit={auth.submitAuth}
+          profile={auth.profile}
+          setAuthForm={auth.setAuthForm}
+          setAuthMode={auth.setAuthMode}
+        />
+      )}
+    </main>
+  );
+}

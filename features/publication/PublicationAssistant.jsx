@@ -1,9 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { checklistOptions } from "../../lib/velox-data";
 import {
   PHOTO_GUIDE,
+  PHOTO_MIME_TYPES,
+  VIDEO_MIME_TYPES,
+  UNREVIEWED,
+  validatePublicationMedia,
+  validatePublicationStep,
   buildDescription,
   createPublicationForm,
   getPublicationQuality,
@@ -25,6 +30,7 @@ export default function PublicationAssistant({
   onNeedAuth,
   onPublish,
   profile,
+  publishAccessMessage,
   publishStatus,
 }) {
   const [step, setStep] = useState(0);
@@ -33,6 +39,19 @@ export default function PublicationAssistant({
   const [videoFile, setVideoFile] = useState(null);
   const [videoName, setVideoName] = useState("");
   const [mediaError, setMediaError] = useState("");
+  const [publicationError, setPublicationError] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
+  const publishingRef = useRef(false);
+  const previewUrls = useRef(new Map());
+  const suggestedDescription = useRef(null);
+
+  useEffect(() => {
+    const urls = previewUrls.current;
+    return () => {
+      urls.forEach(url => URL.revokeObjectURL(url));
+      urls.clear();
+    };
+  }, []);
 
   const recommendations = useMemo(
     () => getPublicationRecommendations({ form, photos, videoFile }),
@@ -44,69 +63,99 @@ export default function PublicationAssistant({
   );
 
   function next() {
-    if (step === 4 && !form.description) {
-      setForm((current) => ({ ...current, description: buildDescription(current) }));
+    if (publishingRef.current || !validatePublicationStep(step, form, photos)) return;
+    if (step === 4 && (!form.description.trim() || form.description === suggestedDescription.current)) {
+      const description = buildDescription(form);
+      suggestedDescription.current = description;
+      setForm({ ...form, description });
     }
-    setStep((current) => Math.min(steps.length - 1, current + 1));
+    setStep(Math.min(steps.length - 1, step + 1));
   }
 
   function back() {
-    setStep((current) => Math.max(0, current - 1));
+    if (!publishingRef.current) setStep(Math.max(0, step - 1));
+  }
+
+  function releasePreview(kind) {
+    const previous = previewUrls.current.get(kind);
+    if (previous) URL.revokeObjectURL(previous);
+    previewUrls.current.delete(kind);
   }
 
   function addPhoto(kind, file) {
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) {
-      setMediaError("Cada foto puede pesar como maximo 3 MB.");
+    if (!file || publishingRef.current) return;
+    const error = validatePublicationMedia(file, "photo");
+    if (error) {
+      setMediaError(error);
       return;
     }
     setMediaError("");
-    const previous = photos.find((photo) => photo.kind === kind);
-    if (previous) URL.revokeObjectURL(previous.preview);
+    releasePreview(kind);
+    const preview = URL.createObjectURL(file);
+    previewUrls.current.set(kind, preview);
     setPhotos((current) => [
       ...current.filter((photo) => photo.kind !== kind),
-      { kind, file, preview: URL.createObjectURL(file) },
+      { kind, file, preview },
     ]);
   }
 
   function removePhoto(kind) {
-    const target = photos.find((photo) => photo.kind === kind);
-    if (target) URL.revokeObjectURL(target.preview);
+    if (publishingRef.current) return;
+    releasePreview(kind);
     setPhotos((current) => current.filter((photo) => photo.kind !== kind));
+    setMediaError("");
   }
 
   function addVideo(file) {
-    if (file && file.size > 25 * 1024 * 1024) {
-      setMediaError("El video puede pesar como maximo 25 MB.");
+    if (!file || publishingRef.current) return;
+    const error = validatePublicationMedia(file, "video");
+    if (error) {
+      setMediaError(error);
       return;
     }
     setMediaError("");
-    setVideoFile(file || null);
-    setVideoName(file?.name || "");
+    setVideoFile(file);
+    setVideoName(file.name);
   }
 
   function removeVideo() {
+    if (publishingRef.current) return;
+    setMediaError("");
     setVideoFile(null);
     setVideoName("");
   }
 
   async function publish() {
-    const published = await onPublish({
-      form,
-      photoFiles: photos.map(({ kind, file }) => ({ kind, file })),
-      videoFile,
-    });
-    if (!published) return;
-    photos.forEach((photo) => URL.revokeObjectURL(photo.preview));
-    setForm(createPublicationForm());
-    setPhotos([]);
-    setVideoFile(null);
-    setVideoName("");
-    setMediaError("");
-    setStep(0);
+    if (publishingRef.current || !canPublish || !validatePublicationStep(6, form, photos)) return;
+    if (videoFile && validatePublicationMedia(videoFile, "video")) return;
+    publishingRef.current = true;
+    setIsPublishing(true);
+    setPublicationError("");
+    try {
+      const published = await onPublish({
+        form,
+        photoFiles: photos.map(({ kind, file }) => ({ kind, file })),
+        videoFile,
+      });
+      if (!published) return;
+      previewUrls.current.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.current.clear();
+      suggestedDescription.current = null;
+      setForm(createPublicationForm());
+      setPhotos([]);
+      setVideoFile(null);
+      setVideoName("");
+      setMediaError("");
+      setStep(0);
+    } catch {
+      setPublicationError("No pudimos publicar. Tus datos se conservaron; intenta de nuevo.");
+    } finally {
+      publishingRef.current = false;
+      setIsPublishing(false);
+    }
   }
 
-  const canContinue = validateStep(step, form, photos);
+  const canContinue = validatePublicationStep(step, form, photos);
 
   return (
     <section className="assistantWorkspace" id="asistente">
@@ -120,7 +169,7 @@ export default function PublicationAssistant({
       )}
       {profile && !canPublish && (
         <div className="assistantAuthBanner" style={{ borderColor: "rgba(216,173,84,0.4)", background: "rgba(216,173,84,0.08)" }}>
-          <span>Tu cuenta tipo <b>{profile.role}</b> no tiene permiso de publicación. Contactá a soporte para cambiar tu rol a Particular, Revendedor o Agencia.</span>
+          <span>{publishAccessMessage || <>Tu cuenta tipo <b>{profile.role}</b> no tiene permiso de publicación. Contactá a soporte para cambiar tu rol a Particular, Revendedor o Agencia.</>}</span>
         </div>
       )}
       <aside className="assistantProgress" aria-label="Progreso de publicacion">
@@ -146,7 +195,7 @@ export default function PublicationAssistant({
           </div>
         </div>
 
-        <div className="assistantAnswer">
+        <fieldset className="assistantAnswer" disabled={isPublishing} style={{ border: 0, margin: 0, minWidth: 0 }}>
           {step === 0 && <VehicleStep form={form} setForm={setForm} />}
           {step === 1 && (
             <SingleNumberStep
@@ -183,23 +232,25 @@ export default function PublicationAssistant({
               form={form}
               photos={photos}
               profile={profile}
+              publishAccessMessage={publishAccessMessage}
               publishStatus={publishStatus}
               quality={quality}
             />
           )}
-        </div>
+        </fieldset>
+        {publicationError && <p className="warning" role="alert">{publicationError}</p>}
 
         <div className="assistantActions">
-          <button className="secondary" type="button" disabled={step === 0} onClick={back}>
+          <button className="secondary" type="button" disabled={step === 0 || isPublishing} onClick={back}>
             Volver
           </button>
           {step < steps.length - 1 ? (
-            <button className="primary" type="button" disabled={!canContinue} onClick={next}>
+            <button className="primary" type="button" disabled={!canContinue || isPublishing} onClick={next}>
               Continuar
             </button>
           ) : (
-            <button className="primary" type="button" disabled={!canPublish || photos.length < 4} onClick={publish}>
-              Confirmar y publicar
+            <button className="primary" type="button" disabled={!canPublish || !canContinue || isPublishing} onClick={publish}>
+              {isPublishing ? "Publicando..." : "Confirmar y publicar"}
             </button>
           )}
         </div>
@@ -267,7 +318,10 @@ function PhotosStep({
                 <small>{guide.tip}</small>
                 <label className="fileCommand">
                   {photo ? "Cambiar" : "Subir foto"}
-                  <input hidden type="file" accept="image/*" onChange={(event) => addPhoto(guide.id, event.target.files?.[0])} />
+                  <input hidden type="file" accept={PHOTO_MIME_TYPES.join(",")} aria-label={`Foto ${guide.label}`} onChange={(event) => {
+                    addPhoto(guide.id, event.target.files?.[0]);
+                    event.target.value = "";
+                  }} />
                 </label>
                 {photo && <button className="textDanger" type="button" onClick={() => removePhoto(guide.id)}>Eliminar</button>}
               </div>
@@ -279,12 +333,16 @@ function PhotosStep({
         <div><strong>Video corto</strong><small>Opcional. Recorre exterior e interior en menos de un minuto.</small></div>
         <label className="secondary fileCommand">
           {videoName || "Elegir video"}
-          <input hidden type="file" accept="video/*" onChange={(event) => addVideo(event.target.files?.[0])} />
+          <input hidden type="file" accept={VIDEO_MIME_TYPES.join(",")} aria-label="Video del vehiculo" onChange={(event) => {
+            addVideo(event.target.files?.[0]);
+            event.target.value = "";
+          }} />
         </label>
         {videoName && <button className="textDanger" type="button" onClick={removeVideo}>Eliminar video</button>}
       </div>
       {mediaError && <p className="warning">{mediaError}</p>}
       <p className="assistantHint">{photos.length}/8 fotos cargadas. Necesitas al menos 4.</p>
+      <p className="assistantHint">Obligatorias: frontal, lateral derecho, lateral izquierdo e interior.</p>
     </div>
   );
 }
@@ -293,17 +351,20 @@ function ChecklistStep({ form, setForm }) {
   return (
     <div>
       <p className="ownerDeclaration">Informacion declarada por el propietario. No es una certificacion profesional.</p>
+      <p className="assistantHint">Elegi una respuesta para cada item. Si no conoces el estado, selecciona Sin revisar / No lo se.</p>
       <div className="assistantFieldGrid checklistFields">
         {Object.entries(checklistOptions).map(([key, options]) => (
           <label key={key}>
             <span>{humanize(key)}</span>
             <select
-              value={form.checklist[key]}
+              value={form.checklist[key] || ""}
               onChange={(event) => setForm({
                 ...form,
                 checklist: { ...form.checklist, [key]: event.target.value },
               })}
             >
+              <option value="" disabled>Selecciona una opcion</option>
+              <option value={UNREVIEWED}>Sin revisar / No lo se</option>
               {options.map((option) => <option key={option}>{option}</option>)}
             </select>
           </label>
@@ -342,7 +403,7 @@ function RecommendationsStep({ form, quality, recommendations, setForm }) {
   );
 }
 
-function PublishStep({ canPublish, form, photos, profile, publishStatus, quality }) {
+function PublishStep({ canPublish, form, photos, profile, publishAccessMessage, publishStatus, quality }) {
   return (
     <div className="publishReview">
       <div>
@@ -354,7 +415,7 @@ function PublishStep({ canPublish, form, photos, profile, publishStatus, quality
       <div><span>Fotos</span><strong>{photos.length}/8</strong></div>
       <div><span>Calidad</span><strong>{quality}%</strong></div>
       {!profile && <p className="warning">Crea una cuenta antes de confirmar la publicacion.</p>}
-      {profile && !canPublish && <p className="warning">Tu cuenta no tiene creditos o permiso de publicacion.</p>}
+      {profile && !canPublish && <p className="warning">{publishAccessMessage || "Tu cuenta no tiene creditos o permiso de publicacion."}</p>}
       {publishStatus && <p className="authStatus">{publishStatus}</p>}
     </div>
   );
@@ -375,14 +436,6 @@ function assistantMessage(step, photoCount) {
     "Revisa el resumen. Cuando confirmes, la publicacion quedara activa.",
   ];
   return messages[step];
-}
-
-function validateStep(step, form, photos) {
-  if (step === 0) return Boolean(form.brand && form.model && form.version && form.year);
-  if (step === 1) return Number(form.kilometers) >= 0 && form.kilometers !== "";
-  if (step === 2) return Number(form.price) > 0 && Boolean(form.zone);
-  if (step === 3) return photos.length >= 4;
-  return true;
 }
 
 function humanize(value) {

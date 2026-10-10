@@ -1,0 +1,32 @@
+.faqPage { max-width: 1100px; margin: auto; padding: 32px 20px; }
+.faqPage h1 { margin: 24px 0 16px; }
+.faqPage > a { display: block; width: fit-content; margin-bottom: 20px; }
+.faqBrowser { margin-block: 24px; min-width: 0; }
+.faqBrowser h3 { margin-bottom: 12px; }
+.faqFilters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 20px 0; }
+.faqFilters label,.faqAnswerForm label { display: grid; gap: 6px; }
+.faqFilters input,.faqFilters select,.faqAnswerForm textarea,.faqAnswerForm select { width: 100%; min-width: 0; padding: 12px; color: var(--text); background: var(--surface2); border: 1px solid var(--border-2); border-radius: var(--radius); }
+.faqResults { max-height: 540px; overflow: auto; border: 1px solid var(--border-2); border-radius: var(--radius); margin: 12px 0; }
+.faqResults details { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.faqResults summary,.chatFaq>summary { cursor: pointer; padding: 4px; }
+.faqResults p { padding-block: 12px; overflow-wrap: anywhere; }
+.faqAnswerForm { display: grid; gap: 12px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+.faqAnswerForm textarea { min-height: 100px; }
+.sellerFaq { margin-top: 16px; }
+.sellerFaq section { padding-top: 16px; }
+.visitAuthorizationFields { border: 0; display: grid; gap: 14px; min-width: 0; padding: 0; }
+.visitAuthorizationFields input:not([type="checkbox"]) { width: 100%; min-width: 0; padding: 12px; color: var(--text); background: var(--surface2); border: 1px solid var(--border-2); border-radius: var(--radius); }
+.faqAnswerForm .visitAuthorizationConsent { display: flex; align-items: flex-start; gap: 10px; }
+.visitAuthorizationConsent input { margin-top: 5px; flex-shrink: 0; }
+.visitAuthorizationRecord { display: grid; gap: 10px; padding: 18px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.visitAuthorizationRecord button { justify-self: start; }
+.visitSlots { display: grid; gap: 10px; max-height: 320px; overflow: auto; margin-block: 16px; }
+.visitSlots button { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.visitNotices { margin-block: 24px; padding: 20px; border: 1px solid var(--border-2); border-radius: var(--radius); }
+.visitNotices h3,.visitNotices>p { margin-bottom: 12px; }
+.visitPlanner .visitAuthorizationConsent { display: flex; align-items: flex-start; gap: 10px; margin-block: 16px; }
+.visitPlanner .visitAuthorizationConsent input { width: auto; }
+.chatFaq { padding: 12px 18px; }
+.chatFaq .faqResults { max-height: 260px; }
+.faqPage a { text-decoration: underline; }
+@media(max-width: 600px) { .faqFilters { grid-template-columns: 1fr; } .faqPage { padding: 24px 16px; } }

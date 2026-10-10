@@ -6,16 +6,27 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --import ./tests/no-live-services.mjs --import tsx --test --test-concurrency=1 tests/*.test.mjs tests/backend/*.test.mjs",
+    "test:e2e": "playwright test",
+    "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
-    "@supabase/supabase-js": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "@supabase/supabase-js": "2.105.4",
+    "next": "16.3.8",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
-    "eslint": "latest",
-    "eslint-config-next": "latest"
+    "@electric-sql/pglite": "0.5.8",
+    "@playwright/test": "1.63.0",
+    "@testing-library/react": "16.3.3",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.3.8",
+    "jsdom": "30.1.1",
+    "tsx": "4.23.15"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   }
 }

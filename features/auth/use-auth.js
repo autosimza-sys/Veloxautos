@@ -1,159 +1,142 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase-client";
 
 const emptyAuthForm = {
-  email: "",
-  password: "",
-  displayName: "",
-  phone: "",
-  role: "particular",
-  businessName: "",
+  email: "", password: "", displayName: "", phone: "", role: "particular", businessName: "",
 };
+const sellerRoles = ["particular", "reseller", "agency"];
+const registrationRoles = ["registered", ...sellerRoles];
 
-export function useAuth() {
+export function useAuth(client = supabase) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [authMode, setAuthMode] = useState("login");
   const [authForm, setAuthForm] = useState(emptyAuthForm);
   const [authStatus, setAuthStatus] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  const submitting = useRef(false);
+  const currentUserId = useRef(null);
 
   useEffect(() => {
-    if (!supabase) return;
-
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) await loadProfile(data.session.user.id);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    if (!client) return;
+    let active = true;
+    let version = 0;
+    let timer;
+    function applySession(nextSession) {
+      if (!active) return;
+      const request = ++version;
+      const userId = nextSession?.user?.id || null;
+      currentUserId.current = userId;
       setSession(nextSession);
-      if (nextSession?.user) {
-        await loadProfile(nextSession.user.id);
-      } else {
-        setProfile(null);
-      }
+      setProfile(null);
+      window.clearTimeout(timer);
+      if (!userId) return;
+      // Never await another Supabase request inside its auth state callback.
+      timer = window.setTimeout(async () => {
+        try {
+          const { data, error } = await client.from("profiles").select("*").eq("id", userId).single();
+          if (!active || request !== version) return;
+          if (error) setAuthStatus("No pudimos cargar tu perfil. Intentá ingresar nuevamente.");
+          else setProfile(data);
+        } catch {
+          if (active && request === version) setAuthStatus("No pudimos cargar tu perfil. Revisá la conexión.");
+        }
+      }, 0);
+    }
+    const initialVersion = version;
+    client.auth.getSession().then(({ data, error }) => {
+      if (!active || version !== initialVersion) return;
+      if (error) setAuthStatus("No pudimos recuperar la sesión. Intentá ingresar nuevamente.");
+      else applySession(data.session);
+    }).catch(() => {
+      if (active) setAuthStatus("No pudimos recuperar la sesión. Revisá la conexión.");
     });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  async function loadProfile(userId) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (!error && data) setProfile(data);
-    return data || null;
-  }
+    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession);
+    });
+    return () => {
+      active = false;
+      version += 1;
+      window.clearTimeout(timer);
+      listener.subscription.unsubscribe();
+    };
+  }, [client]);
 
   async function ensureProfile(user = session?.user) {
-    if (!user) return profile;
+    if (!user || !client) return null;
     if (profile?.id === user.id) return profile;
-
+    const { data: existing } = await client.from("profiles").select("*").eq("id", user.id).single();
+    if (existing) {
+      if (currentUserId.current === user.id) setProfile(existing);
+      return existing;
+    }
     const metadata = user.user_metadata || {};
     const fallbackProfile = {
       id: user.id,
       display_name: metadata.display_name || user.email,
       phone: metadata.phone || "",
-      role: metadata.role || "registered",
+      role: sellerRoles.includes(metadata.role) ? metadata.role : "registered",
       business_name: metadata.business_name || "",
     };
-
-    const { data } = await supabase
-      .from("profiles")
-      .insert(fallbackProfile)
-      .select()
-      .single();
-
-    if (data) {
-      setProfile(data);
-      return data;
-    }
-
-    return loadProfile(user.id);
+    const { data, error } = await client.from("profiles").insert(fallbackProfile).select().single();
+    if (error) return null;
+    if (currentUserId.current === user.id) setProfile(data);
+    return data;
   }
 
   async function submitAuth(event) {
     event.preventDefault();
+    if (submitting.current) return;
+    if (!client) { setAuthStatus("Falta configurar la conexión de cuentas."); return; }
+    submitting.current = true;
+    setAuthBusy(true);
     setAuthStatus("Procesando...");
-
-    if (!supabase) {
-      setAuthStatus("Falta conectar Supabase.");
-      return;
-    }
-
-    if (authMode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: authForm.email,
-        password: authForm.password,
-      });
-      setAuthStatus(error ? error.message : "Sesion iniciada.");
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email: authForm.email,
-      password: authForm.password,
-      options: {
-        data: {
+    try {
+      if (authMode === "login") {
+        const { error } = await client.auth.signInWithPassword({ email: authForm.email.trim(), password: authForm.password });
+        setAuthStatus(error ? error.message : "Sesión iniciada.");
+        if (!error) setAuthForm(current => ({ ...current, password: "" }));
+        return;
+      }
+      const { data, error } = await client.auth.signUp({
+        email: authForm.email.trim(), password: authForm.password,
+        options: { data: {
           display_name: authForm.displayName || authForm.email,
           phone: authForm.phone,
-          role: authForm.role,
+          role: registrationRoles.includes(authForm.role) ? authForm.role : "registered",
           business_name: authForm.businessName,
-        },
-      },
-    });
-
-    if (error) {
-      setAuthStatus(error.message);
-      return;
-    }
-
-    if (!data.user) {
-      setAuthStatus("Algo salió mal. Intentá de nuevo.");
-      return;
-    }
-
-    if (data.session) {
-      await ensureProfile(data.user);
-      await loadProfile(data.user.id);
-      setAuthStatus("Cuenta creada. ¡Ya podés publicar!");
-    } else {
-      // Si Supabase requiere confirmación de email, intentar login automático.
-      // Esto funciona en proyectos con email confirm desactivado o donde
-      // el usuario ya confirmó previamente.
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: authForm.email,
-        password: authForm.password,
+        } },
       });
-      if (!loginError && loginData.session) {
-        await ensureProfile(loginData.user);
+      if (error) { setAuthStatus(error.message); return; }
+      setAuthForm(current => ({ ...current, password: "" }));
+      if (data.session) {
+        await ensureProfile(data.user);
         setAuthStatus("Cuenta creada. ¡Ya podés publicar!");
       } else {
-        setAuthStatus("Cuenta creada. Revisá tu email para confirmar y luego ingresá.");
+        setAuthStatus("Revisá tu email para confirmar la cuenta y luego ingresá.");
       }
+    } catch {
+      setAuthStatus("No pudimos completar la operación. Revisá la conexión e intentá de nuevo.");
+    } finally {
+      submitting.current = false;
+      setAuthBusy(false);
     }
   }
 
   async function logout() {
-    await supabase.auth.signOut();
-    setAuthStatus("Sesion cerrada.");
+    if (!client) return;
+    try {
+      const { error } = await client.auth.signOut();
+      if (error) { setAuthStatus("No se pudo cerrar la sesión. Intentá de nuevo."); return; }
+      currentUserId.current = null;
+      setSession(null);
+      setProfile(null);
+      setAuthForm(emptyAuthForm);
+      setAuthStatus("Sesión cerrada.");
+    } catch { setAuthStatus("No se pudo cerrar la sesión. Revisá la conexión."); }
   }
 
-  return {
-    authForm,
-    authMode,
-    authStatus,
-    ensureProfile,
-    logout,
-    profile,
-    session,
-    setAuthForm,
-    setAuthMode,
-    submitAuth,
-  };
+  return { authBusy, authForm, authMode, authStatus, ensureProfile, logout, profile, session, setAuthForm, setAuthMode, submitAuth };
 }

@@ -1,0 +1,51 @@
+import {test,expect} from '@playwright/test';
+
+test('demo answers a question, confirms an accepted visit, shows seller notice and resets without external requests',async({page},testInfo)=>{
+ const errors=[],external=[],writes=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:3100/'))external.push(r.url());if(r.method()!=='GET')writes.push(r.url());});
+ await page.goto('/demo');await expect(page.getByText('Todo lo que hagas acá es una simulación.')).toBeVisible();
+ await page.getByRole('button',{name:'Empezar demostración'}).click();
+ await page.getByRole('button',{name:'Usar publicación de ejemplo'}).click();
+ await page.getByRole('button',{name:'Continuar como comprador →'}).click();
+ await page.getByRole('button',{name:'¿Cuántos kilómetros tiene?'}).click();
+ await expect(page.getByRole('log')).toContainText('78.000 km');
+ await page.getByLabel('Tu pregunta sobre el vehículo').fill('¿Tiene oblea de GNC?');await page.getByRole('button',{name:'Preguntar',exact:true}).click();
+ await expect(page.getByRole('log')).toContainText('No tengo ese dato');
+ await page.getByRole('button',{name:'Ver horarios autorizados'}).click();
+ await page.getByRole('button',{name:/Elegir horario:/}).first().click();
+ await expect(page.getByRole('button',{name:'Confirmar esta visita'})).toBeDisabled();
+ await page.getByRole('checkbox',{name:'Confirmo que voy a asistir en este horario y lugar.'}).check();
+ await page.getByRole('button',{name:'Confirmar esta visita'}).click();
+ await expect(page.getByRole('status')).toContainText('Visita confirmada');
+ await page.getByRole('button',{name:'Ver qué recibe el vendedor →'}).click();
+ await expect(page.getByRole('region',{name:'Avisos de visitas'})).toContainText('Comprador: Comprador de ejemplo');
+ await expect(page.getByRole('region',{name:'Avisos de visitas'})).toContainText('30 minutos');
+ await page.screenshot({path:testInfo.outputPath('demo-aviso.png'),fullPage:true});
+ await page.getByRole('button',{name:'Marcar como leído'}).click();await expect(page.getByRole('button',{name:'Marcar como leído'})).toHaveCount(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.reload();await expect(page.getByRole('button',{name:'Empezar demostración'})).toBeVisible();
+ expect(external).toEqual([]);expect(writes).toEqual([]);expect(errors).toEqual([]);
+});
+
+test('real publication form runs end-to-end in isolated demo including photos and declared auto-check',async({page})=>{
+ const writes=[];page.on('request',r=>{if(r.method()!=='GET')writes.push(r.url());});
+ await page.goto('/demo');await page.getByRole('button',{name:'Empezar demostración'}).click();
+ await page.getByLabel('Tipo de vendedor').selectOption('agency');
+ await page.getByRole('button',{name:'Probar formulario de publicación'}).click();
+ await page.getByLabel('Marca',{exact:true}).fill('Fiat');await page.getByLabel('Modelo',{exact:true}).fill('Cronos');
+ await page.getByLabel('Version',{exact:true}).fill('Drive');await page.getByLabel('Ano',{exact:true}).fill('2021');
+ const next=()=>page.getByRole('button',{name:'Continuar',exact:true}).click();await next();
+ await page.getByRole('spinbutton',{name:/Cuantos kilometros/}).fill('42000');await next();
+ await page.getByRole('spinbutton',{name:/Que precio/}).fill('15000000');await page.getByLabel('Ubicacion',{exact:true}).fill('Mendoza');await next();
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64');
+ for(const label of ['Frontal','Lateral derecho','Lateral izquierdo','Interior'])await page.getByLabel(`Foto ${label}`,{exact:true}).setInputFiles({name:'ejemplo.png',mimeType:'image/png',buffer:png});
+ await next();for(const select of await page.locator('.checklistFields select').all())await select.selectOption('no revisado');await next();await next();
+ await page.getByRole('button',{name:'Confirmar y publicar'}).click();
+ await expect(page.getByRole('status')).toContainText('Publicación simulada creada');
+ await expect(page.getByRole('heading',{name:'Fiat Cronos'})).toBeVisible();
+ await page.getByRole('button',{name:'Continuar como comprador →'}).click();
+ await page.getByRole('button',{name:'¿Cuántos kilómetros tiene?'}).click();await expect(page.getByRole('log')).toContainText('42.000 km');
+ await page.getByRole('button',{name:'Ver horarios autorizados'}).click();await expect(page.getByText('No hay horarios libres autorizados.',{exact:false})).toBeVisible();
+ expect(writes).toEqual([]);
+});

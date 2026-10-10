@@ -1,0 +1,3235 @@
+{
+  "version": "reviewed-2026-10-09",
+  "sourceSha256": "afaa4726610b7167618ff250433347fd585ba5fe020d11810387133c67c7bbea",
+  "categories": [
+    {
+      "id": "c01",
+      "name": "Disponibilidad y vendedor"
+    },
+    {
+      "id": "c02",
+      "name": "Ficha técnica e identificación"
+    },
+    {
+      "id": "c03",
+      "name": "Motor, caja y mantenimiento"
+    },
+    {
+      "id": "c04",
+      "name": "Carrocería, interior y desgaste"
+    },
+    {
+      "id": "c05",
+      "name": "Equipamiento y seguridad"
+    },
+    {
+      "id": "c06",
+      "name": "GNC"
+    },
+    {
+      "id": "c07",
+      "name": "Eléctricos e híbridos"
+    },
+    {
+      "id": "c08",
+      "name": "Precio y negociación"
+    },
+    {
+      "id": "c09",
+      "name": "Medios de pago y gastos"
+    },
+    {
+      "id": "c10",
+      "name": "Permuta: qué vehículos aceptan"
+    },
+    {
+      "id": "c11",
+      "name": "Tasación de la permuta"
+    },
+    {
+      "id": "c12",
+      "name": "Permuta, ahorro y financiación combinados"
+    },
+    {
+      "id": "c13",
+      "name": "Modalidades de financiación"
+    },
+    {
+      "id": "c14",
+      "name": "Requisitos y evaluación crediticia"
+    },
+    {
+      "id": "c15",
+      "name": "Simulación, cuotas y vida del crédito"
+    },
+    {
+      "id": "c16",
+      "name": "Titularidad y documentación"
+    },
+    {
+      "id": "c17",
+      "name": "Patentes, multas y transferencia"
+    },
+    {
+      "id": "c18",
+      "name": "Auto check, revisión y garantías"
+    },
+    {
+      "id": "c19",
+      "name": "Visitas, llamadas y agenda"
+    },
+    {
+      "id": "c20",
+      "name": "Reserva, entrega y compra a distancia"
+    },
+    {
+      "id": "c21",
+      "name": "Elección, uso y alternativas"
+    },
+    {
+      "id": "c22",
+      "name": "Publicación y gestión del vendedor"
+    },
+    {
+      "id": "c23",
+      "name": "Asistente, privacidad y ayuda"
+    },
+    {
+      "id": "c24",
+      "name": "Promoción, créditos y administración"
+    }
+  ],
+  "items": [
+    {
+      "id": "c01.available",
+      "category": "c01",
+      "question": "¿Todavía está disponible?",
+      "aliases": [
+        "Hola está disponible",
+        "Lo tenés todavía",
+        "Sigue a la venta",
+        "¿Sigue disponible?",
+        "¿Está disponible?",
+        "Disponible"
+      ],
+      "kind": "availability",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.reserved",
+      "category": "c01",
+      "question": "¿Está reservado o se puede ver?",
+      "aliases": [
+        "Está señado",
+        "Lo reservaron",
+        "Puedo verlo igual"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.sold",
+      "category": "c01",
+      "question": "¿Ya se vendió?",
+      "aliases": [
+        "Ya lo vendiste",
+        "Se fue",
+        "Lo siguen ofreciendo"
+      ],
+      "kind": "availability",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.exact_unit",
+      "category": "c01",
+      "question": "¿Las fotos son del auto que venden?",
+      "aliases": [
+        "Es el de las fotos",
+        "Son fotos reales",
+        "Son ilustrativas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.seller_kind",
+      "category": "c01",
+      "question": "¿Vende un particular, una reventa o una agencia?",
+      "aliases": [
+        "Sos dueño o agencia",
+        "Es concesionaria",
+        "Quién lo vende"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.own_or_consigned",
+      "category": "c01",
+      "question": "¿El auto es propio o está en consignación?",
+      "aliases": [
+        "Lo tienen para vender",
+        "Es de ustedes",
+        "Venden por un tercero"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.public_location",
+      "category": "c01",
+      "question": "¿En qué zona está el auto?",
+      "aliases": [
+        "De dónde sos",
+        "Dónde está",
+        "En qué ciudad",
+        "¿En qué zona se puede ver?",
+        "¿Dónde está?"
+      ],
+      "kind": "zone",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.last_update",
+      "category": "c01",
+      "question": "¿Cuándo actualizaron la publicación?",
+      "aliases": [
+        "Es una publicación vieja",
+        "Está actualizado",
+        "Cuándo la subieron"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.seller_contact",
+      "category": "c01",
+      "question": "¿Puedo hablar directamente con el vendedor?",
+      "aliases": [
+        "Pasame el teléfono",
+        "Quiero hablar con una persona",
+        "Te puedo llamar"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c01.other_units",
+      "category": "c01",
+      "question": "¿Tenés otro igual o parecido?",
+      "aliases": [
+        "Tenés otro del mismo modelo",
+        "Algo parecido",
+        "Hay otra unidad"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c02.year",
+      "category": "c02",
+      "question": "¿De qué año es y qué modelo figura?",
+      "aliases": [
+        "Qué año es",
+        "Año de fabricación",
+        "Modelo año"
+      ],
+      "kind": "year",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c02.version",
+      "category": "c02",
+      "question": "¿Qué versión exacta es?",
+      "aliases": [
+        "Qué versión",
+        "Es full o base",
+        "Qué equipamiento trae de fábrica"
+      ],
+      "kind": "version",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c02.mileage",
+      "category": "c02",
+      "question": "¿Cuántos kilómetros tiene?",
+      "aliases": [
+        "Kilómetros",
+        "Cuantos km",
+        "Cuánto marca el tablero"
+      ],
+      "kind": "mileage",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c02.engine",
+      "category": "c02",
+      "question": "¿Qué motor y cilindrada tiene?",
+      "aliases": [
+        "Qué motor trae",
+        "Cilindrada",
+        "Es turbo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c02.transmission",
+      "category": "c02",
+      "question": "¿Es manual o automático?",
+      "aliases": [
+        "Es automático",
+        "Qué caja tiene",
+        "Cuántos cambios"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c02.fuel",
+      "category": "c02",
+      "question": "¿Usa nafta, diésel, GNC o electricidad?",
+      "aliases": [
+        "Qué combustible usa",
+        "Es gasolero",
+        "Es naftero"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c02.doors_seats",
+      "category": "c02",
+      "question": "¿Cuántas puertas y plazas tiene?",
+      "aliases": [
+        "Es cinco puertas",
+        "Cuántos entran",
+        "Tiene siete asientos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c02.color",
+      "category": "c02",
+      "question": "¿De qué color es?",
+      "aliases": [
+        "Color original",
+        "Qué color",
+        "Es el color de fábrica"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c02.body_dimensions",
+      "category": "c02",
+      "question": "¿Qué tamaño, baúl o capacidad de carga tiene?",
+      "aliases": [
+        "Entra en mi cochera",
+        "Capacidad del baúl",
+        "Cuánto carga"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c02.owners_use",
+      "category": "c02",
+      "question": "¿Cuántos dueños tuvo y qué uso le dieron?",
+      "aliases": [
+        "Fue taxi",
+        "Único dueño",
+        "Era remis o de empresa"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.engine_condition",
+      "category": "c03",
+      "question": "¿Cómo está el motor?",
+      "aliases": [
+        "Está bien de motor",
+        "Tiene fallas",
+        "Cómo anda de mecánica"
+      ],
+      "kind": "check:motor",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c03.engine_repairs",
+      "category": "c03",
+      "question": "¿Se reparó o cambió el motor?",
+      "aliases": [
+        "Motor hecho",
+        "Le hicieron tapa",
+        "Tiene motor nuevo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.overheating",
+      "category": "c03",
+      "question": "¿Levanta temperatura o tuvo problemas de refrigeración?",
+      "aliases": [
+        "Calienta",
+        "Hirvió",
+        "Tiene problemas de temperatura"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.smoke_oil",
+      "category": "c03",
+      "question": "¿Humea o consume aceite?",
+      "aliases": [
+        "Gasea",
+        "Tira humo",
+        "Gasta aceite"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.leaks",
+      "category": "c03",
+      "question": "¿Tiene pérdidas de aceite, agua o combustible?",
+      "aliases": [
+        "Pierde agua",
+        "Pierde aceite",
+        "Tiene pérdidas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.gearbox",
+      "category": "c03",
+      "question": "¿Cómo está la caja de cambios?",
+      "aliases": [
+        "Rasca los cambios",
+        "Patina la automática",
+        "Tiene problemas de caja"
+      ],
+      "kind": "check:caja",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c03.clutch",
+      "category": "c03",
+      "question": "¿Cómo está el embrague?",
+      "aliases": [
+        "Se le hizo embrague",
+        "Patina el embrague",
+        "Está duro el pedal"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.timing",
+      "category": "c03",
+      "question": "¿Cuándo cambiaron la distribución?",
+      "aliases": [
+        "Correa hecha",
+        "Tiene cadena",
+        "Kit de distribución"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.service",
+      "category": "c03",
+      "question": "¿Tiene servicios y comprobantes de mantenimiento?",
+      "aliases": [
+        "Historial de service",
+        "Cambio de aceite",
+        "Libreta de mantenimiento"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c03.warning_lights",
+      "category": "c03",
+      "question": "¿Tiene testigos encendidos, ruidos o fallas al arrancar?",
+      "aliases": [
+        "Check engine",
+        "No arranca en frío",
+        "Hace algún ruido"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c04.accidents",
+      "category": "c04",
+      "question": "¿Tuvo choques o reparaciones importantes?",
+      "aliases": [
+        "Fue chocado",
+        "Tuvo un palo",
+        "Tiene daños estructurales"
+      ],
+      "kind": "check:choques",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c04.flood_fire",
+      "category": "c04",
+      "question": "¿Se inundó o tuvo un incendio?",
+      "aliases": [
+        "Fue inundado",
+        "Entró agua",
+        "Se prendió fuego"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c04.hail",
+      "category": "c04",
+      "question": "¿Tiene granizo, rayones o abolladuras?",
+      "aliases": [
+        "Está granizado",
+        "Tiene golpes",
+        "Qué detalles de chapa tiene"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c04.paint",
+      "category": "c04",
+      "question": "¿Está repintado o tiene pintura original?",
+      "aliases": [
+        "Pintura de fábrica",
+        "Lo pintaron",
+        "Tiene paneles repintados"
+      ],
+      "kind": "check:pintura",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c04.structure_rust",
+      "category": "c04",
+      "question": "¿Tiene óxido, corrosión o reparaciones de chasis?",
+      "aliases": [
+        "Está podrido",
+        "Tiene óxido",
+        "Chasis reparado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c04.upholstery",
+      "category": "c04",
+      "question": "¿Cómo están los asientos y el interior?",
+      "aliases": [
+        "Tapizados rotos",
+        "Cómo está adentro",
+        "Tiene detalles de interior"
+      ],
+      "kind": "check:interiores",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c04.water_smell",
+      "category": "c04",
+      "question": "¿Tiene filtraciones, humedad u olores?",
+      "aliases": [
+        "Entra agua al habitáculo",
+        "Tiene olor a humedad",
+        "Fumaban adentro"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c04.tires",
+      "category": "c04",
+      "question": "¿Cómo están las cubiertas y el auxilio?",
+      "aliases": [
+        "Cuánta vida tienen las gomas",
+        "Tiene auxilio",
+        "Están para cambiar"
+      ],
+      "kind": "check:cubiertas",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c04.brakes_suspension",
+      "category": "c04",
+      "question": "¿Cómo están frenos, dirección y suspensión?",
+      "aliases": [
+        "Tren delantero",
+        "Hace ruido la suspensión",
+        "Frena bien"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c04.glass_lights",
+      "category": "c04",
+      "question": "¿Tiene parabrisas, luces o espejos dañados?",
+      "aliases": [
+        "Vidrios rotos",
+        "Parabrisas picado",
+        "Funcionan las luces"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.ac",
+      "category": "c05",
+      "question": "¿Funciona el aire acondicionado y la calefacción?",
+      "aliases": [
+        "Enfría el aire",
+        "Tiene climatizador",
+        "Anda la calefacción"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.steering_windows",
+      "category": "c05",
+      "question": "¿Tiene dirección asistida y levantavidrios?",
+      "aliases": [
+        "Dirección hidráulica",
+        "Vidrios eléctricos",
+        "Cierre centralizado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.airbags",
+      "category": "c05",
+      "question": "¿Cuántos airbags tiene y están operativos?",
+      "aliases": [
+        "Tiene airbag",
+        "Saltaron los airbags",
+        "Luz de airbag"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.abs_esp",
+      "category": "c05",
+      "question": "¿Tiene ABS y control de estabilidad?",
+      "aliases": [
+        "Tiene ESP",
+        "Frenos ABS",
+        "Control de tracción"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.isofix",
+      "category": "c05",
+      "question": "¿Tiene ISOFIX para la silla infantil?",
+      "aliases": [
+        "Anclajes para sillita",
+        "Tiene isofix",
+        "Top tether"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.parking",
+      "category": "c05",
+      "question": "¿Tiene cámara, sensores o asistencia de estacionamiento?",
+      "aliases": [
+        "Cámara de retroceso",
+        "Sensores para estacionar",
+        "Estaciona solo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.multimedia",
+      "category": "c05",
+      "question": "¿Tiene Bluetooth, CarPlay o Android Auto?",
+      "aliases": [
+        "Se conecta el celular",
+        "Tiene pantalla",
+        "Android auto"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.drive_4x4",
+      "category": "c05",
+      "question": "¿Es 4x2, 4x4 o tracción integral?",
+      "aliases": [
+        "Tiene doble tracción",
+        "Es AWD",
+        "Funciona la 4x4"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.cruise_adas",
+      "category": "c05",
+      "question": "¿Tiene control crucero o ayudas a la conducción?",
+      "aliases": [
+        "Crucero adaptativo",
+        "Frena solo",
+        "Asistente de carril"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c05.keys_accessories",
+      "category": "c05",
+      "question": "¿Entregan dos llaves, manual y accesorios?",
+      "aliases": [
+        "Tiene segunda llave",
+        "Trae manual",
+        "Qué incluye la entrega"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.has_gnc",
+      "category": "c06",
+      "question": "¿Tiene GNC instalado?",
+      "aliases": [
+        "Anda a gas",
+        "Tiene equipo",
+        "Es con GNC"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.generation",
+      "category": "c06",
+      "question": "¿Qué generación, marca y modelo de equipo tiene?",
+      "aliases": [
+        "Es quinta generación",
+        "Marca del equipo",
+        "Qué equipo de gas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.cylinder",
+      "category": "c06",
+      "question": "¿Qué tubo tiene y cuánto espacio ocupa?",
+      "aliases": [
+        "Tamaño del tubo",
+        "Capacidad de GNC",
+        "Pierde mucho baúl"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.sticker",
+      "category": "c06",
+      "question": "¿La oblea y la documentación del GNC están vigentes?",
+      "aliases": [
+        "Oblea al día",
+        "Papeles del gas",
+        "Vence el GNC"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.hydrotest",
+      "category": "c06",
+      "question": "¿Cuándo corresponde la prueba del cilindro?",
+      "aliases": [
+        "Prueba hidráulica",
+        "Vencimiento del tubo",
+        "Última prueba del GNC"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c06.installation_date",
+      "category": "c06",
+      "question": "¿Cuándo se instaló y quién hizo el trabajo?",
+      "aliases": [
+        "Hace cuánto tiene gas",
+        "Taller instalador",
+        "Dónde colocaron el equipo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.consumption",
+      "category": "c06",
+      "question": "¿Cuánto rinde con GNC?",
+      "aliases": [
+        "Cuántos km hace con un tubo",
+        "Autonomía a gas",
+        "Cuánto gasta"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.both_fuels",
+      "category": "c06",
+      "question": "¿Funciona bien tanto a nafta como a GNC?",
+      "aliases": [
+        "Anda a nafta y gas",
+        "Falla a gas",
+        "Arranca a nafta"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.maintenance",
+      "category": "c06",
+      "question": "¿Qué mantenimiento o reparaciones tuvo el GNC?",
+      "aliases": [
+        "Le hicieron las válvulas",
+        "Service del gas",
+        "Tuvo problemas con el equipo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c06.remove_install",
+      "category": "c06",
+      "question": "¿Se puede entregar sin GNC o instalarle uno?",
+      "aliases": [
+        "Me lo das sin tubo",
+        "Le pueden poner gas",
+        "Sacan el GNC"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c07.technology",
+      "category": "c07",
+      "question": "¿Es eléctrico, híbrido o híbrido enchufable?",
+      "aliases": [
+        "Es híbrido de verdad",
+        "Se enchufa",
+        "Es cien por ciento eléctrico"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c07.range",
+      "category": "c07",
+      "question": "¿Qué autonomía tiene?",
+      "aliases": [
+        "Cuántos kilómetros dura la batería",
+        "Autonomía real",
+        "Cuánto recorre"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c07.battery_health",
+      "category": "c07",
+      "question": "¿Cómo está la batería y tiene un informe de salud?",
+      "aliases": [
+        "Salud de batería",
+        "Tiene SOH",
+        "Degradación de batería"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c07.battery_warranty",
+      "category": "c07",
+      "question": "¿La batería conserva garantía?",
+      "aliases": [
+        "Garantía de batería",
+        "Cuántos años cubre",
+        "Sigue en garantía"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c07.charger",
+      "category": "c07",
+      "question": "¿Incluye cargador y cables?",
+      "aliases": [
+        "Trae el cargador",
+        "Cable de carga",
+        "Incluye wallbox"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c07.connector",
+      "category": "c07",
+      "question": "¿Qué conector y tipos de carga acepta?",
+      "aliases": [
+        "Qué enchufe usa",
+        "Carga rápida",
+        "Conector compatible"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c07.home_charge",
+      "category": "c07",
+      "question": "¿Lo puedo cargar en casa?",
+      "aliases": [
+        "Carga con enchufe común",
+        "Necesito instalación eléctrica",
+        "Puedo poner wallbox"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c07.charge_time",
+      "category": "c07",
+      "question": "¿Cuánto tarda y cuánto cuesta cargarlo?",
+      "aliases": [
+        "Tiempo de carga",
+        "Precio de una carga",
+        "Cuánto gasta de luz"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c07.replacement",
+      "category": "c07",
+      "question": "¿Cuánto cuesta cambiar o reparar la batería?",
+      "aliases": [
+        "Batería nueva cuánto sale",
+        "Reparan módulos",
+        "Repuestos de batería"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c07.hybrid_maintenance",
+      "category": "c07",
+      "question": "¿Qué mantenimiento y servicio técnico necesita?",
+      "aliases": [
+        "Service de híbrido",
+        "Hay repuestos",
+        "Quién lo repara"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": true
+    },
+    {
+      "id": "c08.price",
+      "category": "c08",
+      "question": "¿Cuál es el precio?",
+      "aliases": [
+        "Precio",
+        "Cuánto vale",
+        "Cuánto pedís"
+      ],
+      "kind": "price",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.cash_discount",
+      "category": "c08",
+      "question": "¿Hay descuento de contado?",
+      "aliases": [
+        "Precio efectivo",
+        "Mejor precio cash",
+        "Cuánto contado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.lowest_price",
+      "category": "c08",
+      "question": "¿Cuál es lo mínimo que aceptás?",
+      "aliases": [
+        "Último precio",
+        "Menos cuánto",
+        "Tu mejor número"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.make_offer",
+      "category": "c08",
+      "question": "¿Puedo hacer una oferta?",
+      "aliases": [
+        "Te ofrezco menos",
+        "Te sirven ocho millones",
+        "Aceptás una propuesta"
+      ],
+      "kind": "static",
+      "answer": "Podés escribir una propuesta para que el vendedor la evalúe. Este asistente no acepta importes ni compromete descuentos.",
+      "reusable": false
+    },
+    {
+      "id": "c08.currency",
+      "category": "c08",
+      "question": "¿El precio está en pesos o dólares?",
+      "aliases": [
+        "Son pesos",
+        "Es en dólares",
+        "Qué moneda es"
+      ],
+      "kind": "currency",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.validity",
+      "category": "c08",
+      "question": "¿Hasta cuándo mantienen el precio?",
+      "aliases": [
+        "Me congelás el precio",
+        "Lo mantenés mañana",
+        "Precio vigente"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.includes_costs",
+      "category": "c08",
+      "question": "¿Ese precio es final o faltan gastos?",
+      "aliases": [
+        "Puesto en la calle",
+        "Tiene gastos aparte",
+        "Incluye todo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.price_difference",
+      "category": "c08",
+      "question": "¿Por qué acá dice un precio y en otro lado otro?",
+      "aliases": [
+        "En Facebook está más barato",
+        "Otro precio en la foto",
+        "Cambió el valor"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.price_reason",
+      "category": "c08",
+      "question": "¿Por qué está tan barato o tan caro?",
+      "aliases": [
+        "Qué tiene por ese precio",
+        "Por qué lo rebajaron",
+        "Vale más que otros"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c08.budget",
+      "category": "c08",
+      "question": "¿Me alcanza con mi presupuesto?",
+      "aliases": [
+        "Tengo hasta diez millones",
+        "Me alcanza con esto",
+        "Busco algo dentro de mi plata"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.payment_methods",
+      "category": "c09",
+      "question": "¿Qué medios de pago aceptan?",
+      "aliases": [
+        "Cómo puedo pagar",
+        "Efectivo o transferencia",
+        "Formas de pago"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.usd_rate",
+      "category": "c09",
+      "question": "¿Aceptan dólares y a qué cotización?",
+      "aliases": [
+        "Toman dólares",
+        "Qué dólar toman",
+        "Pago parte en dólares"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.card",
+      "category": "c09",
+      "question": "¿Puedo pagar con tarjeta?",
+      "aliases": [
+        "Aceptan crédito",
+        "Tarjeta de débito",
+        "Puedo tarjetear la entrega"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.checks",
+      "category": "c09",
+      "question": "¿Aceptan cheques o pagos diferidos?",
+      "aliases": [
+        "Toman cheques",
+        "Cheques de terceros",
+        "Cheques semanales"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.other_assets",
+      "category": "c09",
+      "question": "¿Aceptan criptomonedas u otros bienes?",
+      "aliases": [
+        "Pago con USDT",
+        "Aceptás un terreno",
+        "Puedo darte otra cosa"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.fees",
+      "category": "c09",
+      "question": "¿Hay comisión, inscripción o gastos de gestión?",
+      "aliases": [
+        "Cobran comisión",
+        "Hay inscripción",
+        "Me cobran gestión"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.transfer_cost",
+      "category": "c09",
+      "question": "¿Cuánto cuesta la transferencia?",
+      "aliases": [
+        "Gastos de transferencia",
+        "Cuánto sale ponerlo a mi nombre",
+        "Costo del trámite"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.mixed_payments",
+      "category": "c09",
+      "question": "¿Puedo pagar una parte por transferencia y otra de otra forma?",
+      "aliases": [
+        "Mitad efectivo mitad banco",
+        "Dos transferencias",
+        "Pagar desde dos cuentas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.recipient",
+      "category": "c09",
+      "question": "¿A quién le transfiero y cómo verifico la cuenta?",
+      "aliases": [
+        "Pasame el alias",
+        "CBU para pagar",
+        "A nombre de quién deposito"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c09.receipt",
+      "category": "c09",
+      "question": "¿Me entregan recibo o factura?",
+      "aliases": [
+        "Dan comprobante",
+        "Necesito factura",
+        "Comprobante de pago"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.accept_trade",
+      "category": "c10",
+      "question": "¿Aceptan mi auto en parte de pago?",
+      "aliases": [
+        "Permutás",
+        "Tomás usado",
+        "Aceptan permuta",
+        "¿Aceptás permuta?",
+        "Permuta"
+      ],
+      "kind": "trade",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.old_car",
+      "category": "c10",
+      "question": "¿Aceptan autos viejos o de 2004 para atrás?",
+      "aliases": [
+        "Toman autos viejitos",
+        "Tengo un modelo 98",
+        "Aceptan un 2004"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.motorcycle",
+      "category": "c10",
+      "question": "¿Aceptan una moto como parte de pago?",
+      "aliases": [
+        "Toman moto",
+        "Permuto mi moto",
+        "Auto por moto y diferencia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.multiple",
+      "category": "c10",
+      "question": "¿Aceptan dos vehículos en una misma operación?",
+      "aliases": [
+        "Entrego dos autos",
+        "Auto y moto",
+        "Dos permutas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.higher_value",
+      "category": "c10",
+      "question": "¿Reciben un vehículo de mayor valor y me dan diferencia?",
+      "aliases": [
+        "Me das plata arriba",
+        "Bajo de modelo",
+        "Mi auto vale más"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.lower_value",
+      "category": "c10",
+      "question": "¿Aceptan un auto de menor valor y pago la diferencia?",
+      "aliases": [
+        "Pongo mi usado y plata",
+        "Mi auto vale menos",
+        "Cambio por uno más nuevo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.not_owner",
+      "category": "c10",
+      "question": "¿Puedo entregar un auto que no está a mi nombre?",
+      "aliases": [
+        "Está a nombre de mi padre",
+        "Tengo el 08 firmado",
+        "No soy titular"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.damaged",
+      "category": "c10",
+      "question": "¿Toman autos con detalles mecánicos o sin funcionar?",
+      "aliases": [
+        "Reciben fundidos",
+        "Tiene el motor roto",
+        "No anda"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.with_debts",
+      "category": "c10",
+      "question": "¿Aceptan mi auto con deuda, multas o prenda?",
+      "aliases": [
+        "Tiene deuda de patente",
+        "Mi auto está prendado",
+        "Toman con multas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c10.out_of_province",
+      "category": "c10",
+      "question": "¿Reciben permutas de otra provincia?",
+      "aliases": [
+        "Mi auto está radicado afuera",
+        "Soy de San Juan",
+        "Permuta de otra provincia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.trade_value",
+      "category": "c11",
+      "question": "¿Cuánto me toman mi vehículo?",
+      "aliases": [
+        "Cuánto me das por el mío",
+        "Tasame el auto",
+        "Qué valor de toma tiene"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.required_info",
+      "category": "c11",
+      "question": "¿Qué datos necesitás para tasarlo?",
+      "aliases": [
+        "Qué te paso del mío",
+        "Datos para la permuta",
+        "Qué información te sirve"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.photos",
+      "category": "c11",
+      "question": "¿Qué fotos tengo que mandar?",
+      "aliases": [
+        "Fotos para tasar",
+        "Cuáles fotos necesitas",
+        "Te mando fotos del usado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.remote",
+      "category": "c11",
+      "question": "¿Me lo pueden tasar por fotos o tengo que llevarlo?",
+      "aliases": [
+        "Tasación online",
+        "Sin llevar el auto",
+        "Lo tasan por WhatsApp"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.method",
+      "category": "c11",
+      "question": "¿Cómo calculan el valor de mi auto?",
+      "aliases": [
+        "Usan InfoAuto",
+        "Qué tabla usan",
+        "De dónde sale la tasación"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.final_or_reference",
+      "category": "c11",
+      "question": "¿La tasación es definitiva?",
+      "aliases": [
+        "Ese valor me lo respetan",
+        "Es oferta firme",
+        "Puede cambiar al verlo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.validity",
+      "category": "c11",
+      "question": "¿Cuánto tiempo dura la tasación?",
+      "aliases": [
+        "Hasta cuándo vale",
+        "Me mantienen la toma",
+        "Cuándo vence"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.keep_car",
+      "category": "c11",
+      "question": "¿Puedo seguir usando mi auto hasta la entrega?",
+      "aliases": [
+        "Me tengo que quedar a pie",
+        "Cuándo dejo el usado",
+        "Sigo usando el mío"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.valuation_gap",
+      "category": "c11",
+      "question": "¿Por qué me lo toman por menos de lo que vale publicado?",
+      "aliases": [
+        "Me lo tasan bajo",
+        "En internet piden más",
+        "Por qué la diferencia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c11.valuation_cost",
+      "category": "c11",
+      "question": "¿La tasación se cobra?",
+      "aliases": [
+        "Tasación gratis",
+        "Cuánto cobran por tasar",
+        "Hay que pagar para evaluar"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.trade_cash",
+      "category": "c12",
+      "question": "¿Cuánto efectivo tengo que agregar a mi usado?",
+      "aliases": [
+        "Qué diferencia pongo",
+        "Mi auto más plata",
+        "Cuánto arriba"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.trade_finance",
+      "category": "c12",
+      "question": "¿Puedo entregar mi auto y financiar la diferencia?",
+      "aliases": [
+        "Usado y cuotas",
+        "Financiar arriba de mi auto",
+        "Permuta más crédito"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.trade_cash_finance",
+      "category": "c12",
+      "question": "¿Puedo entregar auto, dinero y pagar el resto en cuotas?",
+      "aliases": [
+        "Usado más ahorro más cuotas",
+        "Tres formas de pago",
+        "Auto plata y financiación"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.half_down",
+      "category": "c12",
+      "question": "¿Mi auto sirve para completar el 50% de entrega?",
+      "aliases": [
+        "La permuta cubre la mitad",
+        "Cuentan mi usado para el 50",
+        "Completo con mi auto"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.no_extra_cash",
+      "category": "c12",
+      "question": "¿Puedo cambiar el auto sin poner efectivo?",
+      "aliases": [
+        "Entrego el mío sin plata",
+        "Cambio sin diferencia",
+        "No tengo para gastos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.old_car_no_credit",
+      "category": "c12",
+      "question": "¿Tengo un auto viejo pero no califico para un banco?",
+      "aliases": [
+        "Usado viejo sin crédito",
+        "Tengo permuta y mal Veraz",
+        "Auto viejo y cuotas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.savings_no_credit",
+      "category": "c12",
+      "question": "¿Tengo algo ahorrado pero no accedo a financiación?",
+      "aliases": [
+        "Tengo dos millones sin recibo",
+        "Poca entrega sin banco",
+        "Ahorro pero no califico"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.no_savings",
+      "category": "c12",
+      "question": "¿Puedo empezar sólo con una cuota y sin ahorro?",
+      "aliases": [
+        "Sin entrega",
+        "No tengo ahorro",
+        "Sólo puedo pagar por mes"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.surplus",
+      "category": "c12",
+      "question": "¿Qué pasa si mi permuta vale más que el auto que compro?",
+      "aliases": [
+        "Me queda saldo a favor",
+        "Mi usado cubre todo",
+        "Me devuelven la diferencia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c12.net_equity",
+      "category": "c12",
+      "question": "¿Cómo descuentan la deuda que tiene mi permuta?",
+      "aliases": [
+        "Mi auto tiene saldo de prenda",
+        "Cuánto queda neto",
+        "Deuda del usado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.available",
+      "category": "c13",
+      "question": "¿Este auto se puede financiar?",
+      "aliases": [
+        "Hay cuotas",
+        "Financian",
+        "Aceptás financiación",
+        "¿Ofrece financiación?",
+        "¿Aceptás financiación?"
+      ],
+      "kind": "finance",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.lender",
+      "category": "c13",
+      "question": "¿Es crédito propio, bancario o de una financiera?",
+      "aliases": [
+        "Quién presta la plata",
+        "Qué banco es",
+        "Crédito de la agencia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.full_finance",
+      "category": "c13",
+      "question": "¿Puedo financiar el 100% del auto?",
+      "aliases": [
+        "Todo financiado",
+        "Sin anticipo",
+        "Cien por ciento con DNI"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.minimum_downpayment",
+      "category": "c13",
+      "question": "¿Cuál es la entrega mínima?",
+      "aliases": [
+        "Con cuánto retiro",
+        "Anticipo mínimo",
+        "Qué porcentaje entrego"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.terms",
+      "category": "c13",
+      "question": "¿En cuántas cuotas se puede pagar?",
+      "aliases": [
+        "Doce dieciocho veinticuatro",
+        "Hasta cuántos meses",
+        "Hay 36 cuotas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.rates",
+      "category": "c13",
+      "question": "¿Qué tasa y costo financiero tiene?",
+      "aliases": [
+        "Qué interés cobran",
+        "Cuál es el CFT",
+        "Tasa mensual o anual"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.fixed_or_variable",
+      "category": "c13",
+      "question": "¿La cuota es fija, variable o ajustable?",
+      "aliases": [
+        "Suben las cuotas",
+        "Es UVA",
+        "Queda siempre igual"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.pledge",
+      "category": "c13",
+      "question": "¿El crédito lleva prenda?",
+      "aliases": [
+        "Queda prendado",
+        "Sin prenda",
+        "El auto garantiza la deuda"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.programmed",
+      "category": "c13",
+      "question": "¿Es una compra inmediata, una búsqueda o un sistema programado?",
+      "aliases": [
+        "Es un plan de ahorro",
+        "Cuándo elijo el auto",
+        "Se entrega al final"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c13.interest_free",
+      "category": "c13",
+      "question": "¿Hay una opción sin interés?",
+      "aliases": [
+        "Cuotas sin interés",
+        "Pago todo de a poco",
+        "Sin recargo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.dni",
+      "category": "c14",
+      "question": "¿Se puede tramitar sólo con DNI?",
+      "aliases": [
+        "Sólo DNI",
+        "Con el documento alcanza",
+        "Crédito con DNI"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.payslip",
+      "category": "c14",
+      "question": "¿Necesito recibo de sueldo?",
+      "aliases": [
+        "Piden bono de sueldo",
+        "Tengo trabajo en blanco",
+        "Cuántos bonos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.self_employed",
+      "category": "c14",
+      "question": "¿Aceptan monotributistas o trabajadores independientes?",
+      "aliases": [
+        "Soy monotributista",
+        "Trabajo por mi cuenta",
+        "Soy autónomo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.informal_income",
+      "category": "c14",
+      "question": "¿Puedo solicitarlo sin recibo o con ingresos informales?",
+      "aliases": [
+        "Trabajo en negro",
+        "No tengo bono",
+        "Sin sueldo registrado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.retired",
+      "category": "c14",
+      "question": "¿Puede solicitarlo una persona jubilada o pensionada?",
+      "aliases": [
+        "Soy jubilado",
+        "Crédito con jubilación",
+        "Pensión"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.guarantee_person",
+      "category": "c14",
+      "question": "¿Necesito garante y qué tiene que presentar?",
+      "aliases": [
+        "Dos garantes",
+        "Puede salir mi mamá de garante",
+        "Sin garante"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.credit_history",
+      "category": "c14",
+      "question": "¿Puedo consultar si estoy en Veraz o tengo atrasos?",
+      "aliases": [
+        "Tengo mal Veraz",
+        "Estoy en situación tres",
+        "Me rechazó un banco"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.income_amount",
+      "category": "c14",
+      "question": "¿Cuánto tengo que ganar para esa cuota?",
+      "aliases": [
+        "Sueldo mínimo",
+        "Me alcanza mi ingreso",
+        "Relación cuota ingreso"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.coapplicant",
+      "category": "c14",
+      "question": "¿Puedo sumar ingresos o tramitarlo con otra persona?",
+      "aliases": [
+        "Usar otro DNI",
+        "Sumar sueldo de mi pareja",
+        "Crédito con dos titulares"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c14.age_residence",
+      "category": "c14",
+      "question": "¿Hay requisitos de edad, domicilio o antigüedad laboral?",
+      "aliases": [
+        "Hasta qué edad",
+        "Soy de otra provincia",
+        "Antigüedad en el trabajo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.monthly_payment",
+      "category": "c15",
+      "question": "¿De cuánto me queda la cuota?",
+      "aliases": [
+        "Cuánto por mes",
+        "Simulame la financiación",
+        "Cuota con mi entrega"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.compare",
+      "category": "c15",
+      "question": "¿Podés comparar distintos plazos o entregas?",
+      "aliases": [
+        "Doce contra veinticuatro",
+        "Si pongo más cuánto baja",
+        "Qué opción conviene"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.first_payment",
+      "category": "c15",
+      "question": "¿Cuándo pago la primera y la segunda cuota?",
+      "aliases": [
+        "Primera cuota al retirar",
+        "Cuándo vence",
+        "Segunda cuota a los treinta días"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.included_insurance",
+      "category": "c15",
+      "question": "¿La cuota incluye seguro y gastos?",
+      "aliases": [
+        "Cuota final",
+        "Seguro incluido",
+        "Hay cargos por fuera"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.approval",
+      "category": "c15",
+      "question": "¿La simulación significa que ya estoy aprobado?",
+      "aliases": [
+        "Con esta cuota ya califico",
+        "Me aprobaron en el chat",
+        "Ya tengo el crédito"
+      ],
+      "kind": "static",
+      "answer": "Una simulación no es una aprobación. El responsable debe confirmar las condiciones y evaluar la operación.",
+      "reusable": false
+    },
+    {
+      "id": "c15.early_payment",
+      "category": "c15",
+      "question": "¿Puedo adelantar cuotas o cancelar antes?",
+      "aliases": [
+        "Cancelación anticipada",
+        "Adelantar capital",
+        "Pago todo antes"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.late_payment",
+      "category": "c15",
+      "question": "¿Qué pasa si me atraso?",
+      "aliases": [
+        "Intereses por mora",
+        "No llego a pagar",
+        "Pago fuera de fecha"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.insurer",
+      "category": "c15",
+      "question": "¿Puedo elegir aseguradora o cobertura?",
+      "aliases": [
+        "Qué seguro me obligan",
+        "Cambio de seguro",
+        "Seguro contra todo riesgo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.quote_expired",
+      "category": "c15",
+      "question": "¿Me mantienen una cuota que me cotizaron antes?",
+      "aliases": [
+        "Ayer era más baja",
+        "Me respetan la simulación",
+        "Venció la propuesta"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c15.credit_declined",
+      "category": "c15",
+      "question": "¿Qué pasa con mi dinero si no aprueban el crédito?",
+      "aliases": [
+        "Si no sale me devuelven",
+        "Rechazo de financiación",
+        "Aprobación insuficiente"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.registered_owner",
+      "category": "c16",
+      "question": "¿Está a nombre de quien lo vende?",
+      "aliases": [
+        "Es titular",
+        "Titular directo",
+        "Coincide el dueño"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.title_card",
+      "category": "c16",
+      "question": "¿Tiene título y cédula?",
+      "aliases": [
+        "Papeles al día",
+        "Tiene todos los papeles",
+        "Título digital"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.form08",
+      "category": "c16",
+      "question": "¿Tiene el formulario 08 y quién debe firmar?",
+      "aliases": [
+        "08 firmado",
+        "08 en blanco",
+        "Firmamos en el registro"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.domain_report",
+      "category": "c16",
+      "question": "¿Se puede consultar un informe de dominio?",
+      "aliases": [
+        "Informe del auto",
+        "Tiene embargo",
+        "Está inhibido el titular"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.physical_verification",
+      "category": "c16",
+      "question": "¿Tiene verificación física o policial?",
+      "aliases": [
+        "Verificación 12",
+        "Grabado motor y chasis",
+        "Verificación policial"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.representation",
+      "category": "c16",
+      "question": "¿Puede vender un apoderado o familiar?",
+      "aliases": [
+        "Vende el hijo",
+        "Tiene poder",
+        "El dueño no puede venir"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.inheritance",
+      "category": "c16",
+      "question": "¿Se puede comprar si el titular falleció?",
+      "aliases": [
+        "Está en sucesión",
+        "Murió el dueño",
+        "Vende un heredero"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.pledge_obstacle",
+      "category": "c16",
+      "question": "¿Tiene prenda, embargo o restricciones?",
+      "aliases": [
+        "Está prendado",
+        "Tiene impedimentos",
+        "Se puede transferir"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.business_owner",
+      "category": "c16",
+      "question": "¿Qué cambia si lo vende o compra una empresa?",
+      "aliases": [
+        "Auto de una sociedad",
+        "Facturar a mi empresa",
+        "Compra con CUIT"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c16.coowners",
+      "category": "c16",
+      "question": "¿Deben intervenir cónyuge o cotitulares?",
+      "aliases": [
+        "Firma la esposa",
+        "Hay dos titulares",
+        "Consentimiento del cónyuge"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.vehicle_tax",
+      "category": "c17",
+      "question": "¿Debe patentes o impuestos?",
+      "aliases": [
+        "Patente al día",
+        "Tiene deuda de patente",
+        "Impuesto automotor"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.fines",
+      "category": "c17",
+      "question": "¿Tiene multas o infracciones?",
+      "aliases": [
+        "Multas pendientes",
+        "Libre deuda de multas",
+        "Infracciones en otra provincia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.who_pays",
+      "category": "c17",
+      "question": "¿Quién paga las deudas anteriores?",
+      "aliases": [
+        "Me hacen cargo de multas",
+        "Patentes hasta la entrega",
+        "Quién cancela la deuda"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.clearance",
+      "category": "c17",
+      "question": "¿Entregan comprobantes de cancelación de deudas?",
+      "aliases": [
+        "Constancia de pago de patente",
+        "Libre deuda",
+        "Comprobantes de multas"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.lift_pledge",
+      "category": "c17",
+      "question": "¿Cómo se resuelve una prenda antes de cerrar?",
+      "aliases": [
+        "Levantar la prenda",
+        "Cancelar crédito del dueño",
+        "Liberar el auto"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.registration_payer",
+      "category": "c17",
+      "question": "¿Quién paga y gestiona la transferencia?",
+      "aliases": [
+        "Se encargan del trámite",
+        "Transferencia a cargo de quién",
+        "Gestor incluido"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.timing",
+      "category": "c17",
+      "question": "¿Cuánto demora ponerlo a mi nombre?",
+      "aliases": [
+        "Tiempo de transferencia",
+        "Cuántos días tarda el registro",
+        "Cuándo sale el título"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.other_province",
+      "category": "c17",
+      "question": "¿Lo puedo transferir o radicar en otra provincia?",
+      "aliases": [
+        "Cambio de radicación",
+        "Compro desde otra provincia",
+        "Lo radico donde vivo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.rto_vtv",
+      "category": "c17",
+      "question": "¿Tiene RTO o VTV vigente?",
+      "aliases": [
+        "Revisión técnica",
+        "RTO al día",
+        "VTV vencida"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c17.transfer_completed",
+      "category": "c17",
+      "question": "¿Con el 08 firmado ya está transferido?",
+      "aliases": [
+        "Ya firmé entonces es mío",
+        "Me dieron el 08",
+        "Cómo sé que terminó"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.auto_check",
+      "category": "c18",
+      "question": "¿Qué significa el auto check de Velox?",
+      "aliases": [
+        "Está certificado",
+        "Lo revisó Velox",
+        "Qué es el chequeo"
+      ],
+      "kind": "static",
+      "answer": "El auto check muestra el estado declarado por el vendedor. No es una inspección independiente ni una certificación mecánica.",
+      "reusable": false
+    },
+    {
+      "id": "c18.independent",
+      "category": "c18",
+      "question": "¿Tiene una revisión de un mecánico independiente?",
+      "aliases": [
+        "Lo vio un mecánico",
+        "Informe técnico real",
+        "Revisión profesional"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.mechanic",
+      "category": "c18",
+      "question": "¿Puedo llevar a mi mecánico?",
+      "aliases": [
+        "Voy con mecánico",
+        "Lo puede mirar mi taller",
+        "Revisión antes de comprar"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.test_drive",
+      "category": "c18",
+      "question": "¿Lo puedo probar o escanear?",
+      "aliases": [
+        "Hacemos una vuelta",
+        "Lo puedo escanear",
+        "Prueba de manejo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.check_scope",
+      "category": "c18",
+      "question": "¿Qué partes se revisaron y cuáles no?",
+      "aliases": [
+        "Qué incluye el informe",
+        "Revisaron la batería",
+        "Vieron abajo del auto"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.score",
+      "category": "c18",
+      "question": "¿El puntaje garantiza que el auto está bien?",
+      "aliases": [
+        "Tiene nueve de diez",
+        "Score excelente",
+        "Es seguro por el puntaje"
+      ],
+      "kind": "static",
+      "answer": "El porcentaje de calidad mide qué tan completa está la publicación; no garantiza el estado mecánico del auto.",
+      "reusable": false
+    },
+    {
+      "id": "c18.warranty",
+      "category": "c18",
+      "question": "¿Tiene garantía y qué cubre?",
+      "aliases": [
+        "Cuánta garantía dan",
+        "Garantía de motor y caja",
+        "Cuánto dura"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.as_is",
+      "category": "c18",
+      "question": "¿Qué significa que lo venden en el estado en que está?",
+      "aliases": [
+        "Sin garantía",
+        "Se vende como está",
+        "No se aceptan reclamos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.discrepancy",
+      "category": "c18",
+      "question": "¿Qué pasa si el auto no coincide con la publicación?",
+      "aliases": [
+        "Ocultaron una falla",
+        "No es lo publicado",
+        "Los kilómetros no coinciden"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c18.post_sale_issue",
+      "category": "c18",
+      "question": "¿A quién recurro si aparece un problema después de comprar?",
+      "aliases": [
+        "Se rompió después",
+        "Quiero reclamar",
+        "Falla luego de la entrega"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c19.request_visit",
+      "category": "c19",
+      "question": "¿Cuándo puedo ir a verlo?",
+      "aliases": [
+        "Quiero verlo",
+        "Me interesa ir",
+        "Coordinar visita",
+        "¿Cuándo se puede visitar?"
+      ],
+      "kind": "static",
+      "answer": "Usá Ver horarios autorizados para elegir un turno libre. Revisá fecha, duración y lugar y confirmá tu asistencia; el vendedor ya autorizó esos turnos. Si no hay horarios, podés enviar una propuesta desde Coordinar visita. Este mensaje no reserva una visita.",
+      "reusable": false
+    },
+    {
+      "id": "c19.today_tomorrow",
+      "category": "c19",
+      "question": "¿Puedo verlo hoy o mañana?",
+      "aliases": [
+        "Voy hoy",
+        "Mañana se puede",
+        "Tenés un turno hoy"
+      ],
+      "kind": "static",
+      "answer": "En Ver horarios autorizados podés consultar si hay turnos libres para hoy o mañana. La visita se confirma cuando elegís un horario y aceptás los datos. Si no hay turnos, enviá una propuesta desde Coordinar visita. Este mensaje no reserva una visita.",
+      "reusable": false
+    },
+    {
+      "id": "c19.hours",
+      "category": "c19",
+      "question": "¿Qué horarios tienen?",
+      "aliases": [
+        "Atienden sábado",
+        "Están ahora",
+        "Horario de atención",
+        "¿Qué horarios hay?"
+      ],
+      "kind": "hours",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c19.meeting_place",
+      "category": "c19",
+      "question": "¿Dónde nos encontramos?",
+      "aliases": [
+        "Pasame ubicación",
+        "Dirección para verlo",
+        "Voy a la agencia"
+      ],
+      "kind": "static",
+      "answer": "El lugar se acuerda en la propuesta de visita de esta conversación. No publicamos una dirección exacta mediante respuestas generales.",
+      "reusable": false
+    },
+    {
+      "id": "c19.confirmed",
+      "category": "c19",
+      "question": "¿La visita ya quedó confirmada?",
+      "aliases": [
+        "Está agendado",
+        "Entonces voy",
+        "Ya tengo turno"
+      ],
+      "kind": "static",
+      "answer": "Consultá el estado en la agenda de esta conversación. Una propuesta no es una visita confirmada; este texto no cambia su estado.",
+      "reusable": false
+    },
+    {
+      "id": "c19.reschedule",
+      "category": "c19",
+      "question": "¿Puedo cambiar el día o la hora?",
+      "aliases": [
+        "Reprogramar",
+        "Paso más tarde",
+        "No llego a esa hora"
+      ],
+      "kind": "static",
+      "answer": "Revisá la agenda y acordá una nueva propuesta con el otro participante. Este mensaje no modifica ni confirma el horario.",
+      "reusable": false
+    },
+    {
+      "id": "c19.cancel",
+      "category": "c19",
+      "question": "¿Cómo cancelo la visita?",
+      "aliases": [
+        "No voy a poder",
+        "Cancelá el turno",
+        "Dejemos sin efecto"
+      ],
+      "kind": "static",
+      "answer": "Usá la acción Cancelar de la agenda cuando esté disponible para tu visita. Este mensaje no cancela la reunión.",
+      "reusable": false
+    },
+    {
+      "id": "c19.video_call",
+      "category": "c19",
+      "question": "¿Podemos hacer una videollamada?",
+      "aliases": [
+        "Lo veo por video",
+        "Me mostrás el auto por cámara",
+        "Video llamada"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c19.phone_call",
+      "category": "c19",
+      "question": "¿Me puede llamar el vendedor?",
+      "aliases": [
+        "Llamame",
+        "Prefiero por teléfono",
+        "Que me llame alguien"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c19.no_show",
+      "category": "c19",
+      "question": "¿Qué hago si llegué y no hay nadie?",
+      "aliases": [
+        "Estoy en la puerta",
+        "El vendedor no vino",
+        "No atiende"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.immediate",
+      "category": "c20",
+      "question": "¿Me lo puedo llevar en el día?",
+      "aliases": [
+        "Retiro inmediato",
+        "Pago y me lo llevo",
+        "Entrega hoy"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.reservation",
+      "category": "c20",
+      "question": "¿Cómo lo reservo y cuánto seña piden?",
+      "aliases": [
+        "Lo puedo señar",
+        "Cuánto para reservar",
+        "Me lo guardás"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.reservation_refund",
+      "category": "c20",
+      "question": "¿La seña se devuelve si no compro?",
+      "aliases": [
+        "Pierdo la seña",
+        "Cancelación de reserva",
+        "Me devuelven la reserva"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.handover_documents",
+      "category": "c20",
+      "question": "¿Qué me entregan junto con el auto?",
+      "aliases": [
+        "Papeles al retirar",
+        "Acta de entrega",
+        "Qué recibo al llevarlo"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.insurance_start",
+      "category": "c20",
+      "question": "¿Cuándo tengo que contratar el seguro?",
+      "aliases": [
+        "Seguro antes de retirarlo",
+        "Salgo asegurado",
+        "Desde cuándo cubre"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.shipping",
+      "category": "c20",
+      "question": "¿Lo pueden enviar o traer a otra ciudad?",
+      "aliases": [
+        "Envían al interior",
+        "Transporte del auto",
+        "Me lo llevan"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.remote_purchase",
+      "category": "c20",
+      "question": "¿Puedo comprarlo sin viajar primero?",
+      "aliases": [
+        "Compra a distancia",
+        "Todo online",
+        "Soy de otra provincia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.payment_verified",
+      "category": "c20",
+      "question": "¿Ya recibieron mi transferencia?",
+      "aliases": [
+        "Mandé el comprobante",
+        "Ya te pagué",
+        "Se acreditó"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.delivery_date",
+      "category": "c20",
+      "question": "¿Cuándo me entregan si el auto lo tienen que buscar?",
+      "aliases": [
+        "Búsqueda a pedido",
+        "Entrega en treinta días",
+        "Todavía no eligieron la unidad"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c20.platform_protection",
+      "category": "c20",
+      "question": "¿Velox guarda el dinero o garantiza la operación?",
+      "aliases": [
+        "Pago protegido",
+        "Tiene escrow",
+        "Velox me cubre la compra"
+      ],
+      "kind": "static",
+      "answer": "Velox no recibe ni custodia el dinero de la compra en esta versión. Una conversación o una visita no garantizan la operación.",
+      "reusable": false
+    },
+    {
+      "id": "c21.family",
+      "category": "c21",
+      "question": "¿Sirve para mi familia y para llevar chicos?",
+      "aliases": [
+        "Auto familiar",
+        "Para cinco personas",
+        "Para llevar niños"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.work_platforms",
+      "category": "c21",
+      "question": "¿Me sirve para trabajar o para aplicaciones de viajes?",
+      "aliases": [
+        "Sirve para Uber",
+        "Para Cabify",
+        "Para remis"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.pickup_load",
+      "category": "c21",
+      "question": "¿Sirve para carga, remolque o trabajo rural?",
+      "aliases": [
+        "Cuánto remolca",
+        "Para trabajar en finca",
+        "Para llevar carga"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.consumption",
+      "category": "c21",
+      "question": "¿Cuánto consume?",
+      "aliases": [
+        "Cuánto gasta",
+        "Es económico",
+        "Consumo en ruta"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.city_road",
+      "category": "c21",
+      "question": "¿Conviene para ciudad, ruta o caminos difíciles?",
+      "aliases": [
+        "Para viajar",
+        "Para usar en la ciudad",
+        "Para caminos de tierra"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.maintenance_cost",
+      "category": "c21",
+      "question": "¿Es caro de mantener?",
+      "aliases": [
+        "Repuestos caros",
+        "Costo de mantenimiento",
+        "Qué gasto mensual tiene"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.parts",
+      "category": "c21",
+      "question": "¿Se consiguen repuestos y servicio técnico?",
+      "aliases": [
+        "Hay repuestos",
+        "Dónde se arregla",
+        "Red de talleres"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.compare_cars",
+      "category": "c21",
+      "question": "¿Cuál me conviene entre estos dos autos?",
+      "aliases": [
+        "Comparame los dos",
+        "Cuál elegirías",
+        "Qué cambia entre ambos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.search_request",
+      "category": "c21",
+      "question": "¿Me pueden buscar un auto que no esté publicado?",
+      "aliases": [
+        "Búsqueda personalizada",
+        "Consiguen un modelo",
+        "Lo buscan a pedido"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c21.lower_budget",
+      "category": "c21",
+      "question": "¿Hay una alternativa más económica o una moto?",
+      "aliases": [
+        "Algo más barato",
+        "No llego a ese auto",
+        "Me conviene una moto"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c22.who_can_publish",
+      "category": "c22",
+      "question": "¿Quién puede publicar en Velox?",
+      "aliases": [
+        "Pueden publicar particulares",
+        "Se puede registrar una agencia",
+        "Soy revendedor"
+      ],
+      "kind": "static",
+      "answer": "Pueden publicar particulares, revendedores y agencias con una cuenta habilitada.",
+      "reusable": false
+    },
+    {
+      "id": "c22.registration",
+      "category": "c22",
+      "question": "¿Qué necesito para registrarme como vendedor?",
+      "aliases": [
+        "Crear cuenta",
+        "Cómo me registro",
+        "Alta de agencia"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c22.required_fields",
+      "category": "c22",
+      "question": "¿Qué información tengo que cargar de un auto?",
+      "aliases": [
+        "Cómo publico",
+        "Datos obligatorios",
+        "Qué pide la ficha"
+      ],
+      "kind": "static",
+      "answer": "Cargá marca, modelo, año, kilómetros, precio en pesos argentinos, zona, fotos y el estado que conocés del vehículo. No declares como comprobado lo que desconocés.",
+      "reusable": false
+    },
+    {
+      "id": "c22.photos",
+      "category": "c22",
+      "question": "¿Qué fotos y videos conviene subir?",
+      "aliases": [
+        "Cuántas fotos",
+        "Qué imágenes pongo",
+        "Video del auto"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c22.auto_check_entry",
+      "category": "c22",
+      "question": "¿Cómo completo el auto check sin ser mecánico?",
+      "aliases": [
+        "No sé mecánica",
+        "Cómo declaro el estado",
+        "No conozco una falla"
+      ],
+      "kind": "static",
+      "answer": "Completá el auto check con lo que conocés y observás. Es una declaración del vendedor; no reemplaza una revisión mecánica.",
+      "reusable": false
+    },
+    {
+      "id": "c22.commercial_rules",
+      "category": "c22",
+      "question": "¿Puedo decidir si acepto permuta o financiación?",
+      "aliases": [
+        "Configurar condiciones",
+        "Yo no financio",
+        "Sólo vendo contado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c22.edit_listing",
+      "category": "c22",
+      "question": "¿Puedo corregir precio, kilómetros o información?",
+      "aliases": [
+        "Editar publicación",
+        "Cambiar precio",
+        "Corregir un dato"
+      ],
+      "kind": "static",
+      "answer": "En Mis publicaciones podés corregir los datos de tu auto. Revisá los cambios antes de guardarlos.",
+      "reusable": false
+    },
+    {
+      "id": "c22.pause_sold",
+      "category": "c22",
+      "question": "¿Cómo pauso una publicación o marco que se vendió?",
+      "aliases": [
+        "Sacar de venta",
+        "Pausar el auto",
+        "Marcar vendido"
+      ],
+      "kind": "static",
+      "answer": "En Mis publicaciones podés pausar o retirar el aviso para dejar de ofrecerlo. Una publicación retirada no prueba una venta.",
+      "reusable": false
+    },
+    {
+      "id": "c22.consigned",
+      "category": "c22",
+      "question": "¿Puedo publicar autos propios y en consignación?",
+      "aliases": [
+        "Vehículo de un cliente",
+        "Publicar por un tercero",
+        "Propio o consignado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c22.missing_answer",
+      "category": "c22",
+      "question": "¿Qué pasa cuando un comprador pregunta algo que no cargué?",
+      "aliases": [
+        "La IA no sabe algo",
+        "Preguntas pendientes",
+        "Responder al interesado"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c23.ai_identity",
+      "category": "c23",
+      "question": "¿Estoy hablando con una IA o con una persona?",
+      "aliases": [
+        "Sos un robot",
+        "Quién me contesta",
+        "Es automático"
+      ],
+      "kind": "static",
+      "answer": "Los mensajes marcados Asistente VELOX son respuestas automáticas. Los demás mensajes pertenecen al participante que los envió.",
+      "reusable": false
+    },
+    {
+      "id": "c23.human",
+      "category": "c23",
+      "question": "¿Puedo pedir atención humana?",
+      "aliases": [
+        "Quiero una persona",
+        "Pasame con alguien",
+        "No quiero hablar con el bot"
+      ],
+      "kind": "static",
+      "answer": "Podés escribirle al vendedor en este chat. Eso no significa que esté conectado ni que ya haya leído tu mensaje.",
+      "reusable": false
+    },
+    {
+      "id": "c23.personal_data",
+      "category": "c23",
+      "question": "¿Para qué me piden mis datos?",
+      "aliases": [
+        "Por qué necesitan mi teléfono",
+        "Para qué el DNI",
+        "Qué hacen con mis datos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c23.share_with_seller",
+      "category": "c23",
+      "question": "¿El vendedor ve todos mis datos?",
+      "aliases": [
+        "Quién ve mi número",
+        "Comparten mi información",
+        "Datos privados"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c23.correct_data",
+      "category": "c23",
+      "question": "¿Cómo corrijo un dato que di mal?",
+      "aliases": [
+        "Me equivoqué de presupuesto",
+        "Mi nombre está mal",
+        "Corregir mi vehículo"
+      ],
+      "kind": "static",
+      "answer": "Podés aclarar el dato en este chat. Eso no modifica automáticamente los datos de tu cuenta ni la publicación.",
+      "reusable": false
+    },
+    {
+      "id": "c23.opt_out",
+      "category": "c23",
+      "question": "¿Cómo dejo de recibir mensajes?",
+      "aliases": [
+        "No me escriban más",
+        "Baja",
+        "No quiero seguimiento"
+      ],
+      "kind": "static",
+      "answer": "Podés usar Bloquear en este chat para impedir nuevos mensajes en esta conversación. Esta respuesta no ejecuta el bloqueo ni elimina tu cuenta.",
+      "reusable": false
+    },
+    {
+      "id": "c23.privacy_rights",
+      "category": "c23",
+      "question": "¿Puedo acceder a mis datos o pedir su eliminación?",
+      "aliases": [
+        "Borrar mis datos",
+        "Eliminar cuenta",
+        "Ver qué guardaron"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c23.report_listing",
+      "category": "c23",
+      "question": "¿Cómo denuncio una publicación falsa o sospechosa?",
+      "aliases": [
+        "Es una estafa",
+        "Auto duplicado",
+        "Publicación engañosa"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c23.complaint",
+      "category": "c23",
+      "question": "¿Dónde hago un reclamo por una reserva o una compra?",
+      "aliases": [
+        "Quiero quejarme",
+        "No me devuelven el dinero",
+        "Reclamo de compra"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c23.audio_images",
+      "category": "c23",
+      "question": "¿Puedo mandar audios, fotos o documentos por el chat?",
+      "aliases": [
+        "Te mando audio",
+        "Mirá esta foto",
+        "Subo el recibo"
+      ],
+      "kind": "static",
+      "answer": "Este chat admite mensajes de texto. No procesa audios, comprobantes ni documentos adjuntos en esta versión.",
+      "reusable": false
+    },
+    {
+      "id": "c24.launch_window",
+      "category": "c24",
+      "question": "¿Cuánto dura la promoción gratuita?",
+      "aliases": [
+        "Noventa días gratis",
+        "Tres meses sin costo",
+        "Hasta cuándo es gratis"
+      ],
+      "kind": "static",
+      "answer": "La promoción definida dura 90 días desde una fecha común de lanzamiento para todos. Consultá las fechas y cupos configurados en la sección Créditos.",
+      "reusable": false
+    },
+    {
+      "id": "c24.late_registration",
+      "category": "c24",
+      "question": "¿Tengo 90 días propios si me registro después del lanzamiento?",
+      "aliases": [
+        "Me anoto más tarde",
+        "Noventa días desde mi registro",
+        "Cuánto me queda de promoción"
+      ],
+      "kind": "static",
+      "answer": "La fecha de fin es común: registrarte después no inicia otros 90 días. Consultá el período vigente en Créditos.",
+      "reusable": false
+    },
+    {
+      "id": "c24.credit_allowance",
+      "category": "c24",
+      "question": "¿Cuántos créditos recibe cada tipo de vendedor?",
+      "aliases": [
+        "Créditos para agencia",
+        "Cupo particular",
+        "Qué recibe una reventa"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c24.what_spends",
+      "category": "c24",
+      "question": "¿Los créditos se gastan al publicar, al usar IA o en ambas cosas?",
+      "aliases": [
+        "Qué consume créditos",
+        "Cobran las preguntas",
+        "Me descuentan por publicación"
+      ],
+      "kind": "static",
+      "answer": "La política comercial definitiva de consumo está pendiente. No hay cobros automáticos. Consultá las condiciones del lanzamiento antes de publicar.",
+      "reusable": false
+    },
+    {
+      "id": "c24.faq_cost",
+      "category": "c24",
+      "question": "¿Una respuesta automática consume tokens de IA?",
+      "aliases": [
+        "FAQ gasta IA",
+        "Las preguntas rápidas consumen",
+        "Cuesta cada respuesta"
+      ],
+      "kind": "static",
+      "answer": "Las respuestas por reglas y datos no llaman a un modelo de IA. Los créditos comerciales de Velox se definen por separado del consumo del proveedor.",
+      "reusable": false
+    },
+    {
+      "id": "c24.balance",
+      "category": "c24",
+      "question": "¿Dónde veo mi saldo y por qué se descontaron créditos?",
+      "aliases": [
+        "Historial de consumo",
+        "Me faltan créditos",
+        "Qué se cobró"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c24.exhausted",
+      "category": "c24",
+      "question": "¿Qué pasa si se terminan mis créditos gratuitos?",
+      "aliases": [
+        "Me quedé sin saldo",
+        "Se apaga el asistente",
+        "Tengo que pagar ahora"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c24.after_promotion",
+      "category": "c24",
+      "question": "¿Después se empieza a cobrar automáticamente?",
+      "aliases": [
+        "Cuánto cuesta al terminar",
+        "Se renueva solo",
+        "Cobran después de los noventa días"
+      ],
+      "kind": "static",
+      "answer": "No se cobra automáticamente. Al terminar, administración decide si ofrece créditos pagos o extiende otros tres meses gratis; la extensión debe quedar registrada.",
+      "reusable": false
+    },
+    {
+      "id": "c24.paid_services",
+      "category": "c24",
+      "question": "¿La promoción incluye informes, revisiones o compra protegida?",
+      "aliases": [
+        "Incluye mecánico",
+        "Dominio gratis",
+        "Servicios extra incluidos"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    },
+    {
+      "id": "c24.admin_metrics",
+      "category": "c24",
+      "question": "¿Qué resultados puede ver la administración?",
+      "aliases": [
+        "Métricas del embudo",
+        "Usuarios y publicaciones",
+        "Visitas y uso de IA"
+      ],
+      "kind": "missing",
+      "answer": null,
+      "reusable": false
+    }
+  ]
+}

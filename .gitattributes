@@ -1,0 +1,2 @@
+# SQL function fingerprints must match on Windows and Linux.
+*.sql text eol=lf

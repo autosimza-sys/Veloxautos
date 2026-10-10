@@ -2,6 +2,7 @@ import { roleLabel } from "../../lib/roles";
 
 export default function AuthSection({
   authForm,
+  authBusy = false,
   authMode,
   authStatus,
   onSubmit,
@@ -99,7 +100,7 @@ export default function AuthSection({
           />
         </label>
 
-        <button className="primary" type="submit">
+            <button className="primary" type="submit" disabled={authBusy}>
           {authMode === "login" ? "Entrar" : "Crear cuenta"}
         </button>
 
