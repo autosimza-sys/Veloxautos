@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test('demo answers a question, confirms an accepted visit, shows seller notice and resets without external requests',async({page})=>{
+test('demo answers a question, confirms an accepted visit, shows seller notice and resets without external requests',async({page},testInfo)=>{
  const errors=[],external=[],writes=[];
  page.on('pageerror',e=>errors.push(e.message));
  page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:3100/'))external.push(r.url());if(r.method()!=='GET')writes.push(r.url());});
@@ -21,6 +21,7 @@ test('demo answers a question, confirms an accepted visit, shows seller notice a
  await page.getByRole('button',{name:'Ver qué recibe el vendedor →'}).click();
  await expect(page.getByRole('region',{name:'Avisos de visitas'})).toContainText('Comprador: Comprador de ejemplo');
  await expect(page.getByRole('region',{name:'Avisos de visitas'})).toContainText('30 minutos');
+ await page.screenshot({path:testInfo.outputPath('demo-aviso.png'),fullPage:true});
  await page.getByRole('button',{name:'Marcar como leído'}).click();await expect(page.getByRole('button',{name:'Marcar como leído'})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.reload();await expect(page.getByRole('button',{name:'Empezar demostración'})).toBeVisible();
