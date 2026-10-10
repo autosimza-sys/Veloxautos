@@ -8,7 +8,7 @@
 -- PostgreSQL can see only some PostgREST configuration. Dashboard/runtime exposure,
 -- frontend cutover and signed-URL smoke tests always require independent review.
 -- Fingerprints below describe local schema + ordered migrations through
--- 202610090006. A PostgreSQL deparser change may cause a conservative REVIEW.
+-- 202610100001. A PostgreSQL deparser change may cause a conservative REVIEW.
 -- Update fingerprints only after reviewing the corresponding source change.
 begin transaction isolation level repeatable read read only;
 set transaction read only;
@@ -32,7 +32,7 @@ expected_relations(object_name) as (values
   ('storage.objects'), ('storage.buckets'),
   ('velox_private.appointment_reservations'), ('velox_private.appointment_proposal_requests'),
   ('velox_private.message_requests'), ('public.launch_promotion'),
-  ('velox_private.launch_promotion_events'), ('velox_private.ai_reply_jobs'), ('velox_private.faq_catalog'),
+  ('velox_private.launch_promotion_events'), ('velox_private.ai_reply_jobs'), ('velox_private.ai_budget_reservations'), ('velox_private.faq_catalog'),
   ('velox_private.faq_requests'), ('velox_private.faq_answer_history'), ('velox_private.visit_authorizations'), ('velox_private.authorized_visit_requests'), ('velox_private.visit_notices')
 ),
 relations as materialized (
@@ -142,6 +142,7 @@ expected_functions(object_name, fingerprint) as (values
   ('velox_private.resolve_faq(uuid,text)','5658eaf19d67b43485f750a6c1b19e27'),
   ('velox_private.apply_global_credit_expiry()','be029781c0d0bcc3e1e8244d2d456fc7'),
   ('public.finish_ai_reply(uuid,uuid,text)','210066210bd08cc653672c05a14f5f1e'),
+  ('public.reserve_ai_reply_budget(uuid,uuid,integer)','a7216d3864aeefb65f2e0c05dc15222b'),
   ('public.claim_ai_reply(uuid,uuid,integer,integer)','5159440ca6d48af80f60a362cc5871c9'),
   ('velox_private.guard_launch_publication()','f1b77a959001522c95abc9921561b843'),
   ('public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)','cb2f3ddd29bc704de3405ebbf4e00f5e'),
@@ -332,7 +333,7 @@ expected_versions(version) as (values
  ('202606230001'),('202606230002'),('202606230003'),('202606230004'),('202606230005'),
  ('202606230006'),('202606230007'),('202606230008'),('202606230009'),
  ('202610030001'),('202610030002'),('202610030003'),('202610030004'),('202610030005'),
- ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005'),('202610090006')
+ ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005'),('202610090006'),('202610100001')
 ),
 bucket_rows as (
  select wanted.id,m.oid,m.can_inspect_all_rows,b.value as configuration
