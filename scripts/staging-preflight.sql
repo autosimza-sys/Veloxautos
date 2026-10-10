@@ -8,7 +8,7 @@
 -- PostgreSQL can see only some PostgREST configuration. Dashboard/runtime exposure,
 -- frontend cutover and signed-URL smoke tests always require independent review.
 -- Fingerprints below describe local schema + ordered migrations through
--- 202610090005. A PostgreSQL deparser change may cause a conservative REVIEW.
+-- 202610090006. A PostgreSQL deparser change may cause a conservative REVIEW.
 -- Update fingerprints only after reviewing the corresponding source change.
 begin transaction isolation level repeatable read read only;
 set transaction read only;
@@ -33,7 +33,7 @@ expected_relations(object_name) as (values
   ('velox_private.appointment_reservations'), ('velox_private.appointment_proposal_requests'),
   ('velox_private.message_requests'), ('public.launch_promotion'),
   ('velox_private.launch_promotion_events'), ('velox_private.ai_reply_jobs'), ('velox_private.faq_catalog'),
-  ('velox_private.faq_requests'), ('velox_private.faq_answer_history'), ('velox_private.visit_authorizations')
+  ('velox_private.faq_requests'), ('velox_private.faq_answer_history'), ('velox_private.visit_authorizations'), ('velox_private.authorized_visit_requests'), ('velox_private.visit_notices')
 ),
 relations as materialized (
   select c.*, n.nspname, n.nspname || '.' || c.relname as object_name,
@@ -124,6 +124,13 @@ policies as materialized (
 ),
 -- FUNCTION_MANIFEST_START
 expected_functions(object_name, fingerprint) as (values
+  ('public.get_visit_notices()','88532b34a8b525119d87c59b13a5aab7'),
+  ('public.read_visit_notice(uuid)','53b2aec096d8b4184baf973a41480143'),
+  ('public.book_authorized_visit(uuid, uuid, timestamp with time zone, boolean, uuid)','b585b209403003dd03c18cba55240df1'),
+  ('public.get_available_visit_slots(uuid)','8c8675c00529d360710fd65b1b7ad562'),
+  ('velox_private.authorized_visit_slot(uuid, uuid, timestamp with time zone)','f78a2102e37bb28c029aae3e1944bfd3'),
+  ('velox_private.visit_buyer_context(uuid)','1423d3036e3c78e758aa944ab7043596'),
+  ('velox_private.notify_visit_change()','e74262f5f6234688b470dd36fb12ef0f'),
   ('velox_private.guard_visit_authorization()','e9622014f4646e8bec109775495f4753'),
   ('public.get_visit_authorizations(uuid)','cf50ca9177b85e0d5bd04c561c137ba6'),
   ('public.authorize_visit_window(uuid,timestamp with time zone,timestamp with time zone,integer,text,text,boolean,uuid)','955229676578bbccf83d4c831d2fbcbc'),
@@ -166,7 +173,7 @@ expected_functions(object_name, fingerprint) as (values
   ('velox_private.can_upload_inspection_object(text)','c29d867cfedd5c2a39fffef5607c5260'),
   ('velox_private.can_write_inspection_report(uuid)','11d875c345f1fb73fbc00078b3866118'),
   ('velox_private.guard_appointment_duration()','defe9e76fa9f2cf818c020811aba58ad'),
-  ('velox_private.guard_appointment_integrity()','b481454d71b888c97820a157d648a5ec'),
+  ('velox_private.guard_appointment_integrity()','4c70930c7a57067e47cd3dc07dc3cea7'),
   ('velox_private.guard_conversation_moderation()','15b0299023ffee6b0536581613e98092'),
   ('velox_private.guard_inspection_assignment()','67b7e694149b09b4977a683e8a2aa780'),
   ('velox_private.guard_inspection_completion()','afb8a0a2d0f0fef0160f005d11705442'),
@@ -193,6 +200,8 @@ functions as materialized (
 -- Function bodies are not enough: triggers must still exist, be enabled for
 -- ordinary writes, fire at the reviewed timing/events, and call the right guard.
 expected_triggers(table_name, trigger_name, function_name, definition) as (values
+ ('public.appointments','notify_visit_change','velox_private.notify_visit_change()',
+  'CREATE TRIGGER notify_visit_change AFTER UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION velox_private.notify_visit_change()'),
  ('velox_private.visit_authorizations','guard_visit_authorization','velox_private.guard_visit_authorization()',
   'CREATE TRIGGER guard_visit_authorization BEFORE UPDATE ON velox_private.visit_authorizations FOR EACH ROW EXECUTE FUNCTION velox_private.guard_visit_authorization()'),
  ('public.credit_balances','global_credit_expiry','velox_private.apply_global_credit_expiry()',
@@ -323,7 +332,7 @@ expected_versions(version) as (values
  ('202606230001'),('202606230002'),('202606230003'),('202606230004'),('202606230005'),
  ('202606230006'),('202606230007'),('202606230008'),('202606230009'),
  ('202610030001'),('202610030002'),('202610030003'),('202610030004'),('202610030005'),
- ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005')
+ ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005'),('202610090006')
 ),
 bucket_rows as (
  select wanted.id,m.oid,m.can_inspect_all_rows,b.value as configuration

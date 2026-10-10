@@ -52,7 +52,7 @@ function AuthorizationEditor({vehicleId,client,listingActive}) {
  return <section aria-label="Disponibilidad autorizada del vendedor" className="visitAuthorization">
   <h4>Prepará la agenda de tu asistente</h4>
   <p>Elegí una fecha concreta y un horario. Los horarios escritos en la ficha no autorizan reservas por sí solos.</p>
-  <p>Esta etapa guarda tu autorización. La coordinación automática y el aviso al vendedor todavía están pendientes de activación.</p>
+  <p>El comprador puede elegir un horario libre y confirmar la visita con tu autorización. El aviso queda en Mis conversaciones, dentro de Velox.</p>
   <p>Zona horaria para cargar: {timezone}. El lugar se guarda de forma privada y queda autorizado para compartirse con el comprador al acordar una visita.</p>
   <button type="button" className="secondary" onClick={refresh} disabled={busy||loading}>Actualizar horarios</button>
   {loading&&<p role="status">Cargando horarios…</p>}{loadError&&<p role="alert">{loadError}</p>}

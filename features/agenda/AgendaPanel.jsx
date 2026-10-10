@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { appointmentActions, appointmentEnd, MAX_APPOINTMENT_DURATION_MINUTES } from "./appointment-model";
 import { statusLabel, useAppointments } from "./use-appointments";
 import VisitPlanner from './VisitPlanner';
+import AuthorizedVisitBooking from './AuthorizedVisitBooking';
 
 const actionLabels = { accepted: "Aceptar", rejected: "Rechazar", confirmed: "Confirmar visita", cancelled: "Cancelar visita" };
 
@@ -41,8 +42,9 @@ function AgendaContent({ conversation, userId, client }) {
 
   return (
     <section className="agendaPanel" aria-label="Agenda de visitas" aria-busy={agenda.busy || agenda.loading}>
+      <AuthorizedVisitBooking conversation={conversation} userId={userId} client={client} onBooked={agenda.refresh}/>
       <button type="button" className="primary" disabled={disabled} aria-expanded={assistantOpen}
-        onClick={()=>setAssistantOpen(current=>!current)}>Asistente para coordinar</button>
+        onClick={()=>setAssistantOpen(current=>!current)}>Preparar otra propuesta</button>
       {assistantOpen && <VisitPlanner onPropose={agenda.propose} onClose={()=>setAssistantOpen(false)} disabled={!agenda.canMutate} />}
       <button className="agendaToggle" type="button" disabled={disabled} aria-expanded={open} aria-controls={formId}
         onClick={() => setOpen(current => !current)}>
@@ -101,7 +103,7 @@ function AgendaContent({ conversation, userId, client }) {
                 ? "La otra persona aceptó. Falta tu confirmación final."
                 : "Tu confirmación quedó registrada. Esperando a quien propuso la visita."}</small>}
               {!appointment.legacy_unverified && <><small>Comprador: {appointment.buyer_confirmed_at ? "confirmó" : "pendiente"}</small>
-              <small>Vendedor: {appointment.seller_confirmed_at ? "confirmó" : "pendiente"}</small></>}
+              <small>Vendedor: {appointment.confirmation_source === 'seller_authorization' ? 'autorizó previamente este horario' : appointment.seller_confirmed_at ? "confirmó" : "pendiente"}</small></>}
             </div>
             <div className="appointmentActions">
               {appointmentActions(appointment, conversation, userId, now).map(action => (

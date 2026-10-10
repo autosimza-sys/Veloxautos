@@ -2460,7 +2460,7 @@
         "¿Cuándo se puede visitar?"
       ],
       "kind": "static",
-      "answer": "Podés proponer uno de tus horarios con Asistente para coordinar. La visita requiere que ambas partes acepten los mismos datos; este mensaje no agenda nada.",
+      "answer": "Usá Ver horarios autorizados para elegir un turno libre. Revisá fecha, duración y lugar y confirmá tu asistencia; el vendedor ya autorizó esos turnos. Si no hay horarios, podés enviar una propuesta desde Coordinar visita. Este mensaje no reserva una visita.",
       "reusable": false
     },
     {
@@ -2473,7 +2473,7 @@
         "Tenés un turno hoy"
       ],
       "kind": "static",
-      "answer": "Usá Asistente para coordinar para proponer fecha, hora, duración y lugar. No hay un horario confirmado hasta completar el acuerdo de ambas partes.",
+      "answer": "En Ver horarios autorizados podés consultar si hay turnos libres para hoy o mañana. La visita se confirma cuando elegís un horario y aceptás los datos. Si no hay turnos, enviá una propuesta desde Coordinar visita. Este mensaje no reserva una visita.",
       "reusable": false
     },
     {

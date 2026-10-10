@@ -20,6 +20,12 @@
 .visitAuthorizationConsent input { margin-top: 5px; flex-shrink: 0; }
 .visitAuthorizationRecord { display: grid; gap: 10px; padding: 18px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .visitAuthorizationRecord button { justify-self: start; }
+.visitSlots { display: grid; gap: 10px; max-height: 320px; overflow: auto; margin-block: 16px; }
+.visitSlots button { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.visitNotices { margin-block: 24px; padding: 20px; border: 1px solid var(--border-2); border-radius: var(--radius); }
+.visitNotices h3,.visitNotices>p { margin-bottom: 12px; }
+.visitPlanner .visitAuthorizationConsent { display: flex; align-items: flex-start; gap: 10px; margin-block: 16px; }
+.visitPlanner .visitAuthorizationConsent input { width: auto; }
 .chatFaq { padding: 12px 18px; }
 .chatFaq .faqResults { max-height: 260px; }
 .faqPage a { text-decoration: underline; }

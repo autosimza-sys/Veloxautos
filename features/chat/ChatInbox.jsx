@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase-client";
 import ChatPreview from "./ChatPreview";
 import { conversationTitle, isParticipant } from "./chat-data";
 import { useChatInbox } from "./use-chat-inbox";
+import VisitNotices from '../agenda/VisitNotices';
 
 const listStyle = { display: "grid", gap: 12, listStyle: "none", padding: 0, margin: "20px 0 0" };
 const rowStyle = { display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", textAlign: "left", color: "var(--text)", padding: 18 };
@@ -37,6 +38,7 @@ function ChatInboxContent({ session, client = supabase, ChatComponent = ChatPrev
           {inbox.loading ? "Actualizando..." : "Actualizar conversaciones"}
         </button>}
       </div>
+      <VisitNotices key={session?.access_token || userId} userId={userId} client={client}/>
       {!userId && <p>Ingresá para ver tus conversaciones.</p>}
       {userId && inbox.loading && <p role="status">Cargando conversaciones...</p>}
       {userId && inbox.status && <p role="alert">{inbox.status}</p>}
