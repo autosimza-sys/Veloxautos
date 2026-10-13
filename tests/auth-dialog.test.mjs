@@ -23,6 +23,15 @@ const props = {
 };
 afterEach(() => cleanup());
 
+test('buyer is selectable in registration and success text alone cannot hide the form', () => {
+  const view = render(React.createElement(AuthModal, { ...props, intent: 'chat',
+    authStatus: 'Cuenta creada. Ya podés publicar', onClose() {} }));
+  assert.ok(view.getByRole('option', { name: /Comprador/ }));
+  assert.equal(view.getByLabelText('Tipo de cuenta').options.length, 4);
+  assert.ok(view.getByRole('button', { name: 'Crear cuenta y consultar' }));
+  assert.equal(view.queryByText('✓ Sesión activa'), null);
+});
+
 function DialogHarness() {
   const dialog = useAuthDialog();
   return React.createElement(React.Fragment, null,

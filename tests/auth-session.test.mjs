@@ -62,6 +62,41 @@ test('network errors become actionable status and permit retry', async () => {
   assert.match(result.current.authStatus, /conexión/i);
   assert.equal(result.current.authBusy, false);
 });
+
+test('chat registration defaults to buyer, publication restores a seller role', async () => {
+  const client = fakeClient();
+  const { result } = renderHook(() => useAuth(client));
+  await flush();
+  act(() => result.current.startRegistration('chat'));
+  assert.equal(result.current.authForm.role, 'registered');
+  assert.equal(result.current.authMode, 'register');
+  act(() => result.current.startRegistration('publish'));
+  assert.equal(result.current.authForm.role, 'particular');
+  act(() => result.current.setAuthForm({ ...result.current.authForm, role: 'agency' }));
+  act(() => result.current.startRegistration('publish'));
+  assert.equal(result.current.authForm.role, 'agency');
+});
+
+test('registration status reflects the loaded role and does not claim access without a profile', async () => {
+  for (const [profile, expected] of [
+    [{id:'new',role:'registered'}, /consultar vehículos/],
+    [{id:'new',role:'agency'}, /preparar tu publicación/],
+    [{id:'new',role:'particular',is_blocked:true}, /necesita revisión/],
+    [null, /no pudimos cargar tu perfil/],
+  ]) {
+    const client=fakeClient();
+    client.auth.signUp=async()=>({data:{user:{id:'new'},session:{user:{id:'new'}}}});
+    client.from=()=>({select:()=>({eq:()=>({single:async()=>({data:profile})})}),
+      insert:()=>({select:()=>({single:async()=>({data:null,error:{message:'denied'}})})})});
+    const { result,unmount }=renderHook(()=>useAuth(client));
+    await flush();
+    act(()=>result.current.setAuthMode('register'));
+    await act(()=>result.current.submitAuth({preventDefault(){}}));
+    assert.match(result.current.authStatus,expected);
+    assert.doesNotMatch(result.current.authStatus,/ya podés publicar/i);
+    unmount();
+  }
+});
 test('unconfirmed registration does not trigger password login or persist password in form', async () => {
   const client = fakeClient();
   let loginCalls = 0;

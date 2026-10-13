@@ -66,7 +66,7 @@ export default function HomePage() {
     if (auth.session) {
       assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
-      auth.setAuthMode("register");
+      auth.startRegistration("publish");
       openAuth("publish");
     }
   }
@@ -127,7 +127,7 @@ export default function HomePage() {
         canSeePrice={canSeePrice}
         onOpenChat={() => {
           if (auth.session) setChatOpen(true);
-          else { auth.setAuthMode("register"); openAuth("chat"); }
+          else { auth.startRegistration("chat"); openAuth("chat"); }
         }}
         vehicle={catalog.selectedVehicle}
       />}

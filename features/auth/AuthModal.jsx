@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { useModalFocus } from "./use-modal-focus";
 
 export default function AuthModal({
@@ -18,7 +19,7 @@ export default function AuthModal({
   const dialogRef = useRef(null);
   useModalFocus(dialogRef, onClose);
   // Si el usuario acaba de autenticarse, mostrar estado de éxito
-  const isSuccess = profile || (authStatus && authStatus.includes("podés publicar"));
+  const isSuccess = Boolean(profile);
 
   return (
     <div
@@ -86,11 +87,12 @@ export default function AuthModal({
                   />
                 </label>
                 <label>
-                  Tipo de vendedor
+                  Tipo de cuenta
                   <select
                     value={authForm.role}
                     onChange={(event) => setAuthForm({ ...authForm, role: event.target.value })}
                   >
+                    <option value="registered">Comprador — quiero consultar vehículos</option>
                     <option value="particular">Particular — quiero vender mi auto</option>
                     <option value="reseller">Revendedor — vendo varios autos</option>
                     <option value="agency">Agencia — soy una concesionaria</option>
@@ -130,8 +132,10 @@ export default function AuthModal({
               />
             </label>
 
+            {authMode === "login" && <Link href="/recuperar-cuenta">Olvidé mi contraseña</Link>}
+
             <button className="primary" type="submit" disabled={authBusy}>
-              {authMode === "login" ? "Ingresar" : intent === "chat" ? "Crear cuenta y consultar" : "Crear cuenta y publicar"}
+              {authMode === "login" ? "Ingresar" : intent === "chat" ? "Crear cuenta y consultar" : authForm.role === "registered" ? "Crear cuenta" : "Crear cuenta y publicar"}
             </button>
 
             {authStatus && (

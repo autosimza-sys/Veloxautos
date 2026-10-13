@@ -58,7 +58,18 @@ test('disabled assistant and blocked conversations cannot create reusable questi
  await asUser(db,ids.buyer);await denied(db,()=>ask('¿Cuánto vale?'),assert);
 });
 test('all canonical questions produce reviewed answers or explicit missing data, never draft variables',async()=>{
- for(const item of catalog.items){const a=await ask(item.question);assert.ok(a,item.id);assert.doesNotMatch(a,/\{(?:listing|seller|vehicle|quote|platform)\./,item.id);}
+ for(let i=0;i<catalog.items.length;i++){
+  // This suite evaluates 240 FAQ answers, not a burst from one live buyer.
+  // Simulate elapsed minutes between batches; rate boundaries have their own
+  // backend suite and remain enforced through the same public send RPC here.
+  if(i>0&&i%10===0){
+   await db.exec('reset role');
+   await db.query(`update velox_private.message_rate_windows set recent_messages=(
+    select jsonb_agg(jsonb_set(e,'{accepted_at}',to_jsonb(clock_timestamp()-interval '61 seconds')))
+    from jsonb_array_elements(recent_messages) e) where author_id=$1`,[ids.buyer]);
+  }
+  const item=catalog.items[i];const a=await ask(item.question);assert.ok(a,item.id);assert.doesNotMatch(a,/\{(?:listing|seller|vehicle|quote|platform)\./,item.id);
+ }
 });
 test('reusable declarations stay on their listing and history records revisions privately',async()=>{
  await ask('¿Cuándo cambiaron la distribución?');await asUser(db,ids.seller);
