@@ -1011,6 +1011,7 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   inset: 0;
   z-index: 100;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 20px;
   background: rgba(0,0,0,0.8);
@@ -1031,6 +1032,7 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   color: var(--muted);
   width: 36px;
   height: 36px;
+  flex: 0 0 36px;
   transition: background 150ms, color 150ms;
 }
 
@@ -2092,6 +2094,8 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   display: flex;
   flex-direction: column;
   width: min(480px, 100%);
+  min-width: 0;
+  max-width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid var(--border);
@@ -2116,6 +2120,8 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   color: white;
 }
 
+.authModalHeader > div { min-width: 0; }
+
 .authModalBody {
   display: grid;
   gap: 14px;
@@ -2133,6 +2139,7 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 .authModalBody input,
 .authModalBody select {
   width: 100%;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -2279,12 +2286,13 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 
 .filterGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
 .filterLabel {
   display: grid;
+  min-width: 0;
   gap: 7px;
   color: var(--muted);
   font-size: 12px;
@@ -2294,6 +2302,8 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 }
 
 .filterLabel select {
+  min-width: 0;
+  width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -2446,7 +2456,7 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
     grid-template-columns: repeat(2, minmax(0,1fr));
   }
 
-  .filterGrid { grid-template-columns: repeat(2, 1fr); }
+  .filterGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .salesAssistantSection {
     grid-template-columns: 1fr;
@@ -2465,7 +2475,7 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 
 @media (max-width: 640px) {
   .catalogGrid { grid-template-columns: 1fr; }
-  .filterGrid { grid-template-columns: 1fr 1fr; }
+  .filterGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalogHeader { flex-direction: column; align-items: flex-start; }
 
   .authModal {

@@ -31,6 +31,14 @@ test('publication writes metadata and credit through one RPC and deterministic c
   assert.equal(client.rpcs[0].payload.media_payload.length,4);
   assert.ok(client.uploads.every(item=>item.path.startsWith(`owner/${requestId}/`)&&item.options.upsert===false));
 });
+
+test('publication sends the displayed quote unchanged instead of silently fetching a new price',async()=>{
+  const client=fakeClient();
+  const quote={policy_revision:2,campaign_revision:1,cost:40,role:'reseller'};
+  await createVehiclePublication({...args(client),publicationQuote:quote});
+  assert.equal(client.rpcs.length,1);
+  assert.deepEqual(client.rpcs[0].payload.payload.publication_quote,quote);
+});
 test('lost RPC response preserves files; retry uses identical request, payload and paths',async()=>{
   const client=fakeClient(); const original=client.rpc; let attempts=0;
   client.rpc=async(...args)=>{const result=await original(...args);if(++attempts===1)throw new Error('Network disconnected');return result;};

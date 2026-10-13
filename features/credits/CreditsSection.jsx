@@ -1,5 +1,5 @@
 import { roleLabel } from "../../lib/roles";
-import { promotionState } from './promotion-model';
+import { promotionState, rolePublicationCost } from './promotion-model';
 import { useCreditHistory } from './use-credit-history';
 
 const movementLabels = { initial_grant: 'Créditos iniciales', publication: 'Publicación de auto', promo_refill: 'Recarga gratuita', admin_adjustment: 'Ajuste de saldo', expiration: 'Vencimiento', purchase: 'Acreditación por compra' };
@@ -19,7 +19,7 @@ export default function CreditsSection({ balance, profile, status, launch }) {
         {phase==='scheduled' && <p>Comienza el {new Date(promotion.starts_at).toLocaleString('es-AR')}.</p>}
         {phase==='free' && <p>Período gratuito hasta el {new Date(promotion.ends_at).toLocaleString('es-AR')}.</p>}
         {phase==='review' && <p>El período gratuito terminó. Estamos evaluando su extensión; no se activó ningún cobro.</p>}
-        {promotion?.revision > 0 && <p>Publicar un auto consume {promotion.publication_cost ?? 1} créditos. Editar, responder preguntas básicas y coordinar visitas están incluidos.</p>}
+        {promotion?.revision > 0 && <p>{['particular','reseller','agency'].includes(profile?.role) ? `Publicar un auto con tu cuenta consume ${rolePublicationCost(promotion,profile.role)} créditos.` : 'El costo de publicación depende del tipo de vendedor y se muestra antes de confirmar.'} Editar, responder preguntas básicas y coordinar visitas están incluidos.</p>}
         {promotion?.revision > 0 && promotion.auto_refill && <p>Durante el período gratuito, el saldo se recarga sin cargo al agotarse o cuando no alcanza para publicar. Cada recarga queda registrada y no cambia la fecha final.</p>}
         {error && <p role="status">{error}</p>}
       </div>
@@ -50,6 +50,7 @@ export default function CreditsSection({ balance, profile, status, launch }) {
           <article key={role}>
             <span>{roleLabel(role)}</span>
             <strong>{credits} créditos iniciales</strong>
+            <p>{rolePublicationCost(promotion,role)} créditos por publicación.</p>
             <p>{promotion.auto_refill ? `Recargas gratuitas de ${credits} créditos durante la promoción.` : 'Vigencia común del período de lanzamiento.'}</p>
           </article>
         ))}

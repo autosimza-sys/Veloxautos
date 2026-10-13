@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "node --import ./tests/no-live-services.mjs --import tsx --test --test-concurrency=1 tests/*.test.mjs tests/backend/*.test.mjs",
     "test:e2e": "playwright test",
+    "test:e2e:pilot": "playwright test --config=playwright.pilot.config.mjs",
     "verify": "npm run lint && npm test && npm run build"
   },
   "dependencies": {

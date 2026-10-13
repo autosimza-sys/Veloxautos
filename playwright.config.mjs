@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  testIgnore: "**/pilot-authenticated.spec.mjs",
   fullyParallel: true,
   projects: [
     { name: "desktop", use: { viewport: { width: 1366, height: 768 } } },
