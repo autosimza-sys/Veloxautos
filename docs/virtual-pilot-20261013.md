@@ -1,0 +1,15 @@
+# Piloto virtual — 13 de octubre de 2026
+
+Federico solicitó cuentas persistentes para repetir el recorrido manual: tres particulares con un auto cada uno, dos reventas con dos autos cada una y una agencia con tres autos. Se crearon además tres compradores. Todos los datos y las imágenes del piloto son ficticios y están identificados como PILOTO VIRTUAL; las diez publicaciones se dejan pausadas al cerrar la ejecución.
+
+El recorrido real verificó registro, ingreso, salida, roles, publicación con cuatro imágenes y auto check, débito idempotente, edición/pausa/retiro, consultas privadas, respuesta declarada reutilizable, autorización de horarios, consentimiento y avisos internos. Hubo diez conversaciones y diez visitas confirmadas de prueba; también se comprobó una cancelación. Tres consultas excepcionales recibieron respuestas de IA en producción, con una reserva máxima conjunta de US$0,075 dentro del límite mensual de US$10. Una reserva no es la factura real del proveedor.
+
+Las pruebas de navegador adicionales usan el SDK real contra una API simulada en un dominio `.invalid`. Complementan los controles reales; no prueban entrega de correo ni reemplazan las pruebas de permisos en PostgreSQL. Se ejecutan mediante `npm run test:e2e:pilot` y forman parte de CI. Corrigen y cubren la limpieza del borrador al salir/cambiar de usuario y el desborde de filtros/registro en celulares.
+
+Las migraciones 004 y 005 agregan tarifas por rol, cotización validada antes de descontar y extensión exacta de 90 días. Aplicarlas no activa una campaña ni cambia saldos. Una política iniciada requiere cotización en `payload.publication_quote`; los reintentos recuperan la publicación previa antes de validar una cotización nueva. La UI adjunta los valores mostrados al vendedor, sin aceptar un precio distinto silenciosamente.
+
+Propuesta editable para lanzamiento: 100 créditos iniciales y recargas de 100; 50 por publicación particular, 40 reventa y 30 agencia. IA: propuesta de 1 crédito por respuesta útil, sin débito comercial implementado. El futuro débito de IA requiere distinguir generación útil de fallback, reservar saldo y liberar ante fallos. FAQ, chat humano y agenda no consumen créditos adicionales.
+
+La campaña pública sigue sin fecha ni activación. Sus 90 días son comunes, no por alta. Al terminar, administración decide cobro futuro o extensión exacta de otros 90 días; nunca se cobra retroactivamente ni se activa un pago automático. Correo de visitas y WhatsApp aún no están integrados; los avisos operativos son dentro de Velox. La recepción real del correo de confirmación/recuperación continúa pendiente. No hay checkout ni facturación fiscal operativos.
+
+Los accesos de prueba se entregan a Federico en un archivo privado local fuera del repositorio y del servidor de informes. No se incluyen credenciales ni datos de clientes en este documento. Los cinco usuarios originales y sus saldos se conservaron. Las 720 pruebas de preguntas anteriores son evidencia histórica y no se repitieron como parte de esta ronda.

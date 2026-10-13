@@ -28,7 +28,8 @@ async function start(q = quotas, when = null) {
 }
 async function publish(request = crypto.randomUUID(), files = media, actor = ids.seller, data = payload) {
   await asUser(db, actor);
-  return (await db.query('select * from public.publish_vehicle_with_credit($1,$2,$3)', [data, files, request])).rows[0];
+  const publication_quote = (await db.query('select public.get_publication_quote() q')).rows[0].q;
+  return (await db.query('select * from public.publish_vehicle_with_credit($1,$2,$3)', [{ ...data, publication_quote }, files, request])).rows[0];
 }
 async function balance() { return (await root('select granted,used,granted-used as remaining,expires_at from public.credit_balances where user_id=$1', [ids.seller])).rows[0]; }
 async function ledger(kind) { return (await root('select amount,kind,reference_id,note from public.credit_ledger where user_id=$1 and kind=$2 order by created_at,id', [ids.seller, kind])).rows; }
@@ -226,9 +227,10 @@ test('queued identical publication requests refill and debit once', async () => 
   await root('update public.credit_balances set used=50 where user_id=$1', [ids.seller]);
   await asUser(db, ids.seller);
   const request = crypto.randomUUID();
+  const publication_quote = (await db.query('select public.get_publication_quote() q')).rows[0].q;
   // Single-connection PGlite checks idempotent results; native PostgreSQL
   // sessions are a separate deployment gate for lock contention.
-  const results = await Promise.all(Array.from({ length: 8 }, () => db.query('select * from public.publish_vehicle_with_credit($1,$2,$3)', [payload, media, request])));
+  const results = await Promise.all(Array.from({ length: 8 }, () => db.query('select * from public.publish_vehicle_with_credit($1,$2,$3)', [{ ...payload, publication_quote }, media, request])));
   for (const result of results) assert.equal(result.rows[0].id, results[0].rows[0].id);
   assert.equal((await balance()).used, 100);
   assert.equal((await balance()).remaining, 100);
@@ -315,7 +317,8 @@ test('migration replay retains balances, refill history and both policy revision
     await isolated.exec('reset role');
     await isolated.query('update public.credit_balances set used=95 where user_id=$1', [ids.seller]);
     await asUser(isolated, ids.seller);
-    await isolated.query('select * from public.publish_vehicle_with_credit($1,$2,$3)', [payload, media, crypto.randomUUID()]);
+    const publication_quote = (await isolated.query('select public.get_publication_quote() q')).rows[0].q;
+    await isolated.query('select * from public.publish_vehicle_with_credit($1,$2,$3)', [{ ...payload, publication_quote }, media, crypto.randomUUID()]);
     await isolated.exec('commit; reset role');
     const before = (await isolated.query('select * from public.credit_balances order by user_id')).rows;
     const promoBefore = (await isolated.query('select * from public.launch_promotion')).rows;

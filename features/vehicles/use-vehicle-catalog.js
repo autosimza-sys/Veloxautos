@@ -9,7 +9,9 @@ export function useVehicleCatalog({ onPublished, profile, session, loadCatalog =
   const [revision, setRevision] = useState(0);
   const [result, setResult] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const [publishStatus, setPublishStatus] = useState("");
+  const [publicationResult, setPublicationResult] = useState(null);
+  const publishStatus = publicationResult?.token === token ? publicationResult.message : "";
+  function setPublishStatus(message) { setPublicationResult({ token, message }); }
   const publishing = useRef(false);
   const refresh = useCallback(() => setRevision(value => value + 1), []);
 
@@ -34,7 +36,7 @@ export function useVehicleCatalog({ onPublished, profile, session, loadCatalog =
   const vehicles = currentResult?.vehicles || [];
   const selectedVehicle = vehicles.find(vehicle => vehicle.id === selectedId) || vehicles[0] || null;
 
-  async function publishVehicle({ form, photoFiles, videoFile }) {
+  async function publishVehicle({ form, photoFiles, videoFile, publicationQuote }) {
     if (!session?.user || !profile) {
       setPublishStatus("Primero tenes que crear cuenta o entrar.");
       return false;
@@ -47,7 +49,7 @@ export function useVehicleCatalog({ onPublished, profile, session, loadCatalog =
       try { storage = window.sessionStorage; } catch { /* Memory fallback for restricted browsers. */ }
       const request = await publicationRequest({ userId: session.user.id, form, photoFiles, videoFile }, storage);
       const createdVehicle = await createPublication({
-        form, photoFiles, videoFile, profile, user: session.user,
+        form, photoFiles, videoFile, profile, user: session.user, publicationQuote,
         requestId: request.id,
       });
       setSelectedId(createdVehicle.id);

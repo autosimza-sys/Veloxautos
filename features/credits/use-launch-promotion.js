@@ -10,7 +10,7 @@ export function useLaunchPromotion(client = supabase) {
   useEffect(()=>{
     if(!client) return;
     let active=true;
-    client.from('launch_promotion').select('starts_at, ends_at, quotas, revision, publication_cost, auto_refill, policy_revision').eq('singleton',true).maybeSingle()
+    client.from('launch_promotion').select('starts_at, ends_at, quotas, revision, publication_cost, publication_costs, ai_response_cost_draft, auto_refill, policy_revision').eq('singleton',true).maybeSingle()
       .then(({data,error:failed})=>{if(active){setPromotion(failed?null:data);setError(failed || !data?'No pudimos consultar la promoción.':'');setLoaded(true);}})
       .catch(()=>{if(active){setPromotion(null);setError('No pudimos consultar la promoción.');setLoaded(true);}});
     const timer=setInterval(refresh,60000);

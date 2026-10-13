@@ -30,7 +30,7 @@ export async function fetchVehicleCatalog(client = supabase) {
 }
 
 export async function createVehiclePublication({
-  form, photoFiles = [], videoFile, profile, user, requestId, client = supabase,
+  form, photoFiles = [], videoFile, profile, user, requestId, publicationQuote, client = supabase,
 }) {
   if (!client || !user?.id) throw new Error("Falta iniciar sesión o configurar la conexión.");
   if (!validatePublicationStep(6, form, photoFiles)) {
@@ -61,6 +61,7 @@ export async function createVehiclePublication({
       publication_request_id: requestId,
       media_payload: uploadedMedia,
       payload: {
+        ...(publicationQuote ? { publication_quote: publicationQuote } : {}),
         brand: form.brand, model: form.model, version: form.version,
         year: form.year, kilometers: form.kilometers, price: form.price, zone: form.zone,
         partial_plate: form.partialPlate, description: form.description,

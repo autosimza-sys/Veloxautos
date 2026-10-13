@@ -11,7 +11,7 @@ import ChatPreview from "../features/chat/ChatPreview";
 import CreditsSection from "../features/credits/CreditsSection";
 import { useCredits } from "../features/credits/use-credits";
 import { useLaunchPromotion } from "../features/credits/use-launch-promotion";
-import { publicationCreditAccess } from "../features/credits/promotion-model";
+import { publicationCreditAccess, publicationQuote } from "../features/credits/promotion-model";
 import HomeHero from "../features/home/HomeHero";
 import PublicationAssistant from "../features/publication/PublicationAssistant";
 import QualitySection from "../features/quality/QualitySection";
@@ -37,6 +37,13 @@ export default function HomePage() {
   const { intent: authIntent, open: openAuth, close: closeAuth } = useAuthDialog();
 
   const auth = useAuth();
+  const draftUserId = auth.session?.user?.id || null;
+  const [draftScope, setDraftScope] = useState({ userId: null, version: 0 });
+  if (draftScope.userId !== draftUserId) {
+    // A visitor may finish signing in after starting a draft. Leaving an
+    // authenticated account must always discard its private fields and files.
+    setDraftScope({ userId: draftUserId, version: draftScope.version + (draftScope.userId ? 1 : 0) });
+  }
   const credits = useCredits(auth.session);
   const launch = useLaunchPromotion();
   const creditAccess = publicationCreditAccess(credits.balance, launch.promotion, auth.profile?.role);
@@ -159,7 +166,9 @@ export default function HomePage() {
 
       <div ref={assistantRef} style={{ scrollMarginTop: "92px" }}>
         <PublicationAssistant
+          key={`publication:${draftScope.version}`}
           creditCost={creditAccess.cost}
+          publicationQuote={publicationQuote(launch.promotion, auth.profile?.role)}
           freeRefill={creditAccess.autoRefill}
           canPublish={canPublish}
           onNeedAuth={handlePublishClick}

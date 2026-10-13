@@ -28,6 +28,7 @@ const steps = [
 export default function PublicationAssistant({
   canPublish,
   creditCost = 1,
+  publicationQuote,
   freeRefill = false,
   onNeedAuth,
   onPublish,
@@ -138,6 +139,7 @@ export default function PublicationAssistant({
         form,
         photoFiles: photos.map(({ kind, file }) => ({ kind, file })),
         videoFile,
+        publicationQuote,
       });
       if (!published) return;
       previewUrls.current.forEach(url => URL.revokeObjectURL(url));

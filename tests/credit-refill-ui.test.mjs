@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { publicationCreditAccess, publicationCreditCost } from '../features/credits/promotion-model.js';
+import { publicationCreditAccess, publicationCreditCost, publicationQuote } from '../features/credits/promotion-model.js';
 
 const now = Date.parse('2026-11-02T00:00:00Z');
 const campaign = { revision: 1, starts_at: '2026-11-01T00:00:00Z', ends_at: '2027-01-30T00:00:00Z', publication_cost: 50, auto_refill: true, quotas: { particular: 100, reseller: 100, agency: 100 } };
@@ -37,4 +37,16 @@ test('invalid publication cost cannot be silently accepted or treated as a free 
   for (const invalid of ['', 0, -1, 1.5, '1e2', 1000001]) assert.throws(() => publicationCreditCost(invalid));
   assert.equal(publicationCreditCost('50'), 50);
   assert.equal(publicationCreditAccess(balance, { ...campaign, publication_cost: 0 }, 'particular', now).canPublish, false);
+});
+
+test('role prices and the displayed quote agree without activating draft prices early', () => {
+  const policy = {...campaign,policy_revision:3,publication_costs:{particular:50,reseller:40,agency:30}};
+  for (const [role,cost] of Object.entries(policy.publication_costs)) {
+    assert.equal(publicationCreditAccess(balance,policy,role,now).cost,cost);
+    assert.deepEqual(publicationQuote(policy,role),{policy_revision:3,campaign_revision:1,cost,role});
+    assert.equal(publicationQuote({...policy,revision:0},role).cost,1);
+  }
+  assert.equal(publicationQuote(policy,'registered'),null);
+  assert.equal(publicationQuote(null,'agency'),null);
+  assert.equal(publicationQuote({...policy,publication_costs:{agency:0}},'agency'),null);
 });

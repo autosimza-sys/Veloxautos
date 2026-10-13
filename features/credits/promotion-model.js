@@ -21,10 +21,24 @@ export function publicationCreditCost(input) {
   return Number(value);
 }
 
+export function rolePublicationCost(promotion, role) {
+  return Number(promotion?.publication_costs?.[role] ?? promotion?.publication_cost ?? 1);
+}
+
+// Capture the exact server policy displayed to the seller. The server validates
+// this quote again under locks; a changed price requires another confirmation.
+export function publicationQuote(promotion, role) {
+  if (!promotion || !['particular', 'reseller', 'agency'].includes(role)) return null;
+  const cost = promotion.revision ? rolePublicationCost(promotion, role) : 1;
+  if (!Number.isSafeInteger(cost) || cost < 1
+      || !Number.isSafeInteger(promotion.policy_revision) || !Number.isSafeInteger(promotion.revision)) return null;
+  return { policy_revision: promotion.policy_revision, campaign_revision: promotion.revision, cost, role };
+}
+
 // The database repeats these checks under locks; this only explains availability.
 export function publicationCreditAccess(balance, promotion, role, now = Date.now()) {
   const { phase } = promotionState(promotion, now);
-  const cost = phase === 'unconfigured' ? 1 : Number(promotion?.publication_cost ?? 1);
+  const cost = phase === 'unconfigured' ? 1 : rolePublicationCost(promotion, role);
   const validCost = Number.isInteger(cost) && cost > 0 && cost <= 1000000;
   const quota = Number(promotion?.quotas?.[role]);
   const autoRefill = phase === 'free' && promotion?.auto_refill === true
