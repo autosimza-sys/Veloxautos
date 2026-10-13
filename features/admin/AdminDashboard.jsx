@@ -328,12 +328,12 @@ export default function AdminDashboard({ client, router }) {
         {status && (
           <div className="adminStatusBar">
             <span>{status}</span>
-            <button className="adminStatusClose" onClick={() => setStatus("")}>✕</button>
+            <button className="adminStatusClose" aria-label="Cerrar aviso" onClick={() => setStatus("")}>✕</button>
           </div>
         )}
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
           {[["vehicles", "Publicaciones"], ["crm", "CRM / Leads"], ["promotion", "Promoción"]].map(([key, label]) => (
             <button
               key={key}
@@ -368,12 +368,12 @@ export default function AdminDashboard({ client, router }) {
         {tab === 'promotion' && <LaunchPromotionPanel client={client} />}
         {/* ── Tab: Vehículos ── */}
         {tab === "vehicles" && (
-          <div style={{ display: "grid", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 16 }}>
 
             {/* Bulk action bar */}
             {selected.size > 0 && (
               <div className="adminBulkBar">
-                <span>{selected.size} publicación{selected.size !== 1 ? "es" : ""} seleccionada{selected.size !== 1 ? "s" : ""}</span>
+                <span>{selected.size} {selected.size === 1 ? "publicación seleccionada" : "publicaciones seleccionadas"}</span>
                 <div className="adminBulkActions">
                   <button className="adminBtnDanger" disabled={busy} onClick={retireSelected}>
                     Retirar seleccionadas
