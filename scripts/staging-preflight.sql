@@ -8,7 +8,8 @@
 -- PostgreSQL can see only some PostgREST configuration. Dashboard/runtime exposure,
 -- frontend cutover and signed-URL smoke tests always require independent review.
 -- Fingerprints below describe local schema + ordered migrations through
--- 202610100001. A PostgreSQL deparser change may cause a conservative REVIEW.
+-- 202610100001, with the reviewed credit functions updated through 202610130002.
+-- A PostgreSQL deparser change may cause a conservative REVIEW.
 -- Update fingerprints only after reviewing the corresponding source change.
 begin transaction isolation level repeatable read read only;
 set transaction read only;
@@ -124,6 +125,7 @@ policies as materialized (
 ),
 -- FUNCTION_MANIFEST_START
 expected_functions(object_name, fingerprint) as (values
+  ('public.configure_launch_credit_policy(integer,integer,boolean)','04a4e0aed975593a21badfd5673f38b4'),
   ('public.get_visit_notices()','3e95809ae696ed40ab96f8ba8358b250'),
   ('public.read_visit_notice(uuid)','4b3f4b8ac84cdfc7254477dafe45cf21'),
   ('public.book_authorized_visit(uuid,uuid,timestamp with time zone,boolean,uuid)','b7b52d25ed69ba52c9f7a6db0a4f0211'),
@@ -144,19 +146,19 @@ expected_functions(object_name, fingerprint) as (values
   ('public.finish_ai_reply(uuid,uuid,text)','210066210bd08cc653672c05a14f5f1e'),
   ('public.reserve_ai_reply_budget(uuid,uuid,integer)','a7216d3864aeefb65f2e0c05dc15222b'),
   ('public.claim_ai_reply(uuid,uuid,integer,integer)','5159440ca6d48af80f60a362cc5871c9'),
-  ('velox_private.guard_launch_publication()','f1b77a959001522c95abc9921561b843'),
-  ('public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)','cb2f3ddd29bc704de3405ebbf4e00f5e'),
+  ('velox_private.guard_launch_publication()','df3977eee52dd7268bad45a88374d3fa'),
+  ('public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)','80e6cb3f8e7a87c3753574c10e650a3d'),
   ('public.can_access_inspection(uuid)','35cf47193a980ea85fc6b4b80f340ff6'),
   ('public.create_profile_for_new_user()','9ff724be469e62f391f2f7df364203f9'),
-  ('public.create_vehicle_with_credit(jsonb)','2a399be8e120b80b700f5d2db66c78f9'),
+  ('public.create_vehicle_with_credit(jsonb)','7256b641102a8a8724cd1f121ec17b2e'),
   ('public.get_admin_leads()','ae1a919d80b67b5b4607ecbe8936f989'),
   ('public.get_assigned_inspection_context()','060c19fae0ce71d5def6f97be73d266a'),
   ('public.get_my_conversations()','399c79815b8360c44ce1b88c4a35689b'),
   ('public.get_vehicle_catalog()','cd19d2fe79cf1d4d1f2f2eb1e21047b0'),
-  ('public.grant_initial_publication_credits()','6ee291ba9f0ac4fee5d3cb06ec4bc5b3'),
+  ('public.grant_initial_publication_credits()','860d1d2f237db6457d56655fb77d8242'),
   ('public.is_admin()','5912b5b51118c447f1335275ad01cd99'),
   ('public.propose_appointment(uuid,timestamp with time zone,integer,text,uuid)','737e454adf18bac0b35f5bc013a9fa12'),
-  ('public.publish_vehicle_with_credit(jsonb,jsonb,uuid)','f9988ad9eb746da2863d2538ba09ca2f'),
+  ('public.publish_vehicle_with_credit(jsonb,jsonb,uuid)','12885ffbf33f0b0c1e8fe829e9523e30'),
   ('public.request_inspection(uuid)','ab991c8d77704ad4026b62c49f4f4da8'),
   ('public.send_message_idempotent(uuid,text,uuid)','22dea9d581adee9611d60ad54e2eeebe'),
   ('public.send_message_with_assistant(uuid,text)','adc83724a521b4ca7f72c06b895c17ba'),

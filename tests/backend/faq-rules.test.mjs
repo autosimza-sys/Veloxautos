@@ -6,6 +6,20 @@ let db;
 before(async()=>{db=await makeDatabase();});after(async()=>{await db?.close();});
 beforeEach(async()=>{await db.exec('begin');});afterEach(async()=>{await db.exec('rollback; reset role');});
 async function ask(text){await asUser(db,ids.buyer); const r=(await db.query('select public.send_message_idempotent($1,$2,$3) as r',[ids.conversation,text,crypto.randomUUID()])).rows[0].r; return r.automated?(await db.query('select body from public.messages where id=$1',[r.automated_message_id])).rows[0].body:null;}
+
+test('credit help distinguishes free refills from deadline extensions and never starts payment', async () => {
+ for (const id of ['c24.credit_allowance','c24.what_spends','c24.balance','c24.exhausted']) {
+  const item=catalog.items.find(entry=>entry.id===id);
+  const answer=await ask(item.question);
+  assert.ok(answer.includes(item.answer),id);
+  assert.doesNotMatch(answer,/10[.,]?000 pesos|\$|100 créditos|50 créditos/,id);
+ }
+ const exhausted=await ask(catalog.items.find(item=>item.id==='c24.exhausted').question);
+ assert.match(exhausted,/Si la recarga gratuita está habilitada/);
+ assert.match(exhausted,/no cambia la fecha final/);
+ await db.exec('reset role');
+ assert.equal((await db.query('select count(*)::int n from velox_private.faq_requests')).rows[0].n,0);
+});
 test('one message answers availability, mileage and trade without model calls',async()=>{
  const answer=await ask('¿Sigue disponible, cuántos kilómetros tiene y tomás un Gol?');
  assert.match(answer,/activa/i);assert.match(answer,/12[.,]?345/);assert.match(answer,/no acepta permuta/i);
