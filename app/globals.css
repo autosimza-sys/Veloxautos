@@ -2609,8 +2609,11 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   margin: 0 auto;
   padding: 32px 24px 60px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
+
+.adminMain > * { min-width: 0; }
 
 /* ── Stats row ─────────────────────────────────────────── */
 
@@ -2661,6 +2664,8 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 }
 
 .adminStatusClose {
+  flex: 0 0 36px;
+  min-height: 36px;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -2670,6 +2675,8 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 }
 
 .adminStatusClose:hover { color: var(--text); }
+
+.adminStatusBar > span { min-width: 0; overflow-wrap: anywhere; }
 
 /* ── Bulk action bar ───────────────────────────────────── */
 
@@ -2750,6 +2757,8 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
 /* ── Table ─────────────────────────────────────────────── */
 
 .adminTableWrap {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -2761,6 +2770,16 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .adminTopbar { position: static; flex-wrap: wrap; gap: 12px; padding: 14px 16px; }
+  .adminUser { min-width: 0; flex-wrap: wrap; gap: 10px; }
+  .adminUserName { overflow-wrap: anywhere; }
+  .adminMain { padding: 24px 16px 40px; }
+  .adminStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adminStatCard { min-width: 0; padding: 16px; overflow-wrap: anywhere; }
+  .adminBulkBar, .adminBulkActions { flex-wrap: wrap; }
 }
 
 .adminTable thead {
