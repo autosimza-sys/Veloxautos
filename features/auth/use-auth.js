@@ -112,8 +112,14 @@ export function useAuth(client = supabase) {
       if (error) { setAuthStatus(error.message); return; }
       setAuthForm(current => ({ ...current, password: "" }));
       if (data.session) {
-        await ensureProfile(data.user);
-        setAuthStatus("Cuenta creada. ¡Ya podés publicar!");
+        const createdProfile = await ensureProfile(data.user);
+        setAuthStatus(!createdProfile
+          ? "Cuenta creada, pero no pudimos cargar tu perfil. Intentá ingresar nuevamente."
+          : createdProfile.is_blocked
+            ? "Cuenta creada. Tu cuenta necesita revisión; contactá a soporte."
+            : sellerRoles.includes(createdProfile.role)
+              ? "Cuenta creada. Ya podés preparar tu publicación."
+              : "Cuenta creada. Ya podés consultar vehículos.");
       } else {
         setAuthStatus("Revisá tu email para confirmar la cuenta y luego ingresá.");
       }
@@ -123,6 +129,15 @@ export function useAuth(client = supabase) {
       submitting.current = false;
       setAuthBusy(false);
     }
+  }
+
+  function startRegistration(intent = "publish") {
+    setAuthMode("register");
+    setAuthStatus("");
+    setAuthForm(current => ({ ...current,
+      role: intent === "chat" ? "registered"
+        : sellerRoles.includes(current.role) ? current.role : "particular",
+    }));
   }
 
   async function logout() {
@@ -138,5 +153,5 @@ export function useAuth(client = supabase) {
     } catch { setAuthStatus("No se pudo cerrar la sesión. Revisá la conexión."); }
   }
 
-  return { authBusy, authForm, authMode, authStatus, ensureProfile, logout, profile, session, setAuthForm, setAuthMode, submitAuth };
+  return { authBusy, authForm, authMode, authStatus, ensureProfile, logout, profile, session, setAuthForm, setAuthMode, startRegistration, submitAuth };
 }

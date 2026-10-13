@@ -1,4 +1,5 @@
 import { roleLabel } from "../../lib/roles";
+import Link from "next/link";
 
 export default function AuthSection({
   authForm,
@@ -14,7 +15,7 @@ export default function AuthSection({
     <section className="section authSection" id="cuenta">
       <div>
         <p className="eyebrow">Cuenta real</p>
-        <h2>Registro y acceso con Supabase</h2>
+        <h2>Registro y acceso a Velox</h2>
         <p>
           Tu cuenta conecta publicaciones, conversaciones, agenda y servicios
           sin exponer tus datos personales.
@@ -62,7 +63,7 @@ export default function AuthSection({
                 value={authForm.role}
                 onChange={(event) => setAuthForm({ ...authForm, role: event.target.value })}
               >
-                <option value="registered">Registrado</option>
+                <option value="registered">Comprador</option>
                 <option value="particular">Particular</option>
                 <option value="reseller">Revendedor</option>
                 <option value="agency">Agencia</option>
@@ -100,7 +101,9 @@ export default function AuthSection({
           />
         </label>
 
-            <button className="primary" type="submit" disabled={authBusy}>
+        {authMode === "login" && <Link href="/recuperar-cuenta">Olvidé mi contraseña</Link>}
+
+        <button className="primary" type="submit" disabled={authBusy}>
           {authMode === "login" ? "Entrar" : "Crear cuenta"}
         </button>
 
