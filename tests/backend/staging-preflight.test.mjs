@@ -140,7 +140,7 @@ test("final schema and cutover have inspectable legacy and RPC gates without cla
     const requiredPolicies = rows.filter((entry) => entry.section === "policies" && !entry.details.optional_observed_policy);
     assert.ok(requiredPolicies.length > 40);
     assert.ok(requiredPolicies.every((entry) => entry.status === "PASS"));
-    for (const name of ["public.claim_ai_reply(uuid,uuid,integer,integer)", "public.finish_ai_reply(uuid,uuid,text)", "public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)", "velox_private.apply_global_credit_expiry()", "velox_private.guard_launch_publication()"]) {
+    for (const name of ["public.claim_ai_reply(uuid,uuid,integer,integer)", "public.finish_ai_reply(uuid,uuid,text)", "public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)", "public.configure_launch_credit_policy(integer,integer,boolean)", "public.publish_vehicle_with_credit(jsonb,jsonb,uuid)", "public.create_vehicle_with_credit(jsonb)", "velox_private.apply_global_credit_expiry()", "velox_private.guard_launch_publication()"]) {
       assert.equal(row(rows, "functions", name).status, "PASS", name);
     }
     assert.equal(row(rows, "api_exposure", "velox_private").status, "REVIEW");

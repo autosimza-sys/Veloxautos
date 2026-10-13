@@ -10,6 +10,8 @@ import { useAuthDialog } from "../features/auth/use-auth-dialog";
 import ChatPreview from "../features/chat/ChatPreview";
 import CreditsSection from "../features/credits/CreditsSection";
 import { useCredits } from "../features/credits/use-credits";
+import { useLaunchPromotion } from "../features/credits/use-launch-promotion";
+import { publicationCreditAccess } from "../features/credits/promotion-model";
 import HomeHero from "../features/home/HomeHero";
 import PublicationAssistant from "../features/publication/PublicationAssistant";
 import QualitySection from "../features/quality/QualitySection";
@@ -36,6 +38,8 @@ export default function HomePage() {
 
   const auth = useAuth();
   const credits = useCredits(auth.session);
+  const launch = useLaunchPromotion();
+  const creditAccess = publicationCreditAccess(credits.balance, launch.promotion, auth.profile?.role);
   const catalog = useVehicleCatalog({
     onPublished: credits.refresh,
     profile: auth.profile,
@@ -45,12 +49,14 @@ export default function HomePage() {
   const canSeePrice = Boolean(auth.session);
   const canChat = Boolean(auth.session);
   const canPublish = isSellerRole(auth.profile?.role)
-    && !auth.profile?.is_blocked && Boolean(credits.balance?.remaining > 0);
+    && !auth.profile?.is_blocked && !launch.isLoading && !launch.error && creditAccess.canPublish;
   const publishAccessMessage = auth.profile?.is_blocked ? "Tu cuenta está bloqueada. Contactá a soporte."
     : !isSellerRole(auth.profile?.role) ? "Tu cuenta no tiene permiso para publicar vehículos."
-    : credits.isLoading ? "Consultando tus créditos de publicación..."
-    : credits.status || (credits.balance?.expired ? "Tus créditos vencieron. Contactá a soporte para renovarlos."
-      : "No tenés créditos disponibles para publicar. Contactá a soporte.");
+    : credits.isLoading || launch.isLoading ? "Consultando tus créditos de publicación..."
+    : credits.status || launch.error || (creditAccess.phase === 'scheduled' ? "La promoción todavía no comenzó."
+      : creditAccess.phase === 'review' ? "El período gratuito terminó. Administración debe definir la continuidad; no se genera ningún cargo."
+      : credits.balance?.expired ? "Tus créditos vencieron. Contactá a soporte para renovarlos."
+      : `Necesitás ${creditAccess.cost} créditos para publicar. Contactá a soporte.`);
 
   useEffect(() => {
     if (!auth.session || !auth.profile || !authIntent) return;
@@ -153,6 +159,8 @@ export default function HomePage() {
 
       <div ref={assistantRef} style={{ scrollMarginTop: "92px" }}>
         <PublicationAssistant
+          creditCost={creditAccess.cost}
+          freeRefill={creditAccess.autoRefill}
           canPublish={canPublish}
           onNeedAuth={handlePublishClick}
           onPublish={catalog.publishVehicle}
@@ -175,6 +183,7 @@ export default function HomePage() {
       />}
 
       <CreditsSection
+        launch={launch}
         balance={credits.balance}
         profile={auth.profile}
         status={credits.status}

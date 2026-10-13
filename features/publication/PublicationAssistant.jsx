@@ -27,6 +27,8 @@ const steps = [
 
 export default function PublicationAssistant({
   canPublish,
+  creditCost = 1,
+  freeRefill = false,
   onNeedAuth,
   onPublish,
   profile,
@@ -228,6 +230,8 @@ export default function PublicationAssistant({
           )}
           {step === 6 && (
             <PublishStep
+              creditCost={creditCost}
+              freeRefill={freeRefill}
               canPublish={canPublish}
               form={form}
               photos={photos}
@@ -403,7 +407,7 @@ function RecommendationsStep({ form, quality, recommendations, setForm }) {
   );
 }
 
-function PublishStep({ canPublish, form, photos, profile, publishAccessMessage, publishStatus, quality }) {
+function PublishStep({ canPublish, creditCost, freeRefill, form, photos, profile, publishAccessMessage, publishStatus, quality }) {
   return (
     <div className="publishReview">
       <div>
@@ -414,6 +418,8 @@ function PublishStep({ canPublish, form, photos, profile, publishAccessMessage, 
       <div><span>Precio</span><strong>${Number(form.price).toLocaleString("es-AR")}</strong></div>
       <div><span>Fotos</span><strong>{photos.length}/8</strong></div>
       <div><span>Calidad</span><strong>{quality}%</strong></div>
+      <div><span>Consumo al publicar</span><strong>{creditCost} créditos</strong></div>
+      {freeRefill && <p>La recarga es gratuita mientras esté vigente la promoción. No se cobra dinero ni se genera deuda.</p>}
       {!profile && <p className="warning">Crea una cuenta antes de confirmar la publicacion.</p>}
       {profile && !canPublish && <p className="warning">{publishAccessMessage || "Tu cuenta no tiene creditos o permiso de publicacion."}</p>}
       {publishStatus && <p className="authStatus">{publishStatus}</p>}

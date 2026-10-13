@@ -1933,6 +1933,13 @@ h1, h2, h3 { line-height: 1.05; letter-spacing: -0.02em; }
   line-height: 1.55;
 }
 
+.creditHistory { margin-top: 24px; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.creditHistory summary { cursor: pointer; font-weight: 700; }
+.creditHistory p, .creditHistory time { color: var(--muted); font-size: 14px; }
+.creditHistory ol { list-style: none; padding: 0; }
+.creditHistory li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.creditHistory time { display: block; margin-top: 4px; }
+
 /* ─── Inspection section ────────────────────────────────── */
 
 .inspectionSection {
