@@ -3,7 +3,7 @@
 ## Q02 — typed minimal model context
 Status: prepared and locally verified; production unchanged.
 Change: model context rejects array vehicles, omits nested scalar fields and invalid numeric/boolean values, and includes only recognized auto-check choices. Null declarations remain unknown; no private history/address/contact fields added. Existing byte limit, pre-reservation preparation, monthly cap and no-uncertain-retry behavior retained.
-Proof: 13 focused provider/endpoint tests pass with network disabled and explicit mocks; new nested-context regression passes. ESLint and production build pass; diff whitespace check clean. General candidate suite started because source changed; its final result must be recorded separately.
+Proof: 13 focused provider/endpoint tests pass with network disabled and explicit mocks; new nested-context regression passes. ESLint and production build pass; diff whitespace check clean. New general candidate suite completed: 730/730 passed, zero failed/skipped/cancelled (127.95 seconds), with no live-services preload. This is new local evidence after the code change, separate from historical CI. Browser journeys were not rerun locally; remote CI result remains pending.
 Blocker: no production acceptance until release/backup prerequisites are met. This filter reduces context leakage, not a guarantee against natural-language prompt injection or invented model answers.
 Next: verify budget concurrency SQL and fallback/FAQ continuity, then measure bounded context for authorized concrete FAQ scenarios. No paid request, cache or debit enabled.
 
