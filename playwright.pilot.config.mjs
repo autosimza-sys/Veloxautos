@@ -5,7 +5,7 @@ import { defineConfig } from '@playwright/test';
 // The reserved .invalid host can never be a production project.
 export default defineConfig({
   ...base,
-  testMatch: ['**/pilot-authenticated.spec.mjs', '**/extra-controls.spec.mjs', '**/admin-controls.spec.mjs'],
+  testMatch: ['**/pilot-authenticated.spec.mjs', '**/extra-controls.spec.mjs', '**/admin-controls.spec.mjs', '**/launch-adversarial.spec.mjs'],
   testIgnore: [],
   workers: 2,
   timeout: 60_000,

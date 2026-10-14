@@ -178,11 +178,11 @@ test("a blocked account cannot edit conversation moderation flags", async () => 
   assert.equal((await db.query("update public.conversations set is_blocked=true where id=$1 returning id", [ids.conversation])).rows.length, 0);
 });
 
-test("a seller can clean up their own unlinked uploads after failed publication", async () => {
+test("unlinked upload cleanup is reserved to maintenance so it cannot race publication", async () => {
   await asUser(db, ids.seller);
   const objectName = `${ids.seller}/not-linked-yet.jpg`;
   await db.query("insert into storage.objects(bucket_id,name) values ('vehicle-media',$1) returning id", [objectName]);
-  assert.equal((await db.query("delete from storage.objects where bucket_id='vehicle-media' and name=$1 returning id", [objectName])).rows.length, 1);
+  assert.equal((await db.query("delete from storage.objects where bucket_id='vehicle-media' and name=$1 returning id", [objectName])).rows.length, 0);
 });
 
 test("a nonmechanic cannot insert a report for an existing assignment", async () => {

@@ -8,7 +8,7 @@
 -- PostgreSQL can see only some PostgREST configuration. Dashboard/runtime exposure,
 -- frontend cutover and signed-URL smoke tests always require independent review.
 -- Fingerprints below describe local schema + ordered migrations through
--- 202610100001, with the reviewed credit functions updated through 202610130005.
+-- 202610130006, including immutable media and bounded listing/draft content.
 -- A PostgreSQL deparser change may cause a conservative REVIEW.
 -- Update fingerprints only after reviewing the corresponding source change.
 begin transaction isolation level repeatable read read only;
@@ -85,9 +85,9 @@ expected_policies(object_name, fingerprint, optional) as (values
   ('public.profiles.profiles_read_own_or_admin','0df643ecf1d88655eda1b4d1b9f1ac68',false),
   ('public.profiles.profiles_update_own_or_admin','0e3d200d751da6e0daf17489c6d93d65',false),
   ('public.publication_drafts.drafts_owner_delete','105ba614252ab603cc9f3c5b3ceaaa6e',false),
-  ('public.publication_drafts.drafts_owner_insert','2eeba4d2f574f4dd000cb6fb539242a5',false),
+  ('public.publication_drafts.drafts_owner_insert','db6e096b934073e7696e53b4dfb6e2c0',false),
   ('public.publication_drafts.drafts_owner_select','1e068adc6cc3e64c8fccc44ba07c5196',false),
-  ('public.publication_drafts.drafts_owner_update','f3f6bfc539586fee8b38bb69367e723b',false),
+  ('public.publication_drafts.drafts_owner_update','5c92bc294336d575c3ffbbc04d008cfe',false),
   ('public.publication_requests.publication_requests_read_own','1e068adc6cc3e64c8fccc44ba07c5196',false),
   ('public.reports.reports_admin_read','8ca930d38fbc9d7227b4fc54fd4931c8',false),
   ('public.reports.reports_admin_update','cd26977f815c280e744d617a9041cf14',false),
@@ -102,10 +102,8 @@ expected_policies(object_name, fingerprint, optional) as (values
   ('public.vehicles.vehicles_read_owner_or_admin','83e21e0db01da17228f9eb8fb2f01167',false),
   ('storage.objects.inspection_storage_mechanic_insert','a5997f931d1d5792b0775f76db40cbc2',false),
   ('storage.objects.inspection_storage_private_read','da479cda8a14da30b02409e614a01a5f',false),
-  ('storage.objects.vehicle_storage_delete_own_folder','840a17635c82ff67eb30639da2481565',false),
   ('storage.objects.vehicle_storage_insert_own_folder','3a84b9599cc979ec4979e802a7030951',false),
-  ('storage.objects.vehicle_storage_read_linked_media','38545cffaaa124b2cd60254dc2ab7039',false),
-  ('storage.objects.vehicle_storage_update_own_folder','da8b77fd3310c5288e00419812f68605',false)
+  ('storage.objects.vehicle_storage_read_linked_media','38545cffaaa124b2cd60254dc2ab7039',false)
 ),
 -- POLICY_MANIFEST_END
 policies as materialized (
@@ -149,6 +147,7 @@ expected_functions(object_name, fingerprint) as (values
   ('public.reserve_ai_reply_budget(uuid,uuid,integer)','a7216d3864aeefb65f2e0c05dc15222b'),
   ('public.claim_ai_reply(uuid,uuid,integer,integer)','5159440ca6d48af80f60a362cc5871c9'),
   ('velox_private.guard_launch_publication()','df3977eee52dd7268bad45a88374d3fa'),
+  ('velox_private.guard_vehicle_content()','b987e461bd4543b95d6c19d5bdcef843'),
   ('public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)','d000cf9104d486e9823550fe673d4501'),
   ('public.can_access_inspection(uuid)','35cf47193a980ea85fc6b4b80f340ff6'),
   ('public.create_profile_for_new_user()','9ff724be469e62f391f2f7df364203f9'),
@@ -205,6 +204,8 @@ functions as materialized (
 -- Function bodies are not enough: triggers must still exist, be enabled for
 -- ordinary writes, fire at the reviewed timing/events, and call the right guard.
 expected_triggers(table_name, trigger_name, function_name, definition) as (values
+ ('public.vehicles','guard_vehicle_content','velox_private.guard_vehicle_content()',
+  'CREATE TRIGGER guard_vehicle_content BEFORE INSERT OR UPDATE OF brand, model, version, zone, description, view_location, available_hours, partial_plate, checklist ON public.vehicles FOR EACH ROW EXECUTE FUNCTION velox_private.guard_vehicle_content()'),
  ('public.appointments','notify_visit_change','velox_private.notify_visit_change()',
   'CREATE TRIGGER notify_visit_change AFTER UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION velox_private.notify_visit_change()'),
  ('velox_private.visit_authorizations','guard_visit_authorization','velox_private.guard_visit_authorization()',
@@ -338,7 +339,7 @@ expected_versions(version) as (values
  ('202606230006'),('202606230007'),('202606230008'),('202606230009'),
  ('202610030001'),('202610030002'),('202610030003'),('202610030004'),('202610030005'),
  ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005'),('202610090006'),('202610100001'),
- ('202610130001'),('202610130002'),('202610130003'),('202610130004'),('202610130005')
+ ('202610130001'),('202610130002'),('202610130003'),('202610130004'),('202610130005'),('202610130006')
 ),
 bucket_rows as (
  select wanted.id,m.oid,m.can_inspect_all_rows,b.value as configuration
@@ -383,6 +384,7 @@ report(section,object_name,status,details) as (
  select 'policies',coalesce(e.object_name,p.object_name),
    case when p.object_name is null then 'NOT_INSTALLED'
      when p.object_name in ('storage.objects.vehicle_media_public_read','storage.objects.vehicle_media_auth_upload',
+       'storage.objects.vehicle_storage_update_own_folder','storage.objects.vehicle_storage_delete_own_folder',
        'public.messages.admin_select_messages','public.conversations.admin_select_conversations',
        'public.conversations.admin_update_conversations','public.vehicles.admin_update_vehicles') then 'BLOCKED'
      when e.optional or e.fingerprint is distinct from p.fingerprint then 'REVIEW' else 'PASS' end,
