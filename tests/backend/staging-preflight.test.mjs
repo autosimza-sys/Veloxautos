@@ -139,13 +139,29 @@ test("final schema and cutover have inspectable legacy and RPC gates without cla
     assert.equal(row(rows, "buckets", "inspection-media").status, "PASS");
     const requiredPolicies = rows.filter((entry) => entry.section === "policies" && !entry.details.optional_observed_policy);
     assert.ok(requiredPolicies.length > 40);
-    assert.ok(requiredPolicies.every((entry) => entry.status === "PASS"));
+    assert.deepEqual(requiredPolicies.filter((entry) => entry.status !== "PASS").map(entry=>entry.object_name), []);
     for (const name of ["public.claim_ai_reply(uuid,uuid,integer,integer)", "public.finish_ai_reply(uuid,uuid,text)", "public.manage_launch_promotion(text,integer,timestamp with time zone,jsonb)", "public.configure_launch_credit_policy(integer,integer,boolean)", "public.configure_launch_role_credit_policy(integer,jsonb,integer,boolean)", "public.get_publication_quote()", "public.publish_vehicle_with_credit(jsonb,jsonb,uuid)", "public.create_vehicle_with_credit(jsonb)", "velox_private.apply_global_credit_expiry()", "velox_private.guard_launch_publication()"]) {
       assert.equal(row(rows, "functions", name).status, "PASS", name);
     }
     assert.equal(row(rows, "api_exposure", "velox_private").status, "REVIEW");
     assert.notEqual(row(rows, "summary", "rollout").status, "PASS");
   } finally { await db.close(); }
+});
+
+test('preflight detects restored mutable storage policies and disabled content guard',async()=>{
+  const db=await makeDatabase();
+  try {
+    const before=await report(db);
+    assert.equal(row(before,'functions','velox_private.guard_vehicle_content()').status,'PASS');
+    assert.equal(row(before,'triggers','public.vehicles.guard_vehicle_content').status,'PASS');
+    await db.exec(`create policy vehicle_storage_update_own_folder on storage.objects for update to authenticated using (true);
+      create policy vehicle_storage_delete_own_folder on storage.objects for delete to authenticated using (true);
+      alter table public.vehicles disable trigger guard_vehicle_content;`);
+    const after=await report(db);
+    for(const name of ['vehicle_storage_update_own_folder','vehicle_storage_delete_own_folder'])
+      assert.equal(row(after,'policies','storage.objects.'+name).status,'BLOCKED');
+    assert.equal(row(after,'triggers','public.vehicles.guard_vehicle_content').status,'BLOCKED');
+  }finally{await db.close();}
 });
 
 test("required missing columns and removed RPCs are explicit and do not abort other checks", async () => {
@@ -244,4 +260,16 @@ test("limited reviewers cannot mistake RLS-filtered counts or unavailable settin
     assert.equal(row(rows, "buckets", "vehicle-media").status, "REVIEW");
     assert.notEqual(row(rows, "summary", "rollout").status, "PASS");
   } finally { await db.close(); }
+});
+
+test('upload admission and paged catalog are fingerprinted and a disabled admission guard blocks rollout',async()=>{
+ const db=await makeDatabase();
+ try{
+  const before=await report(db);
+  for(const name of ['public.reserve_vehicle_upload(text,bigint,text,text)','public.finish_vehicle_upload(text,boolean,text)','velox_private.consume_vehicle_upload()','public.get_vehicle_catalog_page(integer,jsonb,jsonb)'])
+   assert.equal(row(before,'functions',name).status,'PASS',name);
+  assert.equal(row(before,'triggers','storage.objects.consume_vehicle_upload').status,'PASS');
+  await db.exec('alter table storage.objects disable trigger consume_vehicle_upload');
+  assert.equal(row(await report(db),'triggers','storage.objects.consume_vehicle_upload').status,'BLOCKED');
+ }finally{await db.close();}
 });

@@ -8,15 +8,15 @@ const form = { ...createPublicationForm(), brand:'Test', model:'Auto', version:'
 const photos = ['front','right','left','interior'].map(kind=>({kind,file:new File([kind],`${kind}.jpg`,{type:'image/jpeg'})}));
 const requestId='00000000-0000-4000-8000-000000000001';
 function fakeClient() {
-  const uploads=[]; const rpcs=[];
-  const client={uploads,rpcs,
+  const uploads=[]; const rpcs=[]; const admissions=[];
+  const client={uploads,rpcs,admissions,
     storage:{from:()=>({
       upload:async(path,file,options)=>{uploads.push({path,file,options});return{error:null};},
       createSignedUrls:async(paths)=>({data:paths.map(path=>({path,signedUrl:`https://example.invalid/${path}`})),error:null}),
       createSignedUrl:async(path)=>({data:{signedUrl:`https://example.invalid/${path}`},error:null}),
       remove:async()=>{throw new Error('must not delete staging after ambiguous RPC');},
     })},
-    rpc:async(name,payload)=>{rpcs.push({name,payload});return{data:{id:'created',...payload.payload,owner_id:'owner',status:'active'},error:null};},
+    rpc:async(name,payload)=>{if(name==='reserve_vehicle_upload'||name==='finish_vehicle_upload'){admissions.push({name,payload});return{data:{state:name==='reserve_vehicle_upload'?'reserved':payload.release_pending?'released':'consumed'},error:null};}rpcs.push({name,payload});return{data:{id:'created',...payload.payload,owner_id:'owner',status:'active'},error:null};},
     from:()=>{throw new Error('publication and media must use one transactional RPC');},
   }; return client;
 }
@@ -41,7 +41,7 @@ test('publication sends the displayed quote unchanged instead of silently fetchi
 });
 test('lost RPC response preserves files; retry uses identical request, payload and paths',async()=>{
   const client=fakeClient(); const original=client.rpc; let attempts=0;
-  client.rpc=async(...args)=>{const result=await original(...args);if(++attempts===1)throw new Error('Network disconnected');return result;};
+  client.rpc=async(...args)=>{const result=await original(...args);if(args[0]==='publish_vehicle_with_credit'&&++attempts===1)throw new Error('Network disconnected');return result;};
   await assert.rejects(createVehiclePublication(args(client)),/conexión|confirmar|Network/);
   const result=await createVehiclePublication(args(client));
   assert.equal(result.id,'created');
@@ -81,7 +81,7 @@ test('Supabase 400 Duplicate is retriable but unrelated 400 errors are rejected'
 });
 test('Supabase transport errors resolved as status zero offer safe retry guidance',async()=>{
   const client=fakeClient();
-  client.rpc=async()=>({data:null,error:{code:'',message:'TypeError: Failed to fetch'},status:0});
+  const original=client.rpc;client.rpc=async(name,payload)=>name==='publish_vehicle_with_credit'?{data:null,error:{code:'',message:'TypeError: Failed to fetch'},status:0}:original(name,payload);
   await assert.rejects(createVehiclePublication(args(client)),/reintentá sin cambiar los datos/);
 });
 test('reselecting identical photos in another order preserves transactional media payload',async()=>{
@@ -90,3 +90,28 @@ test('reselecting identical photos in another order preserves transactional medi
   await createVehiclePublication({...args(client),photoFiles:[...photos].reverse()});
   assert.deepEqual(client.rpcs[0],client.rpcs[1]);
 });
+
+ test('admission is required before any upload and quota rejection never publishes',async()=>{
+ const client=fakeClient();client.rpc=async()=>({error:{code:'23514'},data:null});
+ await assert.rejects(createVehiclePublication(args(client)),/reservar espacio/);
+ assert.equal(client.uploads.length,0);assert.equal(client.rpcs.length,0);
+ });
+ test('failed transport releases pending admission without deleting objects or publishing',async()=>{
+ const client=fakeClient();client.storage.from=()=>({upload:async()=>{throw Error('offline');}});
+ await assert.rejects(createVehiclePublication(args(client)),/subir/);
+ assert.equal(client.admissions.at(-1).payload.release_pending,true);assert.equal(client.rpcs.length,0);
+ });
+ test('committed upload found after transport failure proceeds without another upload',async()=>{
+ const client=fakeClient();const original=client.rpc;
+ client.storage.from=()=>({upload:async()=>{throw Error('lost response');},createSignedUrls:async()=>({data:[]})});
+ client.rpc=async(name,payload)=>name==='finish_vehicle_upload'?{data:{state:'consumed'}}:original(name,payload);
+ assert.equal((await createVehiclePublication(args(client))).id,'created');
+ });
+ test('consumed reservation skips upload; missing confirmation never publishes',async()=>{
+ const client=fakeClient();const original=client.rpc;
+ client.rpc=async(name,payload)=>name==='reserve_vehicle_upload'?{data:{state:'consumed'}}:original(name,payload);
+ await createVehiclePublication(args(client));assert.equal(client.uploads.length,0);
+ const other=fakeClient();const base=other.rpc;
+ other.rpc=async(name,payload)=>name==='finish_vehicle_upload'?{error:{code:'unavailable'}}:base(name,payload);
+ await assert.rejects(createVehiclePublication(args(other)),/confirmar la foto/);assert.equal(other.rpcs.length,0);
+ });

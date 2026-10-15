@@ -15,6 +15,18 @@ function actorOf(request) {
   try { return JSON.parse(Buffer.from(request.headers().authorization.split('.')[1], 'base64url')).sub; } catch { return null; }
 }
 
+
+export function syntheticCatalogPage(rows, {filters = {}, after_cursor = null, page_size = 24} = {}) {
+ const matched=rows.filter(v=>(!filters.search||`${v.brand} ${v.model} ${v.version} ${v.zone} ${v.year}`.toLowerCase().includes(filters.search.toLowerCase()))
+ &&(!filters.brand||v.brand===filters.brand)&&(!filters.year||v.year===filters.year)
+ &&(filters.minPrice==null||v.price>=filters.minPrice)&&(filters.maxPrice==null||v.price<=filters.maxPrice)
+ &&(filters.minKm==null||v.kilometers>=filters.minKm)&&(filters.maxKm==null||v.kilometers<=filters.maxKm));
+ const start=after_cursor?matched.findIndex(v=>v.id===after_cursor.id)+1:0;
+ const items=matched.slice(start,start+page_size);
+ return {items,next_cursor:start+items.length<matched.length?{id:items.at(-1).id,created_at:items.at(-1).created_at}:null,
+ brands:[...new Set(rows.map(v=>v.brand))].sort(),years:[...new Set(rows.map(v=>v.year))].sort((a,b)=>b-a)};
+}
+
 export async function installPilotApi(page) {
   const profiles = roles.map((role, i) => ({ id: id(i + 1), email: `pilot-${i + 1}@example.invalid`,
     display_name: `Piloto ${i + 1}`, role, is_blocked: false, business_name: ['agency', 'reseller'].includes(role) ? `Comercio ${i + 1}` : '' }));
@@ -89,10 +101,10 @@ export async function installPilotApi(page) {
     if (key === 'table:vehicles') return respond(vehicles.filter(v => state.leakOtherOwner || v.owner_id === actor));
     if (key === 'table:inspection_requests' || key === 'table:appointments') return respond([]);
     if (['rpc:get_my_conversations', 'rpc:get_visit_notices', 'rpc:get_available_visit_slots'].includes(key)) return respond([]);
-    if (key === 'rpc:get_vehicle_catalog') return respond(vehicles.filter(v => v.status === 'active').map(v => ({ ...v,
+    if (key === 'rpc:get_vehicle_catalog_page') return respond(syntheticCatalogPage(vehicles.filter(v => v.status === 'active').map(v => ({ ...v,
       seller_name: profiles.find(p => p.id === v.owner_id).display_name,
       seller_type: profiles.find(p => p.id === v.owner_id).role, media: [],
-      price: actor ? v.price : null, kilometers: actor ? v.kilometers : null, view_location: null })));
+      price: actor ? v.price : null, kilometers: actor ? v.kilometers : null, view_location: null })),body));
     if (key === 'rpc:update_vehicle_listing' || key === 'rpc:set_vehicle_listing_status') {
       const vehicle = vehicles.find(v => v.id === body.target_vehicle && v.owner_id === actor);
       if (!vehicle) return respond({ code: '42501', message: 'Acceso denegado por el simulador' }, 403);

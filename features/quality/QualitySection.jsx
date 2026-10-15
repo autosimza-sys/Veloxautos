@@ -1,3 +1,5 @@
+import { safeChecklistEntries } from './safe-checklist';
+
 export default function QualitySection({ vehicle }) {
   const quality = vehicle.quality ?? Math.round((vehicle.score || 1) * 10);
   const recommendations = vehicle.recommendations || [];
@@ -9,7 +11,7 @@ export default function QualitySection({ vehicle }) {
         <h2>Informacion declarada por el propietario</h2>
         <p className="warning">No representa una verificacion profesional de VELOX.</p>
         <div className="checklist">
-          {Object.entries(vehicle.checklist).map(([key, value]) => (
+          {safeChecklistEntries(vehicle.checklist).map(([key, value]) => (
             <span key={key}>
               <b>{key}</b>
               {value}

@@ -22,7 +22,7 @@ export const ids = {
 
 // These are local, synthetic Supabase platform primitives, not account credentials.
 // The application SQL is loaded unchanged. No network connection is used.
-const bootstrap = `
+export const bootstrap = `
   create role anon nologin;
   create role authenticated nologin;
   create role service_role nologin bypassrls;

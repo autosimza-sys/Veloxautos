@@ -19,6 +19,7 @@ test('explicit cutover closes old message and publication entrypoints while new 
   const media=[];
   for(let i=0;i<4;i++){
     const path=`${ids.seller}/cutover-fixture-${i}.jpg`;
+    await db.query("select public.reserve_vehicle_upload($1,100,'image/jpeg')",[path]);
     await db.query("insert into storage.objects(bucket_id,name,metadata)values('vehicle-media',$1,$2)",[path,{mimetype:'image/jpeg',size:100}]);
     media.push({media_type:'photo',storage_path:path,sort_order:i});
   }

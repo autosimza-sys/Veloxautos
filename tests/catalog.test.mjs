@@ -66,7 +66,7 @@ test('catalog distinguishes empty results from outage and offers retry', () => {
 test('catalog signs all 80 photos in one storage request and preserves order', async () => {
   let calls = 0;
   const rows = Array.from({length:20},(_,i)=>({id:String(i),media:Array.from({length:4},(_,j)=>({media_type:'photo',sort_order:j,storage_path:`owner/${i}/${j}.jpg`}))}));
-  const client = { rpc: async()=>({data:rows}),storage:{from:()=>({createSignedUrls:async paths=>{calls++;return{data:paths.map(path=>({path,signedUrl:`https://example.invalid/${path}`}))};}})} };
+  const client = { rpc: async()=>({data:{items:rows}}),storage:{from:()=>({createSignedUrls:async paths=>{calls++;return{data:paths.map(path=>({path,signedUrl:`https://example.invalid/${path}`}))};}})} };
   const catalog = await fetchVehicleCatalog(client);
   assert.equal(calls,1);
   assert.equal(catalog.length,20);
@@ -87,4 +87,26 @@ test('same publication retry keeps request ID, committed publication stays succe
   assert.equal(first,false);assert.equal(second,true);
   assert.equal(calls[0].requestId,calls[1].requestId);
   assert.match(result.current.publishStatus,/activa/);
+});
+test('server pagination resets cursor on filters and discards stale page responses',async()=>{
+ const calls=[];const loadCatalog=query=>new Promise(resolve=>calls.push({query,resolve}));
+ const {result}=renderHook(()=>useVehicleCatalog({loadCatalog}));
+ await act(async()=>calls[0].resolve({vehicles:[{id:'first'}],nextCursor:{id:'cursor',created_at:'synthetic'}}));
+ act(()=>result.current.nextPage());assert.deepEqual(calls[1].query.cursor,{id:'cursor',created_at:'synthetic'});
+ act(()=>result.current.setFilters({brand:'Other'}));assert.equal(calls[2].query.cursor,null);assert.deepEqual(calls[2].query.filters,{brand:'Other'});
+ await act(async()=>calls[1].resolve({vehicles:[{id:'stale'}]}));assert.equal(result.current.catalogVehicles.length,0);
+ await act(async()=>calls[2].resolve({vehicles:[{id:'filtered'}],nextCursor:null}));assert.equal(result.current.catalogVehicles[0].id,'filtered');assert.equal(result.current.hasPreviousPage,false);
+});
+test('page fetch requests bounded server retrieval and signs only its current media',async()=>{
+ const calls=[];const signed=[];const cursor={id:'last',created_at:'2026-01-01'};
+ const client={rpc:async(name,payload)=>{calls.push({name,payload});return{data:{items:[{id:'page-two',media:[{storage_path:'owner/only.jpg',media_type:'photo',sort_order:0}]}],next_cursor:null}};},storage:{from:()=>({createSignedUrls:async paths=>{signed.push(...paths);return{data:[]};}})}};
+ const {fetchVehicleCatalogPage}=await import('../features/vehicles/vehicle-api.js');
+ await fetchVehicleCatalogPage({cursor,filters:{brand:'Test'}},client);
+ assert.deepEqual(calls,[{name:'get_vehicle_catalog_page',payload:{page_size:24,after_cursor:cursor,filters:{brand:'Test'}}}]);assert.deepEqual(signed,['owner/only.jpg']);
+});
+test('empty server-filtered page never claims that no stock has been published',()=>{
+ const view=render(React.createElement(CatalogSection,{vehicles:[],onSelect(){},onFiltersChange(){},canSeePrice:false}));
+ fireEvent.change(view.getByRole('textbox',{name:'Buscar vehículos'}),{target:{value:'No match'}});
+ assert.equal(view.queryByText('Todavía no hay vehículos publicados.'),null);
+ assert.ok(view.getByText('No encontramos vehículos con esos filtros.'));
 });

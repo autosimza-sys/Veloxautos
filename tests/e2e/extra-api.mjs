@@ -1,4 +1,4 @@
-import { installPilotApi } from './pilot-api.mjs';
+import { installPilotApi, syntheticCatalogPage } from './pilot-api.mjs';
 export { login, logout } from './pilot-api.mjs';
 export const id = n => `20000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const stamp = () => new Date().toISOString();
@@ -35,7 +35,7 @@ export async function installExtraApi(page) {
     if (url.pathname.startsWith('/media/')) return route.fulfill({ contentType: 'image/svg+xml',
       body: '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><rect width="320" height="200" fill="#357"/></svg>' });
     const key = url.pathname.replace('/rest/v1/rpc/', 'rpc:').replace('/rest/v1/', 'table:');
-    const handlers = ['rpc:get_vehicle_catalog', 'rpc:get_my_conversations', 'table:conversations', 'table:messages',
+    const handlers = ['rpc:get_vehicle_catalog_page', 'rpc:get_my_conversations', 'table:conversations', 'table:messages',
       'table:reports', 'rpc:send_message_idempotent', 'table:appointments', 'rpc:propose_appointment',
       'rpc:transition_appointment', 'rpc:get_visit_notices', 'rpc:read_visit_notice',
       'rpc:get_available_visit_slots', 'rpc:book_authorized_visit'];
@@ -45,12 +45,12 @@ export async function installExtraApi(page) {
     if (method === 'OPTIONS') return respond({});
     if (state.failures.delete(key)) return respond({ code: 'test_network', message: 'Network failure simulated locally' }, 503);
     const member = [buyer.id, seller.id].includes(actor);
-    if (key === 'rpc:get_vehicle_catalog') return respond(base.vehicles.map(v => ({ ...v,
+    if (key === 'rpc:get_vehicle_catalog_page') return respond(syntheticCatalogPage(base.vehicles.map(v => ({ ...v,
       seller_name: base.profiles.find(p => p.id === v.owner_id).display_name,
       seller_type: base.profiles.find(p => p.id === v.owner_id).role,
       price: actor ? v.price : null, kilometers: actor ? v.kilometers : null,
       media: v.id === vehicle.id ? [0, 1, 2].map(n => ({ media_type: 'photo', sort_order: n,
-        storage_path: `https://pilot-supabase.invalid/media/photo-${n}.svg` })) : [] })));
+        storage_path: `https://pilot-supabase.invalid/media/photo-${n}.svg` })) : [] })),body));
     if (key === 'rpc:get_my_conversations') return respond(member ? [{ ...conversation,
       counterparty_name: actor === buyer.id ? seller.display_name : buyer.display_name }] : []);
     if (key === 'table:conversations') {
