@@ -1,5 +1,7 @@
 # ECC independent cloud work — 14 October 2026
 
+Historical checkpoint. Current state: [ECC-STATUS](../ECC-STATUS.md); U01/P01 continued on 15 October.
+
 ## Q02 — typed minimal model context
 Status: prepared and locally verified; production unchanged.
 Change: model context rejects array vehicles, omits nested scalar fields and invalid numeric/boolean values, and includes only recognized auto-check choices. Null declarations remain unknown; no private history/address/contact fields added. Existing byte limit, pre-reservation preparation, monthly cap and no-uncertain-retry behavior retained.

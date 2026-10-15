@@ -125,6 +125,14 @@ export default function HomePage() {
       <HomeHero onPublishClick={handlePublishClick} />
 
       <CatalogSection
+        key={auth.session?.access_token || "guest"}
+        onFiltersChange={catalog.setFilters}
+        brands={catalog.brands}
+        years={catalog.years}
+        hasNextPage={catalog.hasNextPage}
+        hasPreviousPage={catalog.hasPreviousPage}
+        onNextPage={catalog.nextPage}
+        onPreviousPage={catalog.previousPage}
         canSeePrice={canSeePrice}
         catalogStatus={catalog.catalogStatus}
         isLoading={catalog.isLoading}

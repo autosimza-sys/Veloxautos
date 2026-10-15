@@ -261,3 +261,15 @@ test("limited reviewers cannot mistake RLS-filtered counts or unavailable settin
     assert.notEqual(row(rows, "summary", "rollout").status, "PASS");
   } finally { await db.close(); }
 });
+
+test('upload admission and paged catalog are fingerprinted and a disabled admission guard blocks rollout',async()=>{
+ const db=await makeDatabase();
+ try{
+  const before=await report(db);
+  for(const name of ['public.reserve_vehicle_upload(text,bigint,text,text)','public.finish_vehicle_upload(text,boolean,text)','velox_private.consume_vehicle_upload()','public.get_vehicle_catalog_page(integer,jsonb,jsonb)'])
+   assert.equal(row(before,'functions',name).status,'PASS',name);
+  assert.equal(row(before,'triggers','storage.objects.consume_vehicle_upload').status,'PASS');
+  await db.exec('alter table storage.objects disable trigger consume_vehicle_upload');
+  assert.equal(row(await report(db),'triggers','storage.objects.consume_vehicle_upload').status,'BLOCKED');
+ }finally{await db.close();}
+});

@@ -1,5 +1,7 @@
 # Velox ECC — cloud execution status
 
+Historical checkpoint. Current state: [ECC-STATUS](../ECC-STATUS.md); U01/P01 continued on 15 October.
+
 Date: 14 October 2026, America/Buenos_Aires. Target: 21 October; this is a target, not an unattended execution guarantee.
 
 ## E00 — current evidence

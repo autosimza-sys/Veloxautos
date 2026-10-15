@@ -8,7 +8,7 @@
 -- PostgreSQL can see only some PostgREST configuration. Dashboard/runtime exposure,
 -- frontend cutover and signed-URL smoke tests always require independent review.
 -- Fingerprints below describe local schema + ordered migrations through
--- 202610130006, including immutable media and bounded listing/draft content.
+-- 20261015042119, including upload admission and bounded catalog pages.
 -- A PostgreSQL deparser change may cause a conservative REVIEW.
 -- Update fingerprints only after reviewing the corresponding source change.
 begin transaction isolation level repeatable read read only;
@@ -31,6 +31,7 @@ expected_relations(object_name) as (values
   ('public.mechanic_profiles'), ('public.inspection_requests'), ('public.inspection_reports'),
   ('public.inspection_media'), ('public.publication_requests'),
   ('storage.objects'), ('storage.buckets'),
+  ('velox_private.upload_limits'), ('velox_private.upload_reservations'), ('velox_private.upload_windows'),
   ('velox_private.appointment_reservations'), ('velox_private.appointment_proposal_requests'),
   ('velox_private.message_requests'), ('public.launch_promotion'),
   ('velox_private.launch_promotion_events'), ('velox_private.ai_reply_jobs'), ('velox_private.ai_budget_reservations'), ('velox_private.faq_catalog'),
@@ -123,6 +124,10 @@ policies as materialized (
 ),
 -- FUNCTION_MANIFEST_START
 expected_functions(object_name, fingerprint) as (values
+  ('public.get_vehicle_catalog_page(integer,jsonb,jsonb)','77c8b41ce19df055ca35a7fb80beb84f'),
+  ('public.finish_vehicle_upload(text,boolean,text)','e99fbc095b35ac65faf5d9f37177cb19'),
+  ('velox_private.consume_vehicle_upload()','f22fd2b83125ed738234a56181e87f34'),
+  ('public.reserve_vehicle_upload(text,bigint,text,text)','e69edc3c05c4ae318d4a74ad4cf958b1'),
   ('public.configure_launch_credit_policy(integer,integer,boolean)','08323a27ad86b6cb4f24936e3b8e7a7e'),
   ('public.configure_launch_role_credit_policy(integer,jsonb,integer,boolean)','651696fbbc4c4df7a7e2903076055e41'),
   ('public.get_publication_quote()','351a7518a3dfa6165cb750d415363f94'),
@@ -155,7 +160,7 @@ expected_functions(object_name, fingerprint) as (values
   ('public.get_admin_leads()','ae1a919d80b67b5b4607ecbe8936f989'),
   ('public.get_assigned_inspection_context()','060c19fae0ce71d5def6f97be73d266a'),
   ('public.get_my_conversations()','399c79815b8360c44ce1b88c4a35689b'),
-  ('public.get_vehicle_catalog()','cd19d2fe79cf1d4d1f2f2eb1e21047b0'),
+  ('public.get_vehicle_catalog()','c587d5ba15684e05082cb3681ea857d3'),
   ('public.grant_initial_publication_credits()','860d1d2f237db6457d56655fb77d8242'),
   ('public.is_admin()','5912b5b51118c447f1335275ad01cd99'),
   ('public.propose_appointment(uuid,timestamp with time zone,integer,text,uuid)','737e454adf18bac0b35f5bc013a9fa12'),
@@ -204,6 +209,8 @@ functions as materialized (
 -- Function bodies are not enough: triggers must still exist, be enabled for
 -- ordinary writes, fire at the reviewed timing/events, and call the right guard.
 expected_triggers(table_name, trigger_name, function_name, definition) as (values
+ ('storage.objects','consume_vehicle_upload','velox_private.consume_vehicle_upload()',
+  'CREATE TRIGGER consume_vehicle_upload BEFORE INSERT ON storage.objects FOR EACH ROW EXECUTE FUNCTION velox_private.consume_vehicle_upload()'),
  ('public.vehicles','guard_vehicle_content','velox_private.guard_vehicle_content()',
   'CREATE TRIGGER guard_vehicle_content BEFORE INSERT OR UPDATE OF brand, model, version, zone, description, view_location, available_hours, partial_plate, checklist ON public.vehicles FOR EACH ROW EXECUTE FUNCTION velox_private.guard_vehicle_content()'),
  ('public.appointments','notify_visit_change','velox_private.notify_visit_change()',
@@ -339,7 +346,7 @@ expected_versions(version) as (values
  ('202606230006'),('202606230007'),('202606230008'),('202606230009'),
  ('202610030001'),('202610030002'),('202610030003'),('202610030004'),('202610030005'),
  ('202610030006'),('202610030007'),('202610030008'),('202610030009'),('20261004040715'),('202610090001'),('202610090002'),('202610090003'),('202610090004'),('202610090005'),('202610090006'),('202610100001'),
- ('202610130001'),('202610130002'),('202610130003'),('202610130004'),('202610130005'),('202610130006')
+ ('202610130001'),('202610130002'),('202610130003'),('202610130004'),('202610130005'),('202610130006'),('20261015041659'),('20261015042119')
 ),
 bucket_rows as (
  select wanted.id,m.oid,m.can_inspect_all_rows,b.value as configuration

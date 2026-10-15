@@ -1,11 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createVehiclePublication, fetchVehicleCatalog } from "./vehicle-api";
+import { createVehiclePublication, fetchVehicleCatalogPage } from "./vehicle-api";
 import { publicationRequest } from "../publication/publication-request";
 
-export function useVehicleCatalog({ onPublished, profile, session, loadCatalog = fetchVehicleCatalog, createPublication = createVehiclePublication }) {
+const EMPTY_FILTERS = Object.freeze({});
+
+export function useVehicleCatalog({ onPublished, profile, session, loadCatalog = fetchVehicleCatalogPage, createPublication = createVehiclePublication }) {
   const token = session?.access_token || null;
+  const [query, setQuery] = useState(null);
+  const currentQuery = query?.token === token ? query : null;
+  const filters = currentQuery?.filters || EMPTY_FILTERS;
+  const cursor = currentQuery?.cursor || null;
+  const queryKey = JSON.stringify([filters, cursor]);
   const [revision, setRevision] = useState(0);
   const [result, setResult] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -17,22 +24,23 @@ export function useVehicleCatalog({ onPublished, profile, session, loadCatalog =
 
   useEffect(() => {
     let active = true;
-    loadCatalog().then(
-      vehicles => {
-        if (active) setResult({ token, revision, vehicles, error: "" });
+    loadCatalog({ filters, cursor }).then(
+      page => {
+        const data = Array.isArray(page) ? { vehicles: page } : page;
+        if (active) setResult({ token, revision, queryKey, ...data, error: "" });
       },
       () => {
         if (active) setResult({
-          token, revision, vehicles: [],
+          token, revision, queryKey, vehicles: [],
           error: "No pudimos cargar el catálogo. Revisá la conexión e intentá de nuevo.",
         });
       },
     );
     return () => { active = false; };
-  }, [token, revision, loadCatalog]);
+  }, [token, revision, loadCatalog, queryKey, filters, cursor]);
 
   // Session-scoped data disappears immediately on logout, before the next fetch.
-  const currentResult = result?.token === token && result?.revision === revision ? result : null;
+  const currentResult = result?.token === token && result?.revision === revision && result?.queryKey === queryKey ? result : null;
   const vehicles = currentResult?.vehicles || [];
   const selectedVehicle = vehicles.find(vehicle => vehicle.id === selectedId) || vehicles[0] || null;
 
@@ -54,6 +62,7 @@ export function useVehicleCatalog({ onPublished, profile, session, loadCatalog =
       });
       setSelectedId(createdVehicle.id);
       setPublishStatus("Publicacion activa. Ya aparece en el catalogo.");
+      setQuery({ token, filters, cursor: null, history: [] });
       refresh();
       request.complete();
       try { await onPublished?.(); } catch {
@@ -69,6 +78,20 @@ export function useVehicleCatalog({ onPublished, profile, session, loadCatalog =
   }
 
   return {
+    filters,
+    brands: currentResult?.brands,
+    years: currentResult?.years,
+    hasNextPage: Boolean(currentResult?.nextCursor),
+    hasPreviousPage: Boolean(currentQuery?.history?.length),
+    setFilters: next => setQuery({ token, filters: next, cursor: null, history: [] }),
+    nextPage: () => {
+      if (currentResult?.nextCursor) setQuery({ token, filters, cursor: currentResult.nextCursor,
+        history: [...(currentQuery?.history || []), cursor] });
+    },
+    previousPage: () => {
+      const history = [...(currentQuery?.history || [])];
+      if (history.length) setQuery({ token, filters, cursor: history.pop(), history });
+    },
     catalogStatus: currentResult?.error || "",
     catalogVehicles: vehicles,
     isLoading: !currentResult,

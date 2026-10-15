@@ -40,7 +40,7 @@ test('mechanic assignment opens explicit empty assessment, never copied seller o
 test('pending submission prevents assignment switch; failed draft and files survive switching afterward',async()=>{
  const client=fixture();let finish;let sends=0;
  const assignments=[{request_id:'request',brand:'Test',model:'A',version:'Base',request_status:'assigned'},{request_id:'other',brand:'Test',model:'B',version:'Base',request_status:'assigned'}];
- client.rpc=async(name)=>name==='get_assigned_inspection_context'?{data:assignments}:(sends++,await new Promise(resolve=>{finish=resolve;}));
+ client.rpc=async(name)=>name==='reserve_vehicle_upload'?{data:{state:'reserved'}}:name==='finish_vehicle_upload'?{data:{state:'consumed'}}:name==='get_assigned_inspection_context'?{data:assignments}:(sends++,await new Promise(resolve=>{finish=resolve;}));
  client.storage={from:()=>({upload:async()=>({})})};
  const view=render(React.createElement(InspectionSection,{session:{user:{id:'mechanic'}},profile:{role:'mechanic'},client,vehicle:null}));
  await flush();fireEvent.click(view.getByRole('button',{name:/Test A Base/}));
