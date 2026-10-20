@@ -69,3 +69,9 @@ test('recent modification and unknown creation date are retained even on an old 
  assert.ok(!plan.objects.some(o=>o.path===paths[0]||o.path===paths[1]));
  await denied(db,()=>claim(paths[0]),assert);
 });
+
+test('an owner avatar URL conservatively holds ambiguous files including encoded paths',async()=>{
+ await db.query('update public.profiles set avatar_url=$1 where id=$2',['https://example.invalid/opaque%20avatar.jpg',ids.seller]);
+ assert.equal((await preview()).objects.length,0);
+ await denied(db,()=>claim(),assert);
+});

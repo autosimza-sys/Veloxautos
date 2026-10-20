@@ -13,7 +13,10 @@ revoke all on velox_private.storage_cleanup_claims from public,anon,authenticate
 
 create function velox_private.storage_path_referenced(object_path text)
 returns boolean language sql stable security definer set search_path='' as $$
- select exists(select 1 from public.vehicle_media where storage_path=object_path)
+ -- An avatar may be an encoded/signed URL. Hold all owner files rather than
+ -- guessing URL decoding and deleting an ambiguously referenced original.
+ select exists(select 1 from public.profiles p where p.id::text=split_part(object_path,'/',1) and nullif(btrim(p.avatar_url),'') is not null)
+ or exists(select 1 from public.vehicle_media where storage_path=object_path)
  or exists(select 1 from public.inspection_media where storage_path=object_path)
  or exists(select 1 from public.publication_requests where position(to_jsonb(object_path)::text in request_media::text)>0)
  or exists(select 1 from public.publication_drafts where position(to_jsonb(object_path)::text in data::text)>0);

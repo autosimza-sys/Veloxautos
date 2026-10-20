@@ -19,7 +19,8 @@ HTTP route, or imported by the product UI. Default behavior is preview only.
 5. Minimum retention is 7 days from the latest known creation/modification;
    young/unknown-age/non-finite timestamps and recently modified objects, current media links,
    draft/idempotency payload references and active upload reservations are
-   excluded. Preview is capped at 100 and authorization expires after 15 minutes.
+   excluded. Owners with a nonempty avatar URL are conservatively held in full
+   because signed/encoded avatar paths cannot safely be inferred. Preview is capped at 100 and authorization expires after 15 minutes.
 6. After a concrete manual review, passing approvedPlan explicitly revalidates
    each object ID/bucket/path/age under the same owner advisory lock as uploads
    and media links, then records a permanent quarantine before Storage API remove.
