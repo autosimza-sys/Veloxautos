@@ -18,6 +18,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: node --import ./tests/no-live-services.mjs --import tsx --test tests/storage-cleanup.test.mjs tests/safe-metrics.test.mjs tests/secret-patterns.test.mjs tests/backend/storage-cleanup.test.mjs tests/backend/faq-concrete-evaluation.test.mjs
       - run: npm run verify
       - run: npm audit --omit=dev --audit-level=moderate
       - run: npx playwright install --with-deps chromium
