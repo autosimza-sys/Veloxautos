@@ -31,7 +31,7 @@ test('independent PostgreSQL connections serialize cleanup/publication in both o
   }
   const first=await seed('publish-first');
   await seller.query('begin');
-  const car=(await seller.query('select public.publish_vehicle_with_credit($1,$2,$3) result',[payload,first.media,crypto.randomUUID()])).rows[0].result;
+  const car=(await seller.query('select to_jsonb(public.publish_vehicle_with_credit($1,$2,$3)) result',[payload,first.media,crypto.randomUUID()])).rows[0].result;
   const claim=operator.query("select public.claim_storage_cleanup($1,'vehicle-media',$2,7)",[first.objects[0].id,first.objects[0].path]).then(()=>({ok:true}),error=>({error}));
   await seller.query('commit');assert.equal((await claim).error?.code,'23514');
   const second=await seed('cleanup-first');

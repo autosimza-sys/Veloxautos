@@ -12,7 +12,7 @@ async function ask(question){
 test('concrete synthetic price/km/trade facts are answered exactly without AI jobs',async()=>{
  await db.query('update public.vehicles set kilometers=54321,price=8765432,accepts_trade=true where id=$1',[ids.car]);
  const answer=await ask('¿Cuántos kilómetros tiene? ¿Cuánto vale? ¿Aceptás permuta?');
- assert.match(answer,/54[.,]?321/);assert.match(answer,/8[.,]?765[.,]?432/);assert.match(answer,/acepta permuta/i);
+ assert.match(answer,/54[.,]?321/);assert.match(answer,/8[.,]?765[.,]?432/);assert.match(answer,/acepta evaluar permutas/i);assert.match(answer,/confirmarse después/i);
  await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from velox_private.ai_reply_jobs')).rows[0].n,0);
 });
 test('missing, uncertain and owner-approved concrete facts remain three different outcomes',async t=>{
