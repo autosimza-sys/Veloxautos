@@ -31,13 +31,13 @@ test('independent PostgreSQL connections serialize cleanup/publication in both o
   }
   const first=await seed('publish-first');
   await seller.query('begin');
-  const car=(await seller.query('select to_jsonb(public.publish_vehicle_with_credit($1,$2,$3)) result',[payload,first.media,crypto.randomUUID()])).rows[0].result;
+  const car=(await seller.query('select to_jsonb(public.publish_vehicle_with_credit($1,$2,$3)) result',[payload,JSON.stringify(first.media),crypto.randomUUID()])).rows[0].result;
   const claim=operator.query("select public.claim_storage_cleanup($1,'vehicle-media',$2,7)",[first.objects[0].id,first.objects[0].path]).then(()=>({ok:true}),error=>({error}));
   await seller.query('commit');assert.equal((await claim).error?.code,'23514');
   const second=await seed('cleanup-first');
   await operator.query('begin');
   await operator.query("select public.claim_storage_cleanup($1,'vehicle-media',$2,7)",[second.objects[0].id,second.objects[0].path]);
-  const publication=seller.query('select public.publish_vehicle_with_credit($1,$2,$3)',[payload,second.media,crypto.randomUUID()]).then(()=>({ok:true}),error=>({error}));
+  const publication=seller.query('select public.publish_vehicle_with_credit($1,$2,$3)',[payload,JSON.stringify(second.media),crypto.randomUUID()]).then(()=>({ok:true}),error=>({error}));
   await operator.query('commit');assert.equal((await publication).error?.code,'23514');
   assert.equal((await admin.query('select used from public.credit_balances where user_id=$1',[ids.seller])).rows[0].used,1);
   assert.equal((await admin.query('select count(*)::int n from public.vehicles')).rows[0].n,1);
