@@ -16,3 +16,14 @@ test('disabled and unauthorized requests are counted without sending headers to 
  assert.deepEqual(seen,['unavailable','unauthorized']);assert.doesNotMatch(JSON.stringify(seen),/PRIVATE/);
  assert.equal((await handleAssistantRequest(request,{enabled:false,observe(){throw Error('PRIVATE');}})).status,503);
 });
+
+test('provider fallback is observable without claiming generation success or leaking the cause',async()=>{
+ const seen=[];const id='70000000-0000-4000-8000-000000000001';
+ const request=new Request('http://localhost/api/assistant',{method:'POST',headers:{authorization:'Bearer synthetic','content-type':'application/json'},body:JSON.stringify({messageId:id})});
+ const response=await handleAssistantRequest(request,{enabled:true,observe:s=>seen.push(s),verify:async()=>({id:'buyer'}),
+  claim:async()=>({state:'claimed',job:id,question:'Synthetic',vehicle:{}}),prepare:()=>({}),
+  reserve:async()=>({state:'reserved'}),generate:async()=>{throw Error('PRIVATE provider credential');},finish:async()=>({state:'done'})});
+ assert.equal(response.status,200);assert.deepEqual(seen,['provider_failed','done']);
+ const lines=[];recordAssistantOutcome(seen[0],s=>lines.push(s));
+ assert.equal(JSON.parse(lines[0]).event,'velox.assistant.stage_failure');assert.doesNotMatch(lines[0],/PRIVATE|credential/);
+});
