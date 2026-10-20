@@ -25,7 +25,7 @@ revoke all on function velox_private.storage_path_referenced(text) from public,a
 
 
 create function velox_private.cleanup_old_enough(document jsonb, retention_days integer)
-returns boolean language plpgsql set search_path='' as $
+returns boolean language plpgsql set search_path='' as $$
 declare born timestamptz; changed timestamptz;
 begin
  born:=nullif(document->>'created_at','')::timestamptz;
@@ -33,7 +33,7 @@ begin
  return born is not null and isfinite(born) and isfinite(changed)
  and greatest(born,changed)<=clock_timestamp()-retention_days*interval '1 day';
 exception when invalid_datetime_format or datetime_field_overflow then return false;
-end $;
+end $$;
 revoke all on function velox_private.cleanup_old_enough(jsonb,integer) from public,anon,authenticated,service_role;
 
 create function public.storage_cleanup_preview(retention_days integer default 7)
