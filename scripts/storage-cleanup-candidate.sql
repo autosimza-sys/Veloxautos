@@ -20,6 +20,19 @@ returns boolean language sql stable security definer set search_path='' as $$
 $$;
 revoke all on function velox_private.storage_path_referenced(text) from public,anon,authenticated,service_role;
 
+
+create function velox_private.cleanup_old_enough(document jsonb, retention_days integer)
+returns boolean language plpgsql set search_path='' as $
+declare born timestamptz; changed timestamptz;
+begin
+ born:=nullif(document->>'created_at','')::timestamptz;
+ changed:=coalesce(nullif(document->>'updated_at','')::timestamptz,born);
+ return born is not null and isfinite(born) and isfinite(changed)
+ and greatest(born,changed)<=clock_timestamp()-retention_days*interval '1 day';
+exception when invalid_datetime_format or datetime_field_overflow then return false;
+end $;
+revoke all on function velox_private.cleanup_old_enough(jsonb,integer) from public,anon,authenticated,service_role;
+
 create function public.storage_cleanup_preview(retention_days integer default 7)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare plan jsonb;
@@ -29,7 +42,7 @@ begin
  select jsonb_build_object('object_id',o.id,'bucket',o.bucket_id,'path',o.name,'created_at',to_jsonb(o)->>'created_at') item
  from storage.objects o where o.bucket_id in ('vehicle-media','inspection-media')
  and split_part(o.name,'/',1) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
- and nullif(to_jsonb(o)->>'created_at','')::timestamptz<=clock_timestamp()-retention_days*interval '1 day'
+ and velox_private.cleanup_old_enough(to_jsonb(o),retention_days)
  and not velox_private.storage_path_referenced(o.name)
  and not exists(select 1 from velox_private.upload_reservations r where r.bucket_id=o.bucket_id and r.path=o.name and r.state='pending' and r.expires_at>clock_timestamp())
  and not exists(select 1 from velox_private.storage_cleanup_claims c where c.bucket_id=o.bucket_id and c.path=o.name)
@@ -52,8 +65,7 @@ begin
   return jsonb_build_object('state',prior.state);
  end if;
  select * into obj from storage.objects where id=target_object and bucket_id=expected_bucket and name=expected_path;
- if not found or nullif(to_jsonb(obj)->>'created_at','') is null
- or (to_jsonb(obj)->>'created_at')::timestamptz>clock_timestamp()-retention_days*interval '1 day'
+ if not found or not coalesce(velox_private.cleanup_old_enough(to_jsonb(obj),retention_days),false)
  or velox_private.storage_path_referenced(expected_path)
  or exists(select 1 from velox_private.upload_reservations r where r.owner_id=actor and r.bucket_id=expected_bucket and r.path=expected_path and r.state='pending' and r.expires_at>clock_timestamp()) then
  raise exception 'Cleanup target no longer eligible' using errcode='23514'; end if;

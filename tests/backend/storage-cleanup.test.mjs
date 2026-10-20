@@ -8,7 +8,7 @@ const media=paths.map((storage_path,sort_order)=>({storage_path,sort_order,media
 const payload={brand:'Synthetic',model:'Cleanup',version:'Base',year:2020,kilometers:1,price:100,zone:'Test'};
 before(async()=>{
  db=await makeDatabase();
- await db.exec("alter table storage.objects add column created_at timestamptz default now()");
+ await db.exec("alter table storage.objects add column created_at timestamptz default now(), add column updated_at timestamptz");
  await db.exec(await readFile(root+'/scripts/storage-cleanup-candidate.sql','utf8'));
 });
 after(async()=>{await db?.close();});
@@ -60,4 +60,12 @@ test('browser accounts cannot preview, claim, complete, or read cleanup ledger',
  await asUser(db,ids.seller);
  for(const query of ['select public.storage_cleanup_preview(7)','select public.complete_storage_cleanup(gen_random_uuid())','select * from velox_private.storage_cleanup_claims'])
  await denied(db,()=>db.query(query),assert);
+});
+
+test('recent modification and unknown creation date are retained even on an old path',async()=>{
+ await db.query('update storage.objects set updated_at=now() where name=$1',[paths[0]]);
+ await db.query('update storage.objects set created_at=null where name=$1',[paths[1]]);
+ const plan=await preview();
+ assert.ok(!plan.objects.some(o=>o.path===paths[0]||o.path===paths[1]));
+ await denied(db,()=>claim(paths[0]),assert);
 });
