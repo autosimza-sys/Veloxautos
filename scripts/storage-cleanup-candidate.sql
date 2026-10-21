@@ -1,0 +1,5 @@
+-- Historical path retained for discoverability only. No executable SQL.
+-- Canonical reviewed implementation:
+-- supabase/migrations/20261021024417_manual_storage_cleanup.sql
+-- Apply only through the ordered migration/release process; never replay a
+-- second script copy. See docs/operations/manual-storage-cleanup.md.

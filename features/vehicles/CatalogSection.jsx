@@ -18,6 +18,7 @@ const KM_RANGES = [
 ];
 
 export default function CatalogSection({
+  onFiltersChange, brands: serverBrands, years: serverYears, hasNextPage, hasPreviousPage, onNextPage, onPreviousPage,
   canSeePrice,
   catalogStatus,
   isLoading,
@@ -36,17 +37,18 @@ export default function CatalogSection({
   // Unique sorted brands
   const brands = useMemo(() => {
     const set = new Set(vehicles.map((v) => v.brand).filter(Boolean));
-    return Array.from(set).sort();
-  }, [vehicles]);
+    return serverBrands || Array.from(set).sort();
+  }, [vehicles, serverBrands]);
 
   // Unique sorted years
   const years = useMemo(() => {
     const set = new Set(vehicles.map((v) => v.year).filter(Boolean));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [vehicles]);
+    return serverYears || Array.from(set).sort((a, b) => b - a);
+  }, [vehicles, serverYears]);
 
   // Filter logic
   const filtered = useMemo(() => {
+    if (onFiltersChange) return vehicles;
     const q = search.toLowerCase().trim();
 
     return vehicles.filter((v) => {
@@ -84,11 +86,29 @@ export default function CatalogSection({
 
       return true;
     });
-  }, [vehicles, search, filterBrand, filterYear, filterPrice, filterKm, canSeePrice]);
+  }, [vehicles, search, filterBrand, filterYear, filterPrice, filterKm, canSeePrice, onFiltersChange]);
 
   const hasFilters = search || filterBrand || filterYear || (canSeePrice && (filterPrice !== "" || filterKm !== ""));
 
+  function updateFilter(key, value) {
+    const values = { search, filterBrand, filterYear, filterPrice, filterKm, [key]: value };
+    ({ search: setSearch, filterBrand: setFilterBrand, filterYear: setFilterYear,
+      filterPrice: setFilterPrice, filterKm: setFilterKm })[key](value);
+    const next = {};
+    if (values.search.trim()) next.search = values.search.trim();
+    if (values.filterBrand) next.brand = values.filterBrand;
+    if (values.filterYear) next.year = Number(values.filterYear);
+    for (const [field, range] of canSeePrice ? [
+      ["Price", PRICE_RANGES[values.filterPrice]], ["Km", KM_RANGES[values.filterKm]],
+    ] : []) {
+      if (range?.min != null) next[`min${field}`] = range.min;
+      if (range?.max != null) next[`max${field}`] = range.max;
+    }
+    onFiltersChange?.(next);
+  }
+
   function clearFilters() {
+    onFiltersChange?.({});
     setSearch("");
     setFilterBrand("");
     setFilterYear("");
@@ -123,10 +143,10 @@ export default function CatalogSection({
           placeholder="Buscar por marca, modelo, zona..."
           aria-label="Buscar vehículos"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => updateFilter("search", e.target.value)}
         />
         {search && (
-          <button className="searchClear" type="button" onClick={() => setSearch("")}>✕</button>
+          <button className="searchClear" type="button" onClick={() => updateFilter("search", "")}>✕</button>
         )}
       </div>
 
@@ -138,7 +158,7 @@ export default function CatalogSection({
               Marca
               <select
                 value={filterBrand}
-                onChange={(e) => setFilterBrand(e.target.value)}
+                onChange={(e) => updateFilter("filterBrand", e.target.value)}
               >
                 <option value="">Todas</option>
                 {brands.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -149,7 +169,7 @@ export default function CatalogSection({
               Año
               <select
                 value={filterYear}
-                onChange={(e) => setFilterYear(e.target.value)}
+                onChange={(e) => updateFilter("filterYear", e.target.value)}
               >
                 <option value="">Todos</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -161,7 +181,7 @@ export default function CatalogSection({
               <select
                 disabled={!canSeePrice}
                 value={filterPrice}
-                onChange={(e) => setFilterPrice(e.target.value)}
+                onChange={(e) => updateFilter("filterPrice", e.target.value)}
               >
                 <option value="">{canSeePrice ? "Cualquier precio" : "Ingresá para filtrar por precio"}</option>
                 {PRICE_RANGES.map((r, i) => (
@@ -175,7 +195,7 @@ export default function CatalogSection({
               <select
                 disabled={!canSeePrice}
                 value={filterKm}
-                onChange={(e) => setFilterKm(e.target.value)}
+                onChange={(e) => updateFilter("filterKm", e.target.value)}
               >
                 <option value="">{canSeePrice ? "Sin límite" : "Ingresá para filtrar por km"}</option>
                 {KM_RANGES.map((r, i) => (
@@ -198,7 +218,7 @@ export default function CatalogSection({
         <p className="filterResults">
           {filtered.length === 0
             ? "Ningún vehículo coincide con los filtros."
-            : `${filtered.length} vehículo${filtered.length === 1 ? "" : "s"} encontrado${filtered.length === 1 ? "" : "s"}`}
+            : `${filtered.length} vehículo${filtered.length === 1 ? "" : "s"} en esta página`}
         </p>
       )}
 
@@ -239,7 +259,7 @@ export default function CatalogSection({
           <p>{catalogStatus}</p>
           <button className="secondary" type="button" onClick={onRetry}>Reintentar</button>
         </div>
-      ) : vehicles.length === 0 ? (
+      ) : vehicles.length === 0 && !hasFilters ? (
         <div className="emptyState"><p>Todavía no hay vehículos publicados.</p></div>
       ) : (
         <div className="emptyState">
@@ -248,6 +268,10 @@ export default function CatalogSection({
         </div>
       )}
 
+      {onFiltersChange && <nav aria-label="Páginas del catálogo">
+        <button type="button" disabled={isLoading || !hasPreviousPage} onClick={onPreviousPage}>Anterior</button>
+        <button type="button" disabled={isLoading || !hasNextPage} onClick={onNextPage}>Siguiente</button>
+      </nav>}
     </section>
   );
 }

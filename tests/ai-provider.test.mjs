@@ -8,6 +8,17 @@ const env = { VELOX_AI_ENABLED: 'true', VELOX_AI_PROVIDER: 'vercel',
   VELOX_AI_DAILY_USER_LIMIT: '5', VELOX_AI_DAILY_GLOBAL_LIMIT: '30' };
 const policy = readAiPolicy(env, now);
 
+test('nested fields cannot smuggle private context; only declared checklist choices survive', () => {
+  const vehicle = { brand: { phone: 'PRIVATE' }, price: { history: 'PRIVATE' },
+    zone: ['PRIVATE'], acceptsTrade: 'yes', km: Infinity, year: -1,
+    checklist: { motor: 'bueno', caja: { phone: 'PRIVATE' }, certificado: 'PRIVATE' } };
+  const payload = JSON.parse(prepareSalesRequest('¿Motor?', vehicle, policy));
+  assert.deepEqual(JSON.parse(payload.messages[0].content).fichaDeclarada, { checklist: { motor: 'bueno' } });
+  assert.doesNotMatch(JSON.stringify(payload), /PRIVATE/);
+  assert.deepEqual(vehicle.checklist.caja, { phone: 'PRIVATE' });
+  assert.throws(() => prepareSalesRequest('¿Motor?', [], policy), /Invalid context/);
+});
+
 test('AI requires explicit provider, reviewed model, valid daily limits and authorized dollar cap', () => {
   assert.equal(policy.monthly, 10000000);
   assert.equal(policy.monthly / AI_RESERVATION_MICRO_USD, 400);

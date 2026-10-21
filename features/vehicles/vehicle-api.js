@@ -1,3 +1,4 @@
+import { uploadMediaWithAdmission } from "../../lib/storage-upload";
 import { supabase } from "../../lib/supabase-client";
 import { roleLabel } from "../../lib/roles";
 import { fileDigest, orderedPublicationPhotos } from "../publication/publication-request";
@@ -9,24 +10,25 @@ import {
 } from "../publication/publication-quality";
 
 export async function fetchVehicleCatalog(client = supabase) {
-  if (!client) throw new Error("La conexión al catálogo no está configurada.");
-  const { data, error } = await client.rpc("get_vehicle_catalog");
-  if (error) throw error;
+  return (await fetchVehicleCatalogPage({}, client)).vehicles;
+}
 
-  const allMedia = (data || []).flatMap(vehicle => vehicle.media || []);
+export async function fetchVehicleCatalogPage({ cursor = null, filters = {} } = {}, client = supabase) {
+  if (!client) throw new Error("La conexión al catálogo no está configurada.");
+  const { data, error } = await client.rpc("get_vehicle_catalog_page", { page_size: 24, after_cursor: cursor, filters });
+  if (error) throw error;
+  if (!data || !Array.isArray(data.items) || data.items.length > 24) throw new Error("Respuesta de catálogo inválida.");
+  const allMedia = data.items.flatMap(vehicle => vehicle.media || []);
   const resolved = await resolveVehicleMedia(allMedia, client);
   let offset = 0;
-  return (data || []).map(vehicle => {
+  const vehicles = data.items.map(vehicle => {
     const count = (vehicle.media || []).length;
     const media = resolved.slice(offset, offset + count);
     offset += count;
-    return mapVehicleFromDb({
-      ...vehicle,
-      status: "active", // get_vehicle_catalog returns only active publications.
-      profiles: { display_name: vehicle.seller_name, role: vehicle.seller_type },
-      vehicle_media: media,
-    });
+    return mapVehicleFromDb({ ...vehicle, status: "active",
+      profiles: { display_name: vehicle.seller_name, role: vehicle.seller_type }, vehicle_media: media });
   });
+  return { vehicles, nextCursor: data.next_cursor || null, brands: data.brands || [], years: data.years || [] };
 }
 
 export async function createVehiclePublication({
@@ -50,7 +52,7 @@ export async function createVehiclePublication({
   for (let index = 0; index < files.length; index += 1) {
     const { file, type } = files[index];
     const path = await buildStoragePath(user.id, requestId, file, index);
-    await uploadMedia(client, path, file);
+    await uploadMediaWithAdmission(client, "vehicle-media", path, file);
     uploadedMedia.push({ media_type: type, storage_path: path, sort_order: index });
   }
   // A network timeout may arrive after the transaction commits. Keep staged
@@ -136,18 +138,6 @@ async function buildStoragePath(userId, requestId, file, index) {
   return `${userId}/${requestId}/${index}-${hash}.${extensions[file.type]}`;
 }
 
-async function uploadMedia(client, storagePath, file) {
-  const { error } = await client.storage.from("vehicle-media").upload(storagePath, file, {
-    cacheControl: "3600", contentType: file.type, upsert: false,
-  });
-  // Deterministic, content-addressed paths make retry of an existing upload safe.
-  const duplicate = String(error?.statusCode) === "409"
-    || (String(error?.statusCode) === "400" && (error.error === "Duplicate" || error.code === "Duplicate"
-      || /^(?:The resource already exists|Asset Already Exists)\.?$/i.test(error.message || "")));
-  if (error && !duplicate) {
-    throw new Error(`No se pudo subir ${file.name}. Revisá la conexión y reintentá.`);
-  }
-}
 
 async function resolveVehicleMedia(media, client = supabase) {
   const paths = [...new Set(media.map(item => item.storage_path).filter(path => path && !path.startsWith("http")))];

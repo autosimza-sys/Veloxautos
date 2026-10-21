@@ -39,7 +39,8 @@ test("drift: blocked seller cannot use the extra authenticated upload policy", a
 
 test("drift: active seller can still upload only to their own folder", async () => {
   await asUser(db, ids.seller);
-  await db.query("insert into storage.objects(bucket_id,name) values ('vehicle-media',$1)", [`${ids.seller}/allowed.jpg`]);
+  await db.query("select public.reserve_vehicle_upload($1,100,'image/jpeg')",[`${ids.seller}/allowed.jpg`]);
+  await db.query("insert into storage.objects(bucket_id,name,metadata) values ('vehicle-media',$1,'{\"size\":100,\"mimetype\":\"image/jpeg\"}')", [`${ids.seller}/allowed.jpg`]);
   await denied(db, () => db.query("insert into storage.objects(bucket_id,name) values ('vehicle-media',$1)", [`${ids.stranger}/forbidden.jpg`]), assert);
 });
 

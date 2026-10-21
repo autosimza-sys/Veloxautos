@@ -245,13 +245,13 @@ test('expired recovery link cannot enable a new password and can request a fresh
 });
 
 test('failed catalog request offers a real retry and no invented inventory', async ({ page }) => {
-  api.failNext('rpc:get_vehicle_catalog');
-  api.persistentFailures.add('rpc:get_vehicle_catalog');
+  api.failNext('rpc:get_vehicle_catalog_page');
+  api.persistentFailures.add('rpc:get_vehicle_catalog_page');
   await page.goto('/');
   const catalog = page.locator('#catalogo');
   await expect(catalog.getByRole('button', { name: 'Reintentar' })).toBeVisible();
   await expect(catalog.locator('.vehicleCard')).toHaveCount(0);
-  api.failures.delete('rpc:get_vehicle_catalog');
+  api.failures.delete('rpc:get_vehicle_catalog_page');
   await catalog.getByRole('button', { name: 'Reintentar' }).click();
   await expect(catalog.locator('.vehicleCard')).toHaveCount(10);
 });
@@ -286,4 +286,28 @@ test('anonymous publication draft survives first login in place and clears on lo
   await login(page, api.profiles[3]);
   await expect(brand).toHaveValue('');
   await expect(model).toHaveValue('');
+});
+
+test('catalog navigates server pages and searches beyond the loaded page',async({page})=>{
+ const requests=[];
+ const rows=Array.from({length:53},(_,i)=>({id:`80000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`,brand:i===52?'RemoteBrand':'Synthetic',model:i===52?'Only last':`Auto ${i+1}`,version:'Base',year:2020,zone:'Mendoza',seller_name:'Synthetic seller',seller_type:'particular',checklist:{},media:[],price:null,kilometers:null}));
+ await page.route('**/rest/v1/rpc/get_vehicle_catalog_page',async route=>{
+  const body=route.request().postDataJSON();requests.push(body);
+  const filters=body.filters||{};
+  const matched=rows.filter(v=>(!filters.search||`${v.brand} ${v.model}`.toLowerCase().includes(filters.search.toLowerCase()))&&(!filters.brand||v.brand===filters.brand));
+  const start=body.after_cursor?matched.findIndex(v=>v.id===body.after_cursor.id)+1:0;
+  const items=matched.slice(start,start+body.page_size);
+  await route.fulfill({contentType:'application/json',body:JSON.stringify({items,next_cursor:start+items.length<matched.length?{id:items.at(-1).id,created_at:'2026-01-01T00:00:00Z'}:null,brands:['RemoteBrand','Synthetic'],years:[2020]})});
+ });
+ await page.goto('/');
+ await expect(page.locator('#catalogo .vehicleCard')).toHaveCount(24);
+ await page.getByRole('button',{name:'Siguiente',exact:true}).click();
+ await expect(page.locator('#catalogo .vehicleCard').first()).toContainText('Auto 25');
+ await page.getByRole('button',{name:'Anterior',exact:true}).click();
+ await expect(page.locator('#catalogo .vehicleCard').first()).toContainText('Auto 1');
+ await page.getByRole('textbox',{name:'Buscar vehículos'}).fill('Only last');
+ await expect(page.locator('#catalogo .vehicleCard')).toHaveCount(1);
+ await expect(page.locator('#catalogo .vehicleCard')).toContainText('RemoteBrand Only last');
+ expect(requests.at(-1).after_cursor).toBeNull();expect(requests.at(-1).filters.search).toBe('Only last');
+ expect(requests.every(r=>r.page_size===24)).toBe(true);expect(api.violations).toEqual([]);expect(api.pageErrors).toEqual([]);
 });

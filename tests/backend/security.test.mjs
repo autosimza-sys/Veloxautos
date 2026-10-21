@@ -122,7 +122,8 @@ test("inspection upload requires an active assigned mechanic and the request pat
   await asUser(db, ids.seller);
   await denied(db, () => db.query("insert into storage.objects(bucket_id,name) values ('inspection-media',$1)", [`${ids.seller}/${ids.request}/fake.jpg`]), assert);
   await asUser(db, ids.mechanic);
-  assert.equal((await db.query("insert into storage.objects(bucket_id,name) values ('inspection-media',$1) returning id", [`${ids.mechanic}/${ids.request}/extra.jpg`])).rows.length, 1);
+  await db.query("select public.reserve_vehicle_upload($1,100,'image/jpeg','inspection-media')",[`${ids.mechanic}/${ids.request}/extra.jpg`]);
+  assert.equal((await db.query("insert into storage.objects(bucket_id,name,metadata) values ('inspection-media',$1,'{\"size\":100,\"mimetype\":\"image/jpeg\"}') returning id", [`${ids.mechanic}/${ids.request}/extra.jpg`])).rows.length, 1);
   await denied(db, () => db.query("insert into storage.objects(bucket_id,name) values ('inspection-media',$1)", [`${ids.mechanic}/unassigned/extra.jpg`]), assert);
 });
 
@@ -178,11 +179,12 @@ test("a blocked account cannot edit conversation moderation flags", async () => 
   assert.equal((await db.query("update public.conversations set is_blocked=true where id=$1 returning id", [ids.conversation])).rows.length, 0);
 });
 
-test("a seller can clean up their own unlinked uploads after failed publication", async () => {
+test("unlinked upload cleanup is reserved to maintenance so it cannot race publication", async () => {
   await asUser(db, ids.seller);
   const objectName = `${ids.seller}/not-linked-yet.jpg`;
-  await db.query("insert into storage.objects(bucket_id,name) values ('vehicle-media',$1) returning id", [objectName]);
-  assert.equal((await db.query("delete from storage.objects where bucket_id='vehicle-media' and name=$1 returning id", [objectName])).rows.length, 1);
+  await db.query("select public.reserve_vehicle_upload($1,100,'image/jpeg')",[objectName]);
+  await db.query("insert into storage.objects(bucket_id,name,metadata) values ('vehicle-media',$1,'{\"size\":100,\"mimetype\":\"image/jpeg\"}') returning id", [objectName]);
+  assert.equal((await db.query("delete from storage.objects where bucket_id='vehicle-media' and name=$1 returning id", [objectName])).rows.length, 0);
 });
 
 test("a nonmechanic cannot insert a report for an existing assignment", async () => {

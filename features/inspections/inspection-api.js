@@ -1,3 +1,4 @@
+import { uploadMediaWithAdmission } from '../../lib/storage-upload';
 import { supabase } from '../../lib/supabase-client';
 import { fileDigest } from '../publication/publication-request';
 import { validatePublicationMedia } from '../publication/publication-quality';
@@ -27,9 +28,7 @@ export async function submitInspectionReport({ requestId, userId, form, dashboar
   const media = [];
   for (const {file,kind} of files) {
     const path = `${userId}/${requestId}/${kind}-${await fileDigest(file)}.${extensions[file.type]}`;
-    const {error} = await client.storage.from('inspection-media').upload(path,file,{contentType:file.type,upsert:false});
-    const duplicate = String(error?.statusCode)==='409' || (String(error?.statusCode)==='400' && (error.error==='Duplicate' || error.code==='Duplicate' || /^(?:The resource already exists|Asset Already Exists)\.?$/i.test(error.message||'')));
-    if(error&&!duplicate) throw new Error('No se pudo subir un archivo. El informe todavía no fue confirmado; reintentá sin cambiar los datos.');
+    await uploadMediaWithAdmission(client, 'inspection-media', path, file);
     media.push({kind,storage_path:path});
   }
   let response;
