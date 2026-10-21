@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import {before,after,beforeEach,afterEach,test} from 'node:test';
-import {readFile} from 'node:fs/promises';
-import {makeDatabase,asUser,denied,ids,root} from './fixtures.mjs';
+import {makeDatabase,asUser,denied,ids} from './fixtures.mjs';
 let db;
 const paths=Array.from({length:4},(_,i)=>ids.seller+'/cleanup/photo-'+i+'.jpg');
 const media=paths.map((storage_path,sort_order)=>({storage_path,sort_order,media_type:'photo'}));
@@ -9,7 +8,6 @@ const payload={brand:'Synthetic',model:'Cleanup',version:'Base',year:2020,kilome
 before(async()=>{
  db=await makeDatabase();
  await db.exec("alter table storage.objects add column created_at timestamptz default now(), add column updated_at timestamptz");
- await db.exec(await readFile(root+'/scripts/storage-cleanup-candidate.sql','utf8'));
 });
 after(async()=>{await db?.close();});
 beforeEach(async()=>{
@@ -74,4 +72,33 @@ test('an owner avatar URL conservatively holds ambiguous files including encoded
  await db.query('update public.profiles set avatar_url=$1 where id=$2',['https://example.invalid/opaque%20avatar.jpg',ids.seller]);
  assert.equal((await preview()).objects.length,0);
  await denied(db,()=>claim(),assert);
+});
+
+test('claim-first rejects later draft insert/update, idempotency payload and avatar references',async()=>{
+ await db.query('insert into public.publication_drafts(user_id,data)values($1,$2)',[ids.seller,{media:[]}]);
+ await claim();await asUser(db,ids.seller);
+ await denied(db,()=>db.query('update public.publication_drafts set data=$1 where user_id=$2',[{media:[{storage_path:paths[0]}]},ids.seller]),assert);
+ await db.query('delete from public.publication_drafts where user_id=$1',[ids.seller]);
+ await denied(db,()=>db.query('insert into public.publication_drafts(user_id,data)values($1,$2)',[ids.seller,{media:[{storage_path:paths[0]}]}]),assert);
+ await denied(db,()=>db.query('update public.profiles set avatar_url=$1 where id=$2',['https://example.invalid/opaque%20image',ids.seller]),assert);
+ await db.query('insert into public.publication_drafts(user_id,data)values($1,$2)',[ids.seller,{media:[{storage_path:paths[1]}]}]);
+ await db.query("update public.profiles set display_name='Still editable',avatar_url=null where id=$1",[ids.seller]);
+ await db.exec('reset role');
+ await denied(db,()=>db.query('insert into public.publication_requests(user_id,request_id,request_payload,request_media,vehicle_id)values($1,$2,$3,$4,$5)',[ids.seller,crypto.randomUUID(),payload,[media[0]],ids.car]),assert);
+});
+
+test('completed cleanup keeps path tombstones but allows a future unrelated avatar',async()=>{
+ await claim();await db.exec('reset role');
+ const id=(await db.query('select id from storage.objects where name=$1',[paths[0]])).rows[0].id;
+ await db.query('delete from storage.objects where id=$1',[id]); // isolated Storage API metadata simulation
+ await db.exec('set local role service_role');await db.query('select public.complete_storage_cleanup($1)',[id]);
+ await asUser(db,ids.seller);
+ await db.query('update public.profiles set avatar_url=$1 where id=$2',['https://example.invalid/new-avatar',ids.seller]);
+ await denied(db,()=>db.query("select public.reserve_vehicle_upload($1,100,'image/jpeg')",[paths[0]]),assert);
+});
+
+test('quarantined consumed reservation cannot be reused before the Storage deletion completes',async()=>{
+ await db.query("insert into velox_private.upload_reservations values($1,'vehicle-media',$2,100,'image/jpeg','consumed',now()-interval '1 day')",[ids.seller,paths[0]]);
+ await claim();await asUser(db,ids.seller);
+ await denied(db,()=>db.query("select public.reserve_vehicle_upload($1,100,'image/jpeg')",[paths[0]]),assert);
 });

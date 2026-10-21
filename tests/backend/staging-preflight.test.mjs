@@ -164,6 +164,24 @@ test('preflight detects restored mutable storage policies and disabled content g
   }finally{await db.close();}
 });
 
+test('normal migration path installs cleanup guards; preflight rejects grant and trigger drift',async()=>{
+  const db=await makeDatabase();
+  try{
+    const before=await report(db);
+    for(const name of ['public.claim_storage_cleanup(uuid,text,text,integer)','public.complete_storage_cleanup(uuid)','public.storage_cleanup_preview(integer)','public.reserve_vehicle_upload(text,bigint,text,text)','velox_private.cleanup_old_enough(jsonb,integer)','velox_private.storage_path_referenced(text)','velox_private.guard_cleanup_avatar_reference()','velox_private.guard_cleanup_payload_reference()','velox_private.guard_cleanup_media_link()','velox_private.guard_cleanup_object()'])
+      assert.equal(row(before,'functions',name).status,'PASS',name);
+    for(const name of ['public.vehicle_media.guard_cleanup_media','public.inspection_media.guard_cleanup_media','public.publication_drafts.guard_cleanup_payload','public.publication_requests.guard_cleanup_payload','public.profiles.guard_cleanup_avatar','storage.objects.a_guard_cleanup_object'])
+      assert.equal(row(before,'triggers',name).status,'PASS',name);
+    for(const name of ['public.storage_cleanup_preview(integer)','public.claim_storage_cleanup(uuid,text,text,integer)','public.complete_storage_cleanup(uuid)'])
+      assert.equal(row(before,'cleanup_access',name).status,'PASS',name);
+    await db.exec('grant execute on function public.claim_storage_cleanup(uuid,text,text,integer) to authenticated; alter table public.publication_drafts disable trigger guard_cleanup_payload; alter table velox_private.storage_cleanup_claims disable row level security;');
+    const after=await report(db);
+    assert.equal(row(after,'cleanup_access','public.claim_storage_cleanup(uuid,text,text,integer)').status,'BLOCKED');
+    assert.equal(row(after,'triggers','public.publication_drafts.guard_cleanup_payload').status,'BLOCKED');
+    assert.equal(row(after,'relations','velox_private.storage_cleanup_claims').status,'BLOCKED');
+  }finally{await db.close();}
+});
+
 test("required missing columns and removed RPCs are explicit and do not abort other checks", async () => {
   const db = await makeDatabase({ legacy: true });
   try {
