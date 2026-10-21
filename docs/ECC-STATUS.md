@@ -1,5 +1,50 @@
 # Velox ECC — current execution state
 
+## Current closure — 21 October 2026
+
+Federico authorized three automatic phases: correction, isolated delivery/recovery,
+and release preparation. Human-only inputs are grouped at the end; no recurring
+monitor or continuous worker was created. The origin coordinator owns integration.
+
+- A01: hosted Site URL and exact recovery redirect now point to Velox. SMTP and a
+  controlled real inbox remain open; URL configuration is not email delivery proof.
+- U02: cleanup is canonical migration `20261021024417`; draft, idempotency payload
+  and avatar races now serialize with claims. Six PostgreSQL race orderings passed.
+- P01: hosted legacy catalog drift exposed exact meeting locations and allowed
+  blocked users to see price/km. The migration now replaces the full projection.
+  A separate compatible privacy-only hotfix was applied to the hosted legacy RPC;
+  it retains original ordering/count and does not install pagination or PR8.
+- O01: a fresh private backup contains 81 tables and 64 media files. Local restore
+  verified 80 tables/1,062 rows against the same exported snapshot (empty managed
+  Vault excluded with evidence), with zero differences. Four explicit deltas were
+  rehearsed without changing existing rows. AES-GCM decryption/inventory verified.
+  External copy and portable key custody remain open; DPAPI is tied to this profile.
+- T01: code fba2e297 passed CI39538241245: 775 tests, build/lint/runtime audit,
+  20 public and 68 pilot browser tests, PostgreSQL races and budget concurrency.
+  Subsequent catalog correction passed 23 focused tests; final exact-revision CI
+  is reported in PR8 checks and its updated description, not inferred from fba2e297.
+
+Hosted hotfix checks returned two listings: anonymous and missing-profile contexts
+received zero locations/prices/km; an active profile received prices/km and zero
+locations. No blocked profile exists in the hosted fixture, so blocked-user proof
+is synthetic. No customer values or identities were exported. The profile trigger
+diff is line endings only; messaging drift was a stale expected hash, now corrected.
+
+PR8 remains unmerged. The four release deltas and frontend delivery still need a
+coordinated hosted rollout and smoke tests. Two old Storage UPDATE/DELETE policies
+remain in production and are removed by `202610130006`; they disappear in rehearsal.
+Do not replay historical migrations: hosted history uses different identifiers.
+Vercel connector access and browser timeouts still prevent deployment identity
+verification. Campaign/charges/AI debits remain off; product AI budget is US$10/month.
+
+Human inputs after the independent technical work: controlled email/provider
+session and verified sender; reliable Vercel access if still unavailable; external
+backup destination and recoverable key custody; common launch date and final credit
+policy; real listing facts/photos; final seller/buyer/admin acceptance. SMTP setup,
+deployment, migration, hosted checks and fixes remain our technical responsibility.
+
+## Historical checkpoint — 20 October 2026
+
 Updated 20 October 2026, America/Buenos_Aires. Target 21 October, earlier if verified.
 Unique current index; dated checkpoints retain historical evidence.
 

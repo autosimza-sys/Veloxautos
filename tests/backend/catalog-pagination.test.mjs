@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import {before,after,test} from 'node:test';
 import {asUser,ids,makeDatabase,denied} from './fixtures.mjs';
+import {readFile} from 'node:fs/promises';
+const privacyHotfix=await readFile(new URL('../../scripts/hotfix-legacy-catalog-privacy.sql',import.meta.url),'utf8');
+const historicalSchema=await readFile(new URL('../../supabase/migrations/202606230001_security_hardening.sql',import.meta.url),'utf8');
+const historicalCatalog=historicalSchema.match(/create or replace function public\.get_vehicle_catalog\(\)[\s\S]*?\$\$;/)[0];
 let db;
 before(async()=>{
  db=await makeDatabase();
@@ -45,4 +49,47 @@ test('newer insertion between cursor pages does not shift older pages or duplica
  await db.query("insert into public.vehicles(owner_id,status,brand,model,version,year,kilometers,price,zone)values($1,'active','New','After page','Base',2020,0,1,'Test')",[ids.seller]);
  const second=await page(first.next_cursor);assert.ok(second.items.every(v=>!first.items.some(x=>x.id===v.id)));assert.ok(second.items.every(v=>v.model!=='After page'));
  await db.exec('rollback');
+});
+
+test('legacy catalog also hides exact location and blocked-account price/km after normal migrations',async()=>{
+ await db.exec('begin');
+ try{
+  await db.query("update public.vehicles set view_location='PRIVATE_MEETING_SENTINEL' where id=$1",[ids.car]);
+  for(const actor of [null,ids.blocked,ids.buyer]){
+   await asUser(db,actor);
+   const rows=(await db.query('select * from public.get_vehicle_catalog()')).rows;
+   assert.equal(rows.length,24);
+   assert.ok(rows.every(v=>v.view_location===null));
+   assert.ok(!JSON.stringify(rows).includes('PRIVATE_MEETING_SENTINEL'));
+   if(actor!==ids.buyer)assert.ok(rows.every(v=>v.price===null&&v.kilometers===null));
+   else assert.ok(rows.every(v=>v.price!==null&&v.kilometers!==null));
+  }
+ }finally{await db.exec('rollback;reset role');}
+});
+
+test('privacy-only hotfix repairs the observed legacy projection without pagination or data changes',async()=>{
+ const isolated=await makeDatabase();
+ try{
+  // This is the historical definition observed in hosted metadata, with its
+  // CRLF/LF-insensitive body preserved; no customer data is imported.
+  await isolated.exec(historicalCatalog);
+  await isolated.query("update public.vehicles set view_location='PRIVATE_MEETING_SENTINEL' where id=$1",[ids.car]);
+  await isolated.query("insert into public.vehicles(owner_id,status,brand,model,version,year,kilometers,price,zone) select $1,'active','Synthetic','Hotfix '||i,'Base',2020,1,100,'Test' from generate_series(1,30)i",[ids.seller]);
+  assert.equal((await isolated.query('select view_location from public.get_vehicle_catalog() where id=$1',[ids.car])).rows[0].view_location,'PRIVATE_MEETING_SENTINEL','regression fixture must expose the old leak');
+  await isolated.exec('begin');await asUser(isolated,ids.blocked);
+  assert.equal((await isolated.query('select price from public.get_vehicle_catalog() where id=$1',[ids.car])).rows[0].price,1000000,'historical RPC also exposes price to a blocked account');
+  await isolated.exec('rollback;reset role');
+  const before=(await isolated.query('select jsonb_agg(to_jsonb(v) order by id) data from public.vehicles v')).rows[0].data;
+  await isolated.exec(privacyHotfix); // Test the exact deployable file.
+  await isolated.exec('begin');
+  for(const actor of [null,ids.blocked,ids.buyer]){
+   await asUser(isolated,actor);
+   const rows=(await isolated.query('select * from public.get_vehicle_catalog()')).rows;
+   assert.equal(rows.length,32,'existing legacy clients retain the complete result count');
+   assert.ok(rows.every(v=>v.view_location===null));
+   assert.ok(rows.every(v=>actor===ids.buyer?v.price!==null&&v.kilometers!==null:v.price===null&&v.kilometers===null));
+  }
+  await isolated.exec('rollback;reset role');
+  assert.deepEqual((await isolated.query('select jsonb_agg(to_jsonb(v) order by id) data from public.vehicles v')).rows[0].data,before);
+ }finally{await isolated.close();}
 });

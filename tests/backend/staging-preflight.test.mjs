@@ -135,6 +135,8 @@ test("final schema and cutover have inspectable legacy and RPC gates without cla
     assert.equal(row(rows, "cutover", "public.send_message_with_assistant(uuid,text)").status, "PASS");
     assert.equal(row(rows, "cutover", "public.messages.INSERT").status, "PASS");
     assert.equal(row(rows, "functions", "public.is_admin()").status, "PASS");
+    assert.equal(row(rows, "functions", "public.send_message_idempotent(uuid,text,uuid)").status, "PASS", "reviewed rate-limiter body matches hosted and migrated source");
+    assert.equal(row(rows, "functions", "public.get_vehicle_catalog()").status, "PASS", "legacy privacy projection must match the full replacement");
     assert.equal(row(rows, "buckets", "vehicle-media").status, "PASS");
     assert.equal(row(rows, "buckets", "inspection-media").status, "PASS");
     const requiredPolicies = rows.filter((entry) => entry.section === "policies" && !entry.details.optional_observed_policy);
